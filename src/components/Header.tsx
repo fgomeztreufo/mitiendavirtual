@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, ShoppingCart } from 'lucide-react';
 import { siteConfig } from '../config/siteConfig';
+import logo from '../assets/logo.png';
+
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -31,7 +33,7 @@ const Header: React.FC = () => {
           {/* Logo */}
           <div className="flex items-center space-x-6">
   <img
-    src="/public/images/logo.png"
+     src={logo}
     alt="Logo de la tienda"
     className="h-20 w-20 object-contain"
   />
