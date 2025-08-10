@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, ShoppingCart } from 'lucide-react';
 import { siteConfig } from '../config/siteConfig';
-import logo from '../assets/logo.png';
+import logo from '../images/logo.png';
 
 
 const Header: React.FC = () => {
