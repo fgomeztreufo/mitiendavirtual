@@ -14,7 +14,7 @@ const Hero: React.FC = () => {
     <section 
     className="relative min-h-screen flex items-center justify-center bg-cover bg-center"
     style={{
-      backgroundImage: "url('/images/ecommerce-luxury-bg.jpg')",
+      backgroundImage: "url('/images/digby-cheung-7ZSMjPwpr5k-unsplash.jpg')",
     }}>
       {/* Background decorative elements */}
       <div className="absolute inset-0 bg-black/60"></div>
