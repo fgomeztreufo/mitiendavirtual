@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, ShoppingCart } from 'lucide-react';
 import { siteConfig } from '../config/siteConfig';
-import logo from '../images/logo.png';
 
 
 const Header: React.FC = () => {
@@ -32,11 +31,11 @@ const Header: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center space-x-6">
-  <img
-     src={logo}
-    alt="Logo de la tienda"
-    className="h-20 w-20 object-contain"
-  />
+          <img
+            src="/images/logo.png"
+            alt="Logo de la tienda"
+            className="h-20 w-20 object-contain"
+          />
   <span className="text-2xl font-bold text-gray-900">{siteConfig.company.name}</span>
 </div>
 
