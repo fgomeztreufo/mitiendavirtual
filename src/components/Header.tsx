@@ -32,7 +32,7 @@ const Header: React.FC = () => {
           {/* Logo */}
           <div className="flex items-center space-x-6">
           <img
-            src="/public/images/logo.png"
+            src="/images/logo.png"
             alt="Logo de la tienda"
             className="h-20 w-20 object-contain"
           />
