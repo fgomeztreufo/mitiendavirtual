@@ -9,7 +9,7 @@ const VideoSection: React.FC = () => {
           {/* Video 1 */}
           <div className="aspect-w-16 aspect-h-9">
             <video controls className="w-full h-full">
-              <source src="/videos/tienda1.mp4" type="video/mp4" />
+              <source src="/images/6649434-sd_506_960_25fps.mp4" type="video/mp4" />
               Tu navegador no soporta el elemento de video.
             </video>
           </div>
