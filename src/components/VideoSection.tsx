@@ -1,4 +1,5 @@
 import React from 'react';
+import { siteConfig } from '../config/siteConfig';
 
 const VideoSection: React.FC = () => {
   return (

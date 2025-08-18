@@ -30,6 +30,9 @@ export interface SiteConfig {
   analytics: {
     googleAnalyticsId: string;
   };
+  video:{
+    isVisible: boolean;
+  }
 }
 
 export const siteConfig: SiteConfig = {
@@ -84,5 +87,8 @@ export const siteConfig: SiteConfig = {
   },
   analytics: {
     googleAnalyticsId: "G-XQ2HLS2SEQ" // Reemplazar con tu ID de Google Analytics
+  },
+  video:{
+    isVisible: false
   }
 };
