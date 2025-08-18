@@ -36,7 +36,7 @@ export const siteConfig: SiteConfig = {
   company: {
     name: "Mi Tienda Virtual",
     tagline: "Transformamos tu Negocio con Tiendas Virtuales de Alto Rendimiento",
-    phone: "+56912345678",
+    phone: "+56954080571",
     whatsappMessage: "Hola! Me interesa conocer más sobre sus servicios de e-commerce"
   },
   features: {
@@ -46,34 +46,37 @@ export const siteConfig: SiteConfig = {
   },
   plans: {
     basic: {
-      name: "Código Fuente Completo",
-      originalPrice: 350000,
+      name: "Landing Page + Código Fuente Completo",
+      originalPrice: 43750,
       features: [
-        "Código fuente completo del carrito",
-        "Documentación técnica",
-        "Panel de administración",
+        "Landing Page.",
         "Diseño responsivo",
-        "Soporte básico por email"
+        "Soporte básico por email",
+        "Incluye una página única con diseño personalizado, ideal para campañas, servicios o productos específicos.",
+        "Hosting anual +27.000 anual"
       ]
     },
     medium: {
-      name: "Código + Instalación Básica en VPS",
-      originalPrice: 700000,
+      name: "Código + Instalación Básica en Servidor",
+      originalPrice: 87500,
       features: [
         "Todo lo del plan básico",
-        "Instalación en tu VPS",
-        "Configuración de base de datos",
+        "Instalación en tu Servidor",
         "SSL y dominio configurado",
-        "Soporte técnico extendido"
+        "Soporte técnico extendido",
+        "Sitio Web Informativo (4 secciones)",
+        "Incluye las pestañas: Inicio, Servicios, Nosotros y Contacto."+"\n"+
+        "Ideal para presentar tu negocio de forma clara y profesional."
       ]
     },
     advanced: {
-      name: "Instalación y Configuración Completa (Llave en Mano)",
+      name: "Ecommerce full con Instalación y Configuración Completa (Llave en Mano)",
       originalPrice: 900000,
       features: [
         "Todo lo del plan medio",
         "Configuración completa de servidor",
         "Optimización de rendimiento",
+        "Configuración de base de datos",
         "Backup automático",
         "Soporte prioritario 24/7",
         "Capacitación incluida"
