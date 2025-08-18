@@ -65,8 +65,7 @@ export const siteConfig: SiteConfig = {
         "SSL y dominio configurado",
         "Soporte técnico extendido",
         "Sitio Web Informativo (4 secciones)",
-        "Incluye las pestañas: Inicio, Servicios, Nosotros y Contacto."+"\n"+
-        "Ideal para presentar tu negocio de forma clara y profesional."
+        "Incluye las pestañas: Inicio, Servicios, Nosotros y Contacto.\nIdeal para presentar tu negocio de forma clara y profesional."
       ]
     },
     advanced: {
