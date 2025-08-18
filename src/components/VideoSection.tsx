@@ -2,6 +2,10 @@ import React from 'react';
 import { siteConfig } from '../config/siteConfig';
 
 const VideoSection: React.FC = () => {
+  if (!siteConfig.video.isVisible) {
+    return null; // No renderiza la sección si isVisible es false
+  }
+
   return (
     <section id="tiendas" className="mt-20 py-10 bg-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
