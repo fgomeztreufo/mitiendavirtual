@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Star, Send, User } from 'lucide-react';
 import { collection, addDoc, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { siteConfig } from '../config/siteConfig';
 
 interface Testimonial {
   id?: string;
@@ -12,6 +13,10 @@ interface Testimonial {
 }
 
 const Testimonials: React.FC = () => {
+  if (!siteConfig.video.isVisible) {
+    return null; // No renderiza la sección si isVisible es false
+  }
+  // State to manage testimonials and form data
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [formData, setFormData] = useState({
     name: '',
