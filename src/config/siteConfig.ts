@@ -57,7 +57,7 @@ export const siteConfig: SiteConfig = {
       ]
     },
     medium: {
-      name: "Código + Instalación Básica en Servidor",
+      name: "Sitio Web Informativo (4 secciones) + Instalación Básica",
       originalPrice: 87500,
       features: [
         "Todo lo del plan básico",
@@ -70,7 +70,7 @@ export const siteConfig: SiteConfig = {
       ]
     },
     advanced: {
-      name: "Ecommerce full con Instalación y Configuración Completa (Llave en Mano)",
+      name: "Ecommerce full - Instalación y Configuración Completa",
       originalPrice: 900000,
       features: [
         "Todo lo del plan medio",
