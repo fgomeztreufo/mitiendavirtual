@@ -55,6 +55,7 @@ export const siteConfig: SiteConfig = {
         "Landing Page.",
         "Diseño responsivo",
         "Soporte básico por email",
+        "Incluye Botón de WhatsApp",
         "Incluye una página única con diseño personalizado, ideal para campañas, servicios o productos específicos.",
         "Hosting anual +27.000 anual"
       ]
