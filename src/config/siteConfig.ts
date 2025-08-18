@@ -84,6 +84,6 @@ export const siteConfig: SiteConfig = {
     }
   },
   analytics: {
-    googleAnalyticsId: "G-XXXXXXXXXX" // Reemplazar con tu ID de Google Analytics
+    googleAnalyticsId: "G-XQ2HLS2SEQ" // Reemplazar con tu ID de Google Analytics
   }
 };
