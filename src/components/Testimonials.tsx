@@ -13,9 +13,10 @@ interface Testimonial {
 }
 
 const Testimonials: React.FC = () => {
-  if (!siteConfig.video.isVisible) {
+  if (!siteConfig.testimonials.isVisible) {
     return null; // No renderiza la sección si isVisible es false
   }
+
   // State to manage testimonials and form data
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [formData, setFormData] = useState({
