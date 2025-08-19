@@ -41,21 +41,23 @@ const Header: React.FC = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            {[
-              { name: 'Servicios', id: 'servicios' },
-              { name: 'Planes', id: 'planes' },
-              { name: 'Testimonios', id: 'testimonios' },
-              { name: 'Nosotros', id: 'nosotros' }
-            ].map((item) => (
-              <button
-                key={item.id}
-                onClick={() => scrollToSection(item.id)}
-                className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 hover:scale-105"
-              >
-                {item.name}
-              </button>
-            ))}
-          </nav>
+  {[
+    { name: 'Servicios', id: 'servicios' },
+    { name: 'Planes', id: 'planes' },
+    siteConfig.testimonials.isVisible ? { name: 'Testimonios', id: 'testimonios' } : null,
+    { name: 'Nosotros', id: 'nosotros' }
+  ]
+    .filter((item): item is { name: string; id: string } => item !== null) // Filtra valores null o undefined
+    .map((item) => (
+      <button
+        key={item.id}
+        onClick={() => scrollToSection(item.id)}
+        className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 hover:scale-105"
+      >
+        {item.name}
+      </button>
+    ))}
+</nav>
 
           {/* Mobile menu button */}
           <div className="md:hidden">
@@ -75,13 +77,14 @@ const Header: React.FC = () => {
               {[
                 { name: 'Servicios', id: 'servicios' },
                 { name: 'Planes', id: 'planes' },
-                { name: 'Testimonios', id: 'testimonios' },
+                siteConfig.testimonials.isVisible ? { name: 'Testimonios', id: 'testimonios' } : null,
                 { name: 'Nosotros', id: 'nosotros' }
-              ].map((item) => (
+              ] .filter((item): item is { name: string; id: string } => item !== null) // Filtra valores null o undefined
+              .map((item) => (
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors"
+                  className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 hover:scale-105"
                 >
                   {item.name}
                 </button>
