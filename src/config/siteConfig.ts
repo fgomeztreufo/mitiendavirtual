@@ -9,6 +9,7 @@ export interface SiteConfig {
     showOffers: boolean;
     showClientsSection: boolean;
     offerPercentage: number;
+    offerPercentageAuto: number;
   };
   plans: {
     basic: {
@@ -67,7 +68,9 @@ export const siteConfig: SiteConfig = {
   features: {
     showOffers: true,
     showClientsSection: false,
-    offerPercentage: 20
+    offerPercentage: 20,
+    offerPercentageAuto: 40
+
   },
   plans: {
     // --- TUS PLANES ORIGINALES DE WEB (SIN MODIFICACIONES) ---
@@ -112,7 +115,7 @@ export const siteConfig: SiteConfig = {
     // --- NUEVOS PLANES DE AUTOMATIZACIÓN WHATSAPP ---
     automationBasic: {
       name: "Chatbot Conversión Básica",
-      originalPrice: 150000,
+      originalPrice: 120000,
       monthlyPrice: 25000,
       features: [
         "5 respuestas automáticas personalizadas (horarios, precios, dirección)",
@@ -125,8 +128,8 @@ export const siteConfig: SiteConfig = {
     },
     automationMedium: {
       name: "Chatbot Vendedor Automático",
-      originalPrice: 250000,
-      monthlyPrice: 35000,
+      originalPrice: 200000,
+      monthlyPrice: 65000,
       features: [
         "TODO lo del plan Básico, PLUS:",
         "Recuperación de carritos abandonados via WhatsApp (+15% conversión)",
@@ -138,7 +141,7 @@ export const siteConfig: SiteConfig = {
     },
     automationAdvanced: {
       name: "Automatización Total con IA",
-      originalPrice: 490000,
+      originalPrice: 750000,
       monthlyPrice: 80000,
       features: [
         "TODO lo del plan Avanzado, PLUS:",

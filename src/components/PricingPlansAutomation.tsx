@@ -12,7 +12,7 @@ const PricingPlansAutomation: React.FC = () => {
   };
 
   const calculateDiscountedPrice = (originalPrice: number) => {
-    const discount = siteConfig.features.offerPercentage / 100;
+    const discount = siteConfig.features.offerPercentageAuto / 100;
     return Math.round(originalPrice * (1 - discount));
   };
 
@@ -21,8 +21,8 @@ const PricingPlansAutomation: React.FC = () => {
     {
       name: 'Conversión Básica',
       description: 'Ideal para emprendedores que quieren responder preguntas frecuentes automáticamente.',
-      originalPrice: 150000,
-      monthlyPrice: 25000,
+      originalPrice: siteConfig.plans.automationBasic.originalPrice,
+      monthlyPrice: siteConfig.plans.automationBasic.monthlyPrice,
       features: [
         '5 respuestas automáticas personalizadas (ej: horarios, precios, dirección)',
         'Derivación a un número humano fuera de horario',
@@ -37,8 +37,8 @@ const PricingPlansAutomation: React.FC = () => {
     {
       name: 'Vendedor Automático',
       description: 'Perfecto para tiendas online que quieren recuperar ventas perdidas y guiar compradores.',
-      originalPrice: 250000,
-      monthlyPrice: 35000,
+      originalPrice: siteConfig.plans.automationMedium.originalPrice,
+      monthlyPrice: siteConfig.plans.automationMedium.monthlyPrice,
       features: [
         'TODO lo del plan Básico, PLUS:',
         'Recuperación de carritos abandonados via WhatsApp (¡Convierte un 15% más!)',
@@ -53,8 +53,8 @@ const PricingPlansAutomation: React.FC = () => {
     {
       name: 'Automatización Total',
       description: 'Para empresas que buscan un centro de atención al cliente automatizado con IA.',
-      originalPrice: 490000,
-      monthlyPrice: 80000,
+      originalPrice: siteConfig.plans.automationAdvanced.originalPrice,
+      monthlyPrice: siteConfig.plans.automationAdvanced.monthlyPrice,
       features: [
         'TODO lo del plan Avanzado, PLUS:',
         'Inteligencia Artificial (IA) para entender preguntas en lenguaje natural',
@@ -175,7 +175,7 @@ const PricingPlansAutomation: React.FC = () => {
           {siteConfig.features.showOffers && (
             <div className="mt-6 inline-flex items-center bg-green-100 text-green-800 px-4 py-2 rounded-full">
               <Star className="h-4 w-4 mr-2" />
-              <span className="font-medium">¡Oferta especial! {siteConfig.features.offerPercentage}% de descuento</span>
+              <span className="font-medium">¡Oferta especial! {siteConfig.features.offerPercentageAuto}% de descuento</span>
             </div>
           )}
         </div>
@@ -191,7 +191,7 @@ const PricingPlansAutomation: React.FC = () => {
             ¿Ya tienes una web con nosotros?
           </h3>
           <p className="text-indigo-700">
-            Agrega automatización por un <strong>40% DE DESCUENTO</strong> en la implementación.
+            Agrega automatización por un <strong>{siteConfig.features.offerPercentageAuto}% DE DESCUENTO</strong> en la implementación.
           </p>
         </div>
       </div>
