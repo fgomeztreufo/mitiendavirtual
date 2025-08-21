@@ -86,7 +86,7 @@ const PricingPlansAutomation: React.FC = () => {
       {/* Offer flag */}
       {siteConfig.features.showOffers && (
         <div className="absolute -top-3 -right-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
-          -{siteConfig.features.offerPercentage}%
+          -{siteConfig.features.offerPercentageAuto}%
         </div>
       )}
 
@@ -167,7 +167,7 @@ const PricingPlansAutomation: React.FC = () => {
         {/* Section header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Automatización WhatsApp 24/7
+            Automatización WhatsApp y RRSS 24/7
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Tu Sitio Web Trabaja, Tu Chatbot Vende: Conversiones Automáticas
