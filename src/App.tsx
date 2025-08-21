@@ -11,6 +11,7 @@ import Footer from './components/Footer';
 import WhatsAppButton from './components/WhatsAppButton';
 import GoogleAnalytics from './components/GoogleAnalytics';
 import VideoSection from './components/VideoSection';
+import PricingPlansAutomation from './components/PricingPlansAutomation';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <VideoSection />
         <Services />
         <PricingPlans />
+        <PricingPlansAutomation />
         <Technologies />
         <AboutUs />
         <Testimonials />

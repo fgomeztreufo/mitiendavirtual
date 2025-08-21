@@ -26,6 +26,25 @@ export interface SiteConfig {
       originalPrice: number;
       features: string[];
     };
+    // --- NUEVA SECCIÓN: Planes de Automatización ---
+    automationBasic: {
+      name: string;
+      originalPrice: number;
+      monthlyPrice: number;
+      features: string[];
+    };
+    automationMedium: {
+      name: string;
+      originalPrice: number;
+      monthlyPrice: number;
+      features: string[];
+    };
+    automationAdvanced: {
+      name: string;
+      originalPrice: number;
+      monthlyPrice: number;
+      features: string[];
+    };
   };
   analytics: {
     googleAnalyticsId: string;
@@ -51,6 +70,7 @@ export const siteConfig: SiteConfig = {
     offerPercentage: 20
   },
   plans: {
+    // --- TUS PLANES ORIGINALES DE WEB (SIN MODIFICACIONES) ---
     basic: {
       name: "Landing Page + Código Fuente Completo",
       originalPrice: 43750,
@@ -86,6 +106,48 @@ export const siteConfig: SiteConfig = {
         "Backup automático",
         "Soporte prioritario 24/7",
         "Capacitación incluida"
+      ]
+    },
+
+    // --- NUEVOS PLANES DE AUTOMATIZACIÓN WHATSAPP ---
+    automationBasic: {
+      name: "Chatbot Conversión Básica",
+      originalPrice: 150000,
+      monthlyPrice: 25000,
+      features: [
+        "5 respuestas automáticas personalizadas (horarios, precios, dirección)",
+        "Derivación a un número humano fuera de horario",
+        "Botón de WhatsApp click-to-chat integrado",
+        "Detección de palabras clave básica ('precio', 'horario', 'envío')",
+        "Panel de control para editar respuestas (sin código)",
+        "Soporte técnico por 30 días incluido"
+      ]
+    },
+    automationMedium: {
+      name: "Chatbot Vendedor Automático",
+      originalPrice: 250000,
+      monthlyPrice: 35000,
+      features: [
+        "TODO lo del plan Básico, PLUS:",
+        "Recuperación de carritos abandonados via WhatsApp (+15% conversión)",
+        "Envío automático de catálogo o productos destacados",
+        "Integración con Google Sheets para registrar leads/ventas",
+        "Flujos conversacionales avanzados",
+        "Soporte prioritario y 3 ajustes mensuales incluidos"
+      ]
+    },
+    automationAdvanced: {
+      name: "Automatización Total con IA",
+      originalPrice: 490000,
+      monthlyPrice: 80000,
+      features: [
+        "TODO lo del plan Avanzado, PLUS:",
+        "Inteligencia Artificial (IA) para lenguaje natural",
+        "Gestión y agendamiento automático de citas (Google Calendar)",
+        "Segmentación de clientes (nuevos vs. recurrentes)",
+        "Encuestas de satisfacción automatizadas post-venta",
+        "Reportes mensuales de desempeño (leads, ventas, métricas)",
+        "Soporte 24/7 y 10 ajustes mensuales incluidos"
       ]
     }
   },
