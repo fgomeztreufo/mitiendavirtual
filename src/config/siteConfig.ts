@@ -61,7 +61,7 @@ export interface SiteConfig {
 export const siteConfig: SiteConfig = {
   company: {
     name: "Mi Tienda Virtual",
-    tagline: "Transformamos tu Negocio con Tiendas Virtuales de Alto Rendimiento",
+    tagline: "Transformamos tu Negocio con Tiendas Virtuales y automatizaciones de Alto Rendimiento",
     phone: "+56954080571",
     whatsappMessage: "Hola! Me interesa conocer más sobre sus servicios de e-commerce"
   },
@@ -83,7 +83,7 @@ export const siteConfig: SiteConfig = {
         "Soporte básico por email",
         "Incluye Botón de WhatsApp",
         "Incluye una página única con diseño personalizado, ideal para campañas, servicios o productos específicos.",
-        "Hosting anual +27.000 anual"
+        "Hosting anual + 60.000 anual"
       ]
     },
     medium: {
@@ -132,6 +132,7 @@ export const siteConfig: SiteConfig = {
       monthlyPrice: 65000,
       features: [
         "TODO lo del plan Básico, PLUS:",
+        "Automatizacion de redes sociales",
         "Recuperación de carritos abandonados via WhatsApp (+15% conversión)",
         "Envío automático de catálogo o productos destacados",
         "Integración con Google Sheets para registrar leads/ventas",

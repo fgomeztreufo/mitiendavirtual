@@ -36,12 +36,12 @@ const PricingPlansAutomation: React.FC = () => {
     },
     {
       name: 'Vendedor Automático',
-      description: 'Perfecto para tiendas online que quieren recuperar ventas perdidas y guiar compradores.',
+      description: 'Perfecto para tiendas online automatizar compras y guiar compradores.',
       originalPrice: siteConfig.plans.automationMedium.originalPrice,
       monthlyPrice: siteConfig.plans.automationMedium.monthlyPrice,
       features: [
         'TODO lo del plan Básico, PLUS:',
-        'Recuperación de carritos abandonados via WhatsApp (¡Convierte un 15% más!)',
+        //'Recuperación de carritos abandonados via WhatsApp (¡Convierte un 15% más!)',
         'Envío de catálogo o productos destacados por chat automáticamente',
         'Integración con Google Sheets para registrar leads y ventas',
         'Flujos conversacionales avanzados (ej: "¿Busca ropa de hombre o mujer?")',
