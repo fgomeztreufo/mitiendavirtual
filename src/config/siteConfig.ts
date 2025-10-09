@@ -75,40 +75,44 @@ export const siteConfig: SiteConfig = {
   plans: {
     // --- TUS PLANES ORIGINALES DE WEB (SIN MODIFICACIONES) ---
     basic: {
-      name: "Landing Page + Código Fuente Completo",
+      name: "Landing Page Informativo + Hosting",
       originalPrice: 43750,
       features: [
         "Landing Page.",
         "Diseño responsivo",
         "Soporte básico por email",
-        "Incluye Botón de WhatsApp",
         "Incluye una página única con diseño personalizado, ideal para campañas, servicios o productos específicos.",
-        "Hosting anual + 60.000 anual"
+        "Hosting incluido por $3.000 mensual durante el primer año, despúes $5.000",
+        "Sitio Web Informativo (4 secciones)",
+        "Incluye las pestañas: Inicio, Servicios, Nosotros y Contacto.\nIdeal para presentar tu negocio de forma clara y profesional."
       ]
     },
     medium: {
-      name: "Sitio Web Informativo (4 secciones) + Instalación Básica",
+      name: "Landing Page + Botón de WhatsApp + Hosting",
       originalPrice: 87500,
       features: [
         "Todo lo del plan básico",
         "Instalación en tu Servidor",
         "SSL y dominio configurado",
         "Soporte técnico extendido",
-        "Sitio Web Informativo (4 secciones)",
-        "Incluye las pestañas: Inicio, Servicios, Nosotros y Contacto.\nIdeal para presentar tu negocio de forma clara y profesional."
+        "Incluye Botón de WhatsApp",
+        "Hosting incluido por $3.000 mensual durante el primer año, despúes $5.000"
       ]
     },
     advanced: {
       name: "Ecommerce full - Instalación y Configuración Completa",
-      originalPrice: 900000,
+      originalPrice: 1000000,
       features: [
-        "Todo lo del plan medio",
+        "Todo lo del plan anteriores",
         "Configuración completa de servidor",
         "Optimización de rendimiento",
         "Configuración de base de datos",
         "Backup automático",
         "Soporte prioritario 24/7",
-        "Capacitación incluida"
+        "Capacitación incluida",
+        "Carga de informacion de productos",
+        "Comunicacion con API de pasarela de pagos (mercado pago, flow, etc)",
+        "Comunicacion con API de servicios de envio (Chilexpress, Starken, etc)"
       ]
     },
 
@@ -118,12 +122,14 @@ export const siteConfig: SiteConfig = {
       originalPrice: 120000,
       monthlyPrice: 25000,
       features: [
-        "5 respuestas automáticas personalizadas (horarios, precios, dirección)",
+        "Respuestas automáticas personalizadas (horarios, precios, dirección, preguntas frecuentes)",
         "Derivación a un número humano fuera de horario",
         "Botón de WhatsApp click-to-chat integrado",
         "Detección de palabras clave básica ('precio', 'horario', 'envío')",
-        "Panel de control para editar respuestas (sin código)",
-        "Soporte técnico por 30 días incluido"
+        "Guardado de conversaciones o intenciones de ventas en google sheets",
+        "Soporte técnico por 30 días incluido",
+        "Pago maximo en 3 cuotas por transferencia bancaria ",
+        "3 dias de gracias, para disfrutar tu nuevo chatbot, tu decides seguir"
       ]
     },
     automationMedium: {
@@ -131,27 +137,31 @@ export const siteConfig: SiteConfig = {
       originalPrice: 200000,
       monthlyPrice: 65000,
       features: [
-        "TODO lo del plan Básico, PLUS:",
+        "TODO lo del plan Básico:",
         "Automatizacion de redes sociales",
-        "Recuperación de carritos abandonados via WhatsApp (+15% conversión)",
+        "Reconocimiento de intenciones (interés en productos, consultas frecuentes)",
         "Envío automático de catálogo o productos destacados",
         "Integración con Google Sheets para registrar leads/ventas",
         "Flujos conversacionales avanzados",
-        "Soporte prioritario y 3 ajustes mensuales incluidos"
+        "Repositorio para editar respuestas (sin código)",
+        "Soporte prioritario y 3 ajustes mensuales incluidos",
+        "Pago maximo en 3 cuotas por transferencia bancaria ",
+        "3 dias de gracias, para disfrutar tu nuevo chatbot, tu decides seguir"
       ]
     },
     automationAdvanced: {
       name: "Automatización Total con IA",
-      originalPrice: 750000,
+      originalPrice: 1000000,
       monthlyPrice: 80000,
       features: [
-        "TODO lo del plan Avanzado, PLUS:",
+        "TODO lo de los planes anteriores:",
         "Inteligencia Artificial (IA) para lenguaje natural",
-        "Gestión y agendamiento automático de citas (Google Calendar)",
+        "Gestión y agendamiento automático de citas (Google Calendar), en caso que se requiera",
         "Segmentación de clientes (nuevos vs. recurrentes)",
         "Encuestas de satisfacción automatizadas post-venta",
         "Reportes mensuales de desempeño (leads, ventas, métricas)",
-        "Soporte 24/7 y 10 ajustes mensuales incluidos"
+        "Soporte 24/7 y 10 ajustes mensuales incluidos",
+        "Guardado de conversaciones o intenciones de ventas en base de datos",
       ]
     }
   },
