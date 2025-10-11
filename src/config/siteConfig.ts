@@ -82,7 +82,7 @@ export const siteConfig: SiteConfig = {
         "Diseño responsivo",
         "Soporte básico por email",
         "Incluye una página única con diseño personalizado, ideal para campañas, servicios o productos específicos.",
-        "Hosting incluido por $3.000 mensual durante el primer año, despúes $5.000",
+        "Hosting incluido por $3.000 mensual durante los primeros 3 meses,despúes $5.000",
         "Sitio Web Informativo (4 secciones)",
         "Incluye las pestañas: Inicio, Servicios, Nosotros y Contacto.\nIdeal para presentar tu negocio de forma clara y profesional."
       ]
@@ -96,7 +96,7 @@ export const siteConfig: SiteConfig = {
         "SSL y dominio configurado",
         "Soporte técnico extendido",
         "Incluye Botón de WhatsApp",
-        "Hosting incluido por $3.000 mensual durante el primer año, despúes $5.000"
+        "Hosting incluido por $3.000 mensual durante los primeros 6 meses, despúes $5.000"
       ]
     },
     advanced: {
