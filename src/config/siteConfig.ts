@@ -70,7 +70,6 @@ export const siteConfig: SiteConfig = {
     showClientsSection: false,
     offerPercentage: 20,
     offerPercentageAuto: 40
-
   },
   plans: {
     // --- TUS PLANES ORIGINALES DE WEB (SIN MODIFICACIONES) ---
@@ -116,52 +115,37 @@ export const siteConfig: SiteConfig = {
       ]
     },
 
-    // --- NUEVOS PLANES DE AUTOMATIZACIÓN WHATSAPP ---
+    // --- PLANES DE AUTOMATIZACIÓN ACTUALIZADOS ---
     automationBasic: {
-      name: "Chatbot Conversión Básica",
-      originalPrice: 120000,
-      monthlyPrice: 25000,
+      name: "Starter",
+      // Si no hay precio único, dejamos originalPrice igual al valor mensual para consistencia
+      originalPrice: 50000,
+      monthlyPrice: 50000,
       features: [
-        "Respuestas automáticas personalizadas (horarios, precios, dirección, preguntas frecuentes)",
-        "Derivación a un número humano fuera de horario",
-        "Botón de WhatsApp click-to-chat integrado",
-        "Detección de palabras clave básica ('precio', 'horario', 'envío')",
-        "Guardado de conversaciones o intenciones de ventas en google sheets",
-        "Soporte técnico por 30 días incluido",
-        "Pago maximo en 3 cuotas por transferencia bancaria ",
-        "3 dias de gracias, para disfrutar tu nuevo chatbot, tu decides seguir"
+        "Hasta 500 contactos",
+        "Respuestas automáticas a comentarios y mensajes directos."
       ]
     },
     automationMedium: {
-      name: "Chatbot Vendedor Automático",
-      originalPrice: 200000,
-      monthlyPrice: 65000,
+      name: "Crecimiento",
+      originalPrice: 85000,
+      monthlyPrice: 85000,
       features: [
-        "TODO lo del plan Básico:",
-        "Automatizacion de redes sociales",
-        "Reconocimiento de intenciones (interés en productos, consultas frecuentes)",
-        "Envío automático de catálogo o productos destacados",
-        "Integración con Google Sheets para registrar leads/ventas",
-        "Flujos conversacionales avanzados",
-        "Repositorio para editar respuestas (sin código)",
-        "Soporte prioritario y 3 ajustes mensuales incluidos",
-        "Pago maximo en 3 cuotas por transferencia bancaria ",
-        "3 dias de gracias, para disfrutar tu nuevo chatbot, tu decides seguir"
+        "Hasta 2.500 contactos",
+        "Todo lo del plan Starter",
+        "Menú interactivo",
+        "Captura de Leads (WhatsApp)"
       ]
     },
     automationAdvanced: {
-      name: "Automatización Total con IA",
-      originalPrice: 1000000,
-      monthlyPrice: 80000,
+      name: "Escala",
+      originalPrice: 150000,
+      monthlyPrice: 150000,
       features: [
-        "TODO lo de los planes anteriores:",
-        "Inteligencia Artificial (IA) para lenguaje natural",
-        "Gestión y agendamiento automático de citas (Google Calendar), en caso que se requiera",
-        "Segmentación de clientes (nuevos vs. recurrentes)",
-        "Encuestas de satisfacción automatizadas post-venta",
-        "Reportes mensuales de desempeño (leads, ventas, métricas)",
-        "Soporte 24/7 y 10 ajustes mensuales incluidos",
-        "Guardado de conversaciones o intenciones de ventas en base de datos",
+        "Hasta 5.000 contactos",
+        "Todo lo del plan Crecimiento",
+        "Integración con bases de datos",
+        "Soporte prioritario"
       ]
     }
   },
