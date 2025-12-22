@@ -1,13 +1,23 @@
+/* ...existing code... */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  html {
+  /* Previene overflow horizontal y asegura box-sizing consistente */
+  html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
     scroll-behavior: smooth;
   }
-  
+
+  /* Heredar box-sizing */
+  *, *::before, *::after {
+    box-sizing: inherit;
+  }
+
   body {
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     line-height: 1.6;
@@ -18,6 +28,7 @@
   }
 }
 
+/* Componentes y utilidades */
 @layer components {
   .btn-primary {
     @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl;
@@ -27,8 +38,9 @@
     @apply bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-3 px-6 rounded-lg transition-all duration-300 hover:shadow-md;
   }
   
+  /* Añadido overflow-hidden para evitar que elementos absolutos desborden */
   .card {
-    @apply bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6;
+    @apply bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 overflow-hidden;
   }
   
   .section-padding {
@@ -58,6 +70,19 @@
   }
 }
 
+/* Hacer imágenes, videos e iframes responsivos */
+img, picture, video, iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Forzar quiebre de palabras largas para que no expandan el layout */
+.break-words, .text-break {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -76,7 +101,7 @@
   background: #94a3b8;
 }
 
-/* Smooth transitions for all elements */
+/* Smooth transitions for all elementos */
 * {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -122,5 +147,13 @@
 @media print {
   .no-print {
     display: none !important;
+  }
+}
+
+/* Pequeño ajuste extra para pantallas muy pequeñas */
+@media (max-width: 420px) {
+  .container-padding {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
   }
 }
