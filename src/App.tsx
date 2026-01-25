@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom' // <--- IMPORTANTE
+import { PrivacyPolicy, TermsOfService, DataDeletion } from './components/LegalPages';
 import { supabase } from './supabaseClient'
 import { Session } from '@supabase/supabase-js'
 
@@ -71,7 +72,12 @@ function App() {
         element={<PaymentResult />} 
       />
 
-      {/* RUTA COMODÍN: Si escriben cualquier cosa rara, volver al inicio */}
+      {/* 👇 AGREGA ESTAS 3 RUTAS NUEVAS AL FINAL (antes del 404) */}
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/data-deletion" element={<DataDeletion />} />
+
+      {/* RUTA COMODÍN (Debe ser la última) */}
       <Route path="*" element={<Navigate to="/" />} />
 
     </Routes>
