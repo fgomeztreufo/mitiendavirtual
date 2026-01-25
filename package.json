@@ -9,13 +9,21 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/auth-ui-react": "^0.4.7",
+    "@supabase/auth-ui-shared": "^0.1.8",
+    "@supabase/supabase-js": "^2.90.1",
+    "canvas-confetti": "^1.9.4",
     "firebase": "^12.0.0",
+    "framer-motion": "^12.29.0",
     "lucide-react": "^0.532.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.13.0",
+    "sweetalert2": "^11.26.17"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
