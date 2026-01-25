@@ -216,7 +216,7 @@ Nombre: ${ownerName} (Úsalo solo si te preguntan con quién hablar).
 
  const handleInstagramLogin = () => {
     const clientId = '1397698478805069'; 
-    const redirectUri = 'https://webhook.mitiendavirtual.cl/webhook-test/instagram-auth'; 
+    const redirectUri = 'https://webhook.mitiendavirtual.cl/webhook/instagram-auth'; 
     const scopes = 'instagram_basic,instagram_manage_messages,pages_manage_metadata,pages_read_engagement,pages_show_list,business_management,instagram_manage_comments';
     const stateParam = session?.user?.id; 
 
