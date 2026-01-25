@@ -213,6 +213,39 @@ Nombre: ${ownerName} (Úsalo solo si te preguntan con quién hablar).
       setSaving(false)
     }
   }
+  // --- FUNCIÓN PARA DESCONECTAR INSTAGRAM ---
+  const handleDisconnectInstagram = async () => {
+    if (!instance?.id) return;
+
+    const result = await Swal.fire({
+      title: '¿Desconectar Instagram?',
+      text: "Tu vendedor dejará de responder mensajes automáticamente.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#EF4444', // Rojo peligro
+      cancelButtonColor: '#374151',
+      confirmButtonText: 'Sí, desconectar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const { error } = await supabase
+          .from('instances')
+          .update({ provider_id: null }) // Borramos el ID
+          .eq('id', instance.id)
+
+        if (error) throw error
+
+        // Actualizamos la vista al instante
+        setInstance({ ...instance, provider_id: null })
+        
+        Swal.fire('¡Desconectado!', 'Tu cuenta ha sido desvinculada.', 'success')
+      } catch (error: any) {
+        Swal.fire('Error', 'No se pudo desconectar: ' + error.message, 'error')
+      }
+    }
+  }
 
  const handleInstagramLogin = () => {
     const clientId = '1397698478805069'; 
@@ -408,46 +441,36 @@ Nombre: ${ownerName} (Úsalo solo si te preguntan con quién hablar).
                         <div className="lg:col-span-4 space-y-6">
                             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
                                 <h3 className="text-gray-400 text-xs font-bold uppercase mb-4">Estado de Conexión</h3>
+                                
                                 {instance && instance.provider_id && instance.provider_id !== '12345' ? (
-                                    <div className="flex items-center gap-3 p-4 bg-green-900/20 border border-green-900 rounded-lg"><div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div><div><div className="font-bold text-green-400">Instagram Conectado</div><div className="text-xs text-green-600">ID: {instance.provider_id}</div></div></div>
+                                    <div className="space-y-4">
+                                        {/* ESTADO CONECTADO */}
+                                        <div className="flex items-center gap-3 p-4 bg-green-900/20 border border-green-900 rounded-lg">
+                                            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                            <div>
+                                                <div className="font-bold text-green-400">Instagram Conectado</div>
+                                                <div className="text-xs text-green-600 truncate max-w-[150px]">ID: {instance.provider_id}</div>
+                                            </div>
+                                        </div>
+
+                                        {/* BOTÓN DESCONECTAR */}
+                                        <button 
+                                            onClick={handleDisconnectInstagram}
+                                            className="w-full text-xs flex items-center justify-center gap-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 py-2 rounded transition-all border border-transparent hover:border-red-900/30"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            Desvincular cuenta
+                                        </button>
+                                    </div>
                                 ) : (
-                                    <button onClick={handleInstagramLogin} className="w-full bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg">Conectar Instagram</button>
+                                    /* BOTÓN CONECTAR (Estado desconectado) */
+                                    <button onClick={handleInstagramLogin} className="w-full bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg group">
+                                        <svg className="w-5 h-5 fill-white group-hover:scale-110 transition-transform" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                                        Conectar Instagram
+                                    </button>
                                 )}
                             </div>
 
-                            {/* --- TARJETA DE PLAN MEJORADA (CON INDICADORES) --- */}
-                            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-                                <h3 className="text-gray-400 text-xs font-bold uppercase mb-4">Tu Plan Actual</h3>
-                                
-                                {/* Barra de Progreso */}
-                                <div className="flex justify-between items-end mb-2">
-                                    <span className="text-3xl font-bold text-white">{profile?.messages_used || 0}</span>
-                                    <span className="text-sm text-gray-500 mb-1">/ {profile?.monthly_limit || 50} mensajes</span>
-                                </div>
-                                <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden mb-6">
-                                    <div className="bg-blue-500 h-full transition-all duration-1000" style={{ width: `${Math.min(((profile?.messages_used || 0) / (profile?.monthly_limit || 50)) * 100, 100)}%` }}></div>
-                                </div>
-
-                                {/* NUEVOS INDICADORES DE VENCIMIENTO Y ESTADO */}
-                                <div className="pt-4 border-t border-gray-800 space-y-3">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-gray-400">Estado</span>
-                                        <span className="text-xs font-bold bg-green-900/30 text-green-400 border border-green-800 px-2 py-0.5 rounded uppercase tracking-wider">
-                                            ACTIVO
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-gray-400">Renovación</span>
-                                        <span className="text-sm font-mono text-white">
-                                            {formatDate(profile?.subscription_end)}
-                                        </span>
-                                    </div>
-                                    {/* Link rápido a mejorar */}
-                                    <button onClick={() => setActiveTab('plans')} className="w-full mt-2 text-xs text-blue-400 hover:text-blue-300 underline text-right">
-                                        Mejorar mi plan →
-                                    </button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
