@@ -7,6 +7,29 @@ interface DashboardProps {
   session: Session
 }
 
+// --- DEFINICIÓN DE TIPOS (IMPORTANTE PARA QUE NO FALLE) ---
+interface Instance {
+  id: string;
+  user_id: string;
+  provider_id?: string | null;
+  bot_prompt?: string;
+  plan?: string;
+  status?: string;
+  tokens_used?: number;
+  tokens_limit?: number;
+  expires_at?: string;
+}
+
+interface Profile {
+    id: string;
+    full_name?: string;
+    public_reply?: string;
+    plan_type?: string;        // "Empresario"
+    monthly_limit?: number;    // 5000
+    messages_used?: number;    // 4000 (Este es el que faltaba)
+    plan_expires_at?: string;  // "2026-02-25..." (Este es el nombre real)
+  }
+
 // --- COMPONENTE DE AYUDA (TOOLTIP) ---
 const HelpBtn = ({ title, text }: { title: string, text: string }) => (
   <button
@@ -25,17 +48,11 @@ const HelpBtn = ({ title, text }: { title: string, text: string }) => (
   </button>
 )
 
-// --- HELPER PARA FECHAS ---
-const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Indefinido (Plan Gratis)';
-    return new Date(dateString).toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' });
-}
-
 export default function Dashboard({ session }: DashboardProps) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [profile, setProfile] = useState<any>(null)
-  const [instance, setInstance] = useState<any>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [instance, setInstance] = useState<Instance | null>(null)
   
   // --- ESTADOS ---
   const [botPrompt, setBotPrompt] = useState('')
@@ -204,7 +221,7 @@ Nombre: ${ownerName} (Úsalo solo si te preguntan con quién hablar).
         .eq('id', user.id)
       if (profileError) throw profileError
 
-      setProfile({ ...profile, full_name: ownerName })
+      setProfile({ ...profile, full_name: ownerName, id: profile?.id || user.id })
       Toast.fire({ icon: 'success', title: 'Configuración guardada correctamente' })
 
     } catch (error: any) {
@@ -213,6 +230,7 @@ Nombre: ${ownerName} (Úsalo solo si te preguntan con quién hablar).
       setSaving(false)
     }
   }
+
   // --- FUNCIÓN PARA DESCONECTAR INSTAGRAM ---
   const handleDisconnectInstagram = async () => {
     if (!instance?.id) return;
@@ -222,7 +240,7 @@ Nombre: ${ownerName} (Úsalo solo si te preguntan con quién hablar).
       text: "Tu vendedor dejará de responder mensajes automáticamente.",
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#EF4444', // Rojo peligro
+      confirmButtonColor: '#EF4444', 
       cancelButtonColor: '#374151',
       confirmButtonText: 'Sí, desconectar',
       cancelButtonText: 'Cancelar'
@@ -232,14 +250,12 @@ Nombre: ${ownerName} (Úsalo solo si te preguntan con quién hablar).
       try {
         const { error } = await supabase
           .from('instances')
-          .update({ provider_id: null }) // Borramos el ID
+          .update({ provider_id: null }) 
           .eq('id', instance.id)
 
         if (error) throw error
 
-        // Actualizamos la vista al instante
         setInstance({ ...instance, provider_id: null })
-        
         Swal.fire('¡Desconectado!', 'Tu cuenta ha sido desvinculada.', 'success')
       } catch (error: any) {
         Swal.fire('Error', 'No se pudo desconectar: ' + error.message, 'error')
@@ -322,7 +338,7 @@ Nombre: ${ownerName} (Úsalo solo si te preguntan con quién hablar).
                 {instance?.provider_id && <span className="ml-auto w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>}
             </button>
 
-            {/* BOTÓN WHATSAPP (CON ETIQUETA PRONTO) */}
+            {/* BOTÓN WHATSAPP */}
             <button 
                 onClick={() => setActiveTab('whatsapp')} 
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all group ${activeTab === 'whatsapp' ? 'bg-green-600/10 text-green-400 border border-green-600/20' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
@@ -437,8 +453,63 @@ Nombre: ${ownerName} (Úsalo solo si te preguntan con quién hablar).
                             </div>
                         </div>
 
-                        {/* COLUMNA DERECHA: ESTADO Y PLAN (ACTUALIZADA) */}
+                        {/* COLUMNA DERECHA: ESTADO Y PLAN (CORREGIDA ✅) */}
                         <div className="lg:col-span-4 space-y-6">
+                            
+{/* --- TARJETA DE PLAN Y CONSUMO (FUENTE: PROFILE) --- */}
+<div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6 relative overflow-hidden group hover:border-blue-500/50 transition-all">
+    
+    {/* Fondo con brillo sutil */}
+    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+
+    <div className="flex justify-between items-start mb-4">
+        <div>
+            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider">Tu Suscripción</h3>
+            <div className="text-2xl font-bold text-white mt-1 capitalize">
+                {profile?.plan_type || 'Plan Gratuito'} 
+                
+                {/* ESTADO DEL PLAN */}
+                {profile?.plan_expires_at && new Date(profile.plan_expires_at) > new Date() && (
+                    <span className="ml-2 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full align-middle">Activo</span>
+                )}
+            </div>
+        </div>
+        <div className="text-right">
+            <div className="text-xs text-gray-500">Renovación</div>
+            <div className="text-sm text-white font-medium">
+                {profile?.plan_expires_at ? new Date(profile.plan_expires_at).toLocaleDateString('es-CL') : 'Sin fecha'}
+            </div>
+        </div>
+    </div>
+
+    {/* BARRA DE PROGRESO DE TOKENS */}
+    <div className="mt-6">
+        <div className="flex justify-between text-sm mb-2">
+            <span className="text-gray-300">Mensajes usados</span>
+            <span className="text-white font-bold">
+                {/* AQUÍ ESTÁ LA CLAVE: Usamos profile.messages_used */}
+                {profile?.messages_used || 0} / {profile?.monthly_limit || 0}
+            </span>
+        </div>
+        
+        {/* BARRA VISUAL */}
+        <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+            <div 
+                className={`h-full rounded-full transition-all duration-500 ${
+                    ((profile?.messages_used || 0) / (profile?.monthly_limit || 1) * 100) > 90 ? 'bg-red-500' : 'bg-blue-500'
+                }`}
+                style={{ width: `${Math.min(((profile?.messages_used || 0) / (profile?.monthly_limit || 1) * 100), 100)}%` }}
+            ></div>
+        </div>
+        
+        <p className="text-xs text-gray-500 mt-2">
+            Te quedan <strong>{Math.max((profile?.monthly_limit || 0) - (profile?.messages_used || 0), 0)}</strong> mensajes este mes.
+        </p>
+    </div>
+
+</div>
+
+                            {/* --- TARJETA ESTADO DE CONEXIÓN --- */}
                             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
                                 <h3 className="text-gray-400 text-xs font-bold uppercase mb-4">Estado de Conexión</h3>
                                 
@@ -469,52 +540,6 @@ Nombre: ${ownerName} (Úsalo solo si te preguntan con quién hablar).
                                         Conectar Instagram
                                     </button>
                                 )}
-                            </div>
-                            {/* --- TARJETA DE PLAN Y CONSUMO --- */}
-                            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6 relative overflow-hidden group hover:border-blue-500/50 transition-all">
-                            
-                            {/* Fondo con brillo sutil */}
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider">Tu Suscripción</h3>
-                                <div className="text-2xl font-bold text-white mt-1 capitalize">
-                                    {instance?.plan || 'Plan Gratuito'} 
-                                    {instance?.status === 'active' && <span className="ml-2 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full align-middle">Activo</span>}
-                                </div>
-                                </div>
-                                <div className="text-right">
-                                <div className="text-xs text-gray-500">Renovación</div>
-                                <div className="text-sm text-white font-medium">
-                                    {instance?.expires_at ? new Date(instance.expires_at).toLocaleDateString('es-CL') : 'Sin fecha'}
-                                </div>
-                                </div>
-                            </div>
-
-                            {/* BARRA DE PROGRESO DE TOKENS */}
-                            <div className="mt-6">
-                                <div className="flex justify-between text-sm mb-2">
-                                <span className="text-gray-300">Mensajes usados</span>
-                                <span className="text-white font-bold">
-                                    {instance?.tokens_used || 0} / {instance?.tokens_limit || 0}
-                                </span>
-                                </div>
-                                
-                                <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
-                                <div 
-                                    className={`h-full rounded-full transition-all duration-500 ${
-                                    ((instance?.tokens_used || 0) / (instance?.tokens_limit || 1) * 100) > 90 ? 'bg-red-500' : 'bg-blue-500'
-                                    }`}
-                                    style={{ width: `${Math.min(((instance?.tokens_used || 0) / (instance?.tokens_limit || 1) * 100), 100)}%` }}
-                                ></div>
-                                </div>
-                                
-                                <p className="text-xs text-gray-500 mt-2">
-                                Te quedan <strong>{(instance?.tokens_limit || 0) - (instance?.tokens_used || 0)}</strong> mensajes este mes.
-                                </p>
-                            </div>
-
                             </div>
 
                         </div>
@@ -575,7 +600,7 @@ Nombre: ${ownerName} (Úsalo solo si te preguntan con quién hablar).
                             </button>
                         </div>
 
-                        {/* PLAN EMPRENDEDOR (EL FOCO) */}
+                        {/* PLAN EMPRENDEDOR */}
                         <div className="bg-gray-900 border-2 border-blue-600 rounded-2xl p-8 flex flex-col relative transform scale-105 shadow-2xl shadow-blue-900/20">
                             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
                                 Más Popular
