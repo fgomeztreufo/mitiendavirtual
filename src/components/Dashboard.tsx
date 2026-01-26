@@ -470,8 +470,55 @@ Nombre: ${ownerName} (Úsalo solo si te preguntan con quién hablar).
                                     </button>
                                 )}
                             </div>
+                            {/* --- TARJETA DE PLAN Y CONSUMO --- */}
+                            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6 relative overflow-hidden group hover:border-blue-500/50 transition-all">
+                            
+                            {/* Fondo con brillo sutil */}
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider">Tu Suscripción</h3>
+                                <div className="text-2xl font-bold text-white mt-1 capitalize">
+                                    {instance?.plan || 'Plan Gratuito'} 
+                                    {instance?.status === 'active' && <span className="ml-2 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full align-middle">Activo</span>}
+                                </div>
+                                </div>
+                                <div className="text-right">
+                                <div className="text-xs text-gray-500">Renovación</div>
+                                <div className="text-sm text-white font-medium">
+                                    {instance?.expires_at ? new Date(instance.expires_at).toLocaleDateString('es-CL') : 'Sin fecha'}
+                                </div>
+                                </div>
+                            </div>
+
+                            {/* BARRA DE PROGRESO DE TOKENS */}
+                            <div className="mt-6">
+                                <div className="flex justify-between text-sm mb-2">
+                                <span className="text-gray-300">Mensajes usados</span>
+                                <span className="text-white font-bold">
+                                    {instance?.tokens_used || 0} / {instance?.tokens_limit || 0}
+                                </span>
+                                </div>
+                                
+                                <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+                                <div 
+                                    className={`h-full rounded-full transition-all duration-500 ${
+                                    ((instance?.tokens_used || 0) / (instance?.tokens_limit || 1) * 100) > 90 ? 'bg-red-500' : 'bg-blue-500'
+                                    }`}
+                                    style={{ width: `${Math.min(((instance?.tokens_used || 0) / (instance?.tokens_limit || 1) * 100), 100)}%` }}
+                                ></div>
+                                </div>
+                                
+                                <p className="text-xs text-gray-500 mt-2">
+                                Te quedan <strong>{(instance?.tokens_limit || 0) - (instance?.tokens_used || 0)}</strong> mensajes este mes.
+                                </p>
+                            </div>
+
+                            </div>
 
                         </div>
+                        
                     </div>
                 </div>
             )}
