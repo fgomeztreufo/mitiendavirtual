@@ -1,0 +1,163 @@
+{
+  "name": "Unsubscribe App",
+  "nodes": [
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "path": "instagram-unsuscribed",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -592,
+        32
+      ],
+      "id": "d4378187-dab7-4fc4-b2fd-191f0adc956d",
+      "name": "Webhook",
+      "webhookId": "1f73eea1-f7d1-4d71-bdd1-2d6c1e08088a"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v21.0/oauth/access_token",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "1397698478805069"
+            },
+            {
+              "name": "client_secret",
+              "value": "62c35d130a8b92a39bf72023dcfb13ff"
+            },
+            {
+              "name": "redirect_uri",
+              "value": "https://webhook.mitiendavirtual.cl/webhook/instagram-auth"
+            },
+            {
+              "name": "code",
+              "value": "={{ $json.query.code }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -304,
+        48
+      ],
+      "id": "2f1a520a-a713-433a-b34d-548c03c93aa2",
+      "name": "access_token"
+    },
+    {
+      "parameters": {
+        "url": "https://graph.facebook.com/v21.0/me",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "me",
+              "value": "fields"
+            },
+            {
+              "name": "access_token",
+              "value": "={{ $node[\"access_token\"].json[\"access_token\"] }}"
+            },
+            {
+              "name": "fields",
+              "value": "accounts{name,access_token,instagram_business_account}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -64,
+        48
+      ],
+      "id": "6135d53c-2ef8-4dea-8cae-570615b94788",
+      "name": "me"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/me/subscribed_apps",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "={{ $json.accounts.data[0].access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        48
+      ],
+      "id": "476d48ae-6324-4605-905d-fe51fc3099dc",
+      "name": "Unsuscribed app"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [],
+        [
+          {
+            "node": "access_token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "access_token": {
+      "main": [
+        [
+          {
+            "node": "me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "me": {
+      "main": [
+        [
+          {
+            "node": "Unsuscribed app",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "d71049b4-216b-439c-b622-d7ce0eeb1f3a",
+  "meta": {
+    "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
+  },
+  "id": "AeNSbryrX2-qEmz7psP-R",
+  "tags": []
+}

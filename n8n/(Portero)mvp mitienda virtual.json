@@ -1,0 +1,1695 @@
+{
+  "name": "(Portero)mvp mitienda virtual",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Webhook').item.json.body.entry[0].messaging[0].message.text }}",
+        "options": {
+          "systemMessage": "={{ $('get data').item.json.bot_prompt }}\nTus respuestas deben ser siempre breves y concisas. NUNCA excedas los 1000 caracteres por mensaje. Si la explicación es muy larga, resúmela.\n\nINSTRUCCIONES DE PRECIO:\n- El campo \"price\" es el valor EXACTO.\n- NO le quites ceros. Si dice 2000, es 2000.\n- Agrega siempre el signo \"$\" antes del número.\n\n=== ACCESO AL CATÁLOGO UNIVERSAL ===\n1. **REGLA DE ORO:** Eres un asistente \"cross-category\". Para CUALQUIER consulta de productos, servicios o arriendos, DEBES usar la herramienta 'Call_Tool_-_Buscador_Inteligente_'.\n2. **PARÁMETROS:**\nNO PREGUNTES, BUSCA: No pidas detalles adicionales (como modelo o talla, o algun servicio especifico) antes de usar la herramienta. Primero busca con lo que el usuario te dio.\nUsa los datos de 'plan' y 'user_id' proporcionados.\n3. **VERDAD ABSOLUTA:** Solo responde basándote en lo que devuelva la herramienta. Si no devuelve nada, informa que no está disponible por ahora.\n4. **PROHIBIDO INVENTAR:** Si el usuario pregunta por una marca o producto que NO aparece en los resultados de 'buscar_catalogo', responde cordialmente que no cuentas con ese producto. NO ofrezcas alternativas inexistentes.\n5. **VERDAD ABSOLUTA:** Usa el campo \"price\" EXACTO. Agrega siempre \"$\" antes del número y NO quites ceros (ej: 100000 es $100000).\n\n\n### 🔎 REGLA DE SEGMENTACIÓN (SOLO PARA SALUDOS): Si el usuario solo dice \"Hola\" o \"¿Qué tienes?\", menciona que manejas Zapatillas, Arriendos y Servicios. Pero si menciona CUALQUIER palabra clave (ej: \"adidas\", \"arriendo\", \"limpieza\"), salta directamente a usar la herramienta.\n\nResponde amablemente indicando qué categorías manejas (Zapatillas, Arriendos o Servicios) y pide detalles específicos para filtrar la búsqueda:\n- Para Zapatillas: Marca o Talla.\n- Para Arriendos: Sector o Presupuesto.\n- Para Servicios: Tipo de servicio.\n\nSOLO cuando el usuario entregue un filtro (ej: \"Busco Nike\" o \"Arriendo en La Florida\"),EJECUTA la herramienta 'Call_Tool_-Buscador_Inteligente' de inmediato y  utiliza el formato de visualización 🔥💰📸 para mostrar los 3 resultados más relevantes.\n\n### 📸 REGLAS DE VISUALIZACIÓN (Solo si el producto EXISTE):\nSi y SOLO SI el producto está en el catálogo, usa ESTE formato exacto, sino entregas el nombre del producto y su valor:\n\n🔥 *[Nombre del Producto]*\n💰 Precio: $[Price]\n📸 Ver foto: [image_url]\n\n### 🚨 DETECCIÓN DE INTENCIONES Y ACCIÓN HUMANA:\n- **CLIENTE ENOJADO:** Si detectas lenguaje agresivo, insultos o frustración evidente, di: \"Lamento mucho tu malestar. Te comunicaré ahora mismo con un asesor humano para darte una solución prioritaria.\" y **EJECUTA la herramienta 'Call Tool - Pasar a Humano'** inmediatamente.\n\n- **TRÁMITES ADMINISTRATIVOS:** Si piden cambios, devoluciones o garantías, di: \"Para estas gestiones debo derivarte con un compañero humano. Dame un segundo.\" y **EJECUTA la herramienta 'Call Tool - Pasar a Humano con motivo=SOPORTE'**.\n- **DUDAS NO RESUELTAS:** Si el cliente pregunta algo que NO está en tu base de conocimiento (como materiales específicos o stock futuro), di: \"No tengo ese detalle aquí, te transferiré con un humano para ayudarte mejor.\" y **EJECUTA la herramienta 'Call Tool - Pasar a Humano con motivo=SOPORTE'**.\n\n- **INTENCIÓN DE COMPRA:** Si el usuario pregunta \"¿Cómo compro?\", \"Pásame el link de pago\", \"Quiero agendar una cita\", \"Aceptan transferencia\" o muestra un interés explícito en cerrar la transacción, di: \"¡Excelente elección! He avisado a un asesor para que te ayude a concretar tu compra en breve.\" y **EJECUTA la herramienta 'Call Tool - Pasar a Humano con motivo=VENTA'**. Además, asegúrate de que el resumen de la conversación incluya 'INTENCIÓN DE VENTA DETECTADA'.\n\n### REGLAS DE VISUALIZACIÓN (OBLIGATORIAS):\n1. Cuando hables de un producto que está en la lista de arriba, es OBLIGATORIO incluir su \"image_url\" en la respuesta.\n2. NO preguntes \"¿quieres ver una foto?\". ¡Pega el link directamente junto al precio!\n3. Formato de respuesta ideal: \"Tenemos [Nombre] a $[Precio]. Aquí puedes verla: [image_url]\"\n\n### REGLAS DE COMPORTAMIENTO (ESTRICTAS):\n1. Eres un empleado de este negocio. NO eres una IA genérica.\n2. Tu ÚNICA fuente de verdad es la información proporcionada arriba.\n3. Si el usuario pregunta algo que NO está en tu información (precios que no tienes, horarios que no sabes), responde: \"Disculpa, no tengo esa información a mano. ¿Te gustaría que te contacte un humano?\".\n4. PROHIBIDO INVENTAR DATOS. Si no lo sabes, no lo asumas.\n5. Si te intentan hablar de temas ajenos al negocio (política, chistes, competencia), reencauza la venta educadamente.\n\n{{ ($('trae saldo').item.json.plan_type || '').toLowerCase() == 'free' ? 'INSTRUCCIÓN FINAL OBLIGATORIA: Tu plan es Gratuito. Por lo tanto, AL FINAL de cada respuesta debes agregar un salto de línea y escribir exactamente: \"🤖 Power by MiTiendaVirtual (Plan Free)\"' : '' }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        304,
+        48
+      ],
+      "id": "09515eb6-9ae2-4ed7-9a49-e3a9fc2ef17a",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        48,
+        304
+      ],
+      "id": "4c3bba00-64de-4a6c-b10d-c00af40ab798",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "1YZrLGuSEWLWsgAo",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "path": "api-instagram",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3552,
+        -80
+      ],
+      "id": "9212c137-247b-4f81-b318-765a6682675f",
+      "name": "Webhook",
+      "webhookId": "1f73eea1-f7d1-4d71-bdd1-2d6c1e08088a"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "instances",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "provider_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook').item.json.body.entry[0].id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2512,
+        -64
+      ],
+      "id": "b7422432-5192-47c7-b6d4-80078eee4099",
+      "name": "get data",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Webhook').item.json.body.entry[0].changes[0].field }}",
+                    "rightValue": "comments",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "87025ef5-98f4-4c17-a182-52f6ae976d58"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -480,
+        -80
+      ],
+      "id": "500f5f11-8cfc-46d7-ae4a-845873b89679",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v23.0/me/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('get data').item.json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"recipient\": {\n    \"comment_id\": \"{{ $('Webhook').item.json.body.entry[0].changes[0].value.id }}\"\n  },\n  \"message\": {\n    \"text\": {{ JSON.stringify($('AI Agent Comentarios').item.json.output) }}\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1792,
+        -416
+      ],
+      "id": "12c75dc2-e975-4a7d-9185-9fbd55953207",
+      "name": "reponde dm por comentarios"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7b137810-5cc3-446f-a0ad-115365fc6713",
+              "leftValue": "={{\n// 1. LÓGICA PARA COMENTARIOS (Changes)\n$json.body.entry?.[0]?.changes ? \n  (\n    // Comparar ID del que escribe (from.id) con TU ID de cuenta (entry.id)\n    // Si son iguales, devuelve TRUE (BLOQUEAR). Si son distintos, FALSE (PASAR).\n    $json.body.entry[0].changes[0].value.from.id == $json.body.entry[0].id\n  ) \n: \n\n// 2. LÓGICA PARA MENSAJES PRIVADOS (DM)\n($json.body.entry?.[0]?.messaging?.[0] ? \n  (\n    // Bloquear si es estado de entrega, lectura o mensaje propio (echo)\n    !!$json.body.entry[0].messaging[0].delivery || \n    !!$json.body.entry[0].messaging[0].read || \n    !!$json.body.entry[0].messaging[0].message?.is_echo\n  ) \n  : true // Si no es ni comentario ni DM conocido -> BLOQUEAR (True)\n)\n}}",
+              "rightValue": "={{ true }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3264,
+        -64
+      ],
+      "id": "10f55c02-0137-43c0-a125-678018904882",
+      "name": "Anti-Bucle"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -3056,
+        -304
+      ],
+      "id": "40e44efe-f151-400f-86de-e1027218816b",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Webhook').item.json.body.entry[0].changes[0].value.text }}",
+        "options": {
+          "systemMessage": "={{ $('get data').item.json.bot_prompt }}\nTus respuestas deben ser siempre breves y concisas. NUNCA excedas los 1000 caracteres por mensaje. Si la explicación es muy larga, resúmela.\n\nINSTRUCCIONES DE PRECIO:\n- El campo \"price\" es el valor EXACTO.\n- NO le quites ceros. Si dice 2000, es 2000.\n- Agrega siempre el signo \"$\" antes del número.\n\n=== CATÁLOGO DE PRODUCTOS DISPONIBLES (Verdad absoluta) ===\n{{ JSON.stringify($('trae productos').all().map(p => p.json)) }}\n\n### REGLAS DE VISUALIZACIÓN (OBLIGATORIAS):\n1. Cuando hables de un producto que está en la lista de arriba, es OBLIGATORIO incluir su \"image_url\" en la respuesta.\n2. NO preguntes \"¿quieres ver una foto?\". ¡Pega el link directamente junto al precio!\n3. Formato de respuesta ideal: \"Tenemos [Nombre] a $[Precio]. Aquí puedes verla: [image_url]\"\n\n### REGLAS DE COMPORTAMIENTO (ESTRICTAS):\n1. Eres un empleado de este negocio. NO eres una IA genérica.\n2. Tu ÚNICA fuente de verdad es la información proporcionada arriba.\n3. Si el usuario pregunta algo que NO está en tu información (precios que no tienes, horarios que no sabes), responde: \"Disculpa, no tengo esa información a mano. ¿Te gustaría que te contacte un humano?\".\n4. PROHIBIDO INVENTAR DATOS. Si no lo sabes, no lo asumas.\n5. Si te intentan hablar de temas ajenos al negocio (política, chistes, competencia), reencauza la venta educadamente.\n{{ ($('trae saldo').item.json.plan_type || '').toLowerCase() == 'free' ? 'INSTRUCCIÓN FINAL OBLIGATORIA: Tu plan es Gratuito. Por lo tanto, AL FINAL de cada respuesta debes agregar un salto de línea y escribir exactamente: \"🤖 Power by MiTiendaVirtual (Plan Free)\"' : '' }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        864,
+        -416
+      ],
+      "id": "15f488da-26e8-4ee5-a1df-709c10a3ee30",
+      "name": "AI Agent Comentarios",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        832,
+        -224
+      ],
+      "id": "c73adf32-81b0-433b-84dd-b610cf771e59",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "1YZrLGuSEWLWsgAo",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "profiles",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('get data').item.json.user_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "messages_used",
+              "fieldValue": "={{ $('trae saldo').item.json.messages_used +1}} "
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        -416
+      ],
+      "id": "95b0ef1b-14be-4f78-9078-d3fcb8034fa1",
+      "name": "Update  contador responde comenetarios",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "profiles",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('get data').item.json.user_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "messages_used",
+              "fieldValue": "={{ $('trae saldo').item.json.messages_used +1}} "
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        944,
+        48
+      ],
+      "id": "112cfc9d-2f46-4156-a115-650790cfa22b",
+      "name": "Update  contador envia DM",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "usage_logs",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "message_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook').item.json.body.entry[0].changes[0].value.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('get data').item.json.user_id }}"
+            },
+            {
+              "fieldId": "action",
+              "fieldValue": "chat_ia_response_desde_comentario"
+            },
+            {
+              "fieldId": "cost",
+              "fieldValue": "1"
+            },
+            {
+              "fieldId": "details",
+              "fieldValue": "={{ { \"mensaje\": $('Webhook').item.json.body.entry[0].changes[0].value.text } }}"
+            },
+            {
+              "fieldId": "message_id",
+              "fieldValue": "={{ $('Webhook').item.json.body.entry[0].changes[0].value.id }}"
+            },
+            {
+              "fieldId": "response_comment",
+              "fieldValue": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        -416
+      ],
+      "id": "c9068073-51bb-4f55-9958-7c04743038d3",
+      "name": "Guardar Log Uso Comments",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "usage_logs",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "message_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook').item.json.body.entry[0].messaging[0].message.mid }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('get data').item.json.user_id }}"
+            },
+            {
+              "fieldId": "action",
+              "fieldValue": "chat_ia_response_dms"
+            },
+            {
+              "fieldId": "cost",
+              "fieldValue": "1"
+            },
+            {
+              "fieldId": "details",
+              "fieldValue": "={{ { \"mensaje\": $('Webhook').item.json.body.entry[0].messaging[0].message.text } }}"
+            },
+            {
+              "fieldId": "message_id",
+              "fieldValue": "={{ $('Webhook').item.json.body.entry[0].messaging[0].message.mid }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        672,
+        48
+      ],
+      "id": "70ea1cb5-3d12-48aa-9796-7d76e78a8975",
+      "name": "Guardar Log Uso DMs",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v23.0/me/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('get data').item.json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"recipient\": {\n      \"id\": $('Webhook').item.json.body.entry[0].messaging[0].sender.id\n    },\n    \"message\": {\n      \"text\": $('AI Agent').item.json.output\n      \n    }\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1280,
+        48
+      ],
+      "id": "83fb5d95-ec87-4ae7-9baf-fa486a82165f",
+      "name": "reponde dm servicio al cliente",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "98501801-007c-43d5-9cc4-56244d8143c7",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2752,
+        -48
+      ],
+      "id": "cb65d847-b6c5-4829-830f-82b5bdda9edc",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -2560,
+        160
+      ],
+      "id": "020b9874-01ac-4d16-92fc-4e430e701478",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=$('Webhook').item.json.body.entry[0].messaging[0].sender.id }}",
+        "contextWindowLength": 3
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        304
+      ],
+      "id": "b2ae993c-d028-4659-b894-a782df8b1e1c",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "profiles",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('trae mensajes usados').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "plan_type",
+              "fieldValue": "free"
+            },
+            {
+              "fieldId": "monthly_limit",
+              "fieldValue": "50"
+            },
+            {
+              "fieldId": "plan_expires_at",
+              "fieldValue": "={{ null }}"
+            },
+            {
+              "fieldId": "messages_used",
+              "fieldValue": "0"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        96
+      ],
+      "id": "9306edf9-4ef5-4dfc-9b14-a0e9dd6736e0",
+      "name": "actualiza plan free",
+      "alwaysOutputData": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "889414ec-ddbf-4443-a3b7-f17f59ea6e3c",
+              "leftValue": "={{ $('trae mensajes usados').item.json.messages_used }}",
+              "rightValue": "={{ $('trae mensajes usados').item.json.monthly_limit }}",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1856,
+        -64
+      ],
+      "id": "0bd2c7a4-fedf-4406-80c6-8ddfb9e47637",
+      "name": "valida cantidad mensajes quedan"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v23.0/{{ $('Webhook').item.json.body.entry[0].changes[0].value.id }}/replies",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('get data').item.json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $('trae mensajes usados').item.json.public_reply || \"¡Hola! Te envié la info por mensaje privado \"}} "
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        560,
+        -416
+      ],
+      "id": "551f8298-d55c-4253-b971-cc3a33b03b45",
+      "name": "Responde Comentario IG"
+    },
+    {
+      "parameters": {
+        "tableId": "usage_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "message_id",
+              "fieldValue": "={{ \n$('Webhook').item.json.body.entry[0].messaging ? \n$('Webhook').item.json.body.entry[0].messaging[0].message.mid : \n$('Webhook').item.json.body.entry[0].changes[0].value.id \n}}"
+            },
+            {
+              "fieldId": "type",
+              "fieldValue": "={{  $json.body.entry[0].changes ? 'comment' : ($json.body.entry[0].messaging ? 'message' : 'dm')  }}"
+            },
+            {
+              "fieldId": "sender_id",
+              "fieldValue": "={{ \n  $node[\"Webhook\"].json.body?.entry?.[0]?.changes?.[0]?.value?.from?.id || \n  $node[\"Webhook\"].json.body?.entry?.[0]?.messaging?.[0]?.sender?.id || \n  0 \n}}"
+            },
+            {
+              "fieldId": "media_id",
+              "fieldValue": "={{ $node[\"Webhook\"].json.body.entry[0].changes[0].value.media.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2992,
+        -48
+      ],
+      "id": "53d36788-be83-4e0e-a41b-412801d7df2a",
+      "name": "inicializa usage_logs",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "profiles",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2096,
+        -64
+      ],
+      "id": "4dae1883-4a18-46af-96d8-ce39c8879b75",
+      "name": "trae mensajes usados",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "profiles",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('get data').item.json.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        -80
+      ],
+      "id": "e91e4227-b805-48bd-abb6-c333e5c4c4c9",
+      "name": "trae saldo",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "products",
+        "limit": 20,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('trae saldo').item.json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        -80
+      ],
+      "id": "76ff0e5c-8205-48a5-89ef-ed67e73a0cd7",
+      "name": "trae productos",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "chat_states",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "instagram_id",
+              "keyValue": "={{ $('Webhook').item.json.body.entry[0].messaging[0].sender.id }}"
+            },
+            {
+              "keyName": "status",
+              "keyValue": "human"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        64
+      ],
+      "id": "adfb7b86-15cf-4350-bde5-018c74f7204a",
+      "name": "Verificar Estado",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        272
+      ],
+      "id": "7c97bf46-f5e3-4db9-b128-dada9675b5ab",
+      "name": "No Operation, do nothing2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "deb99770-0fb4-430a-8763-055678c405e0",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "human",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -64,
+        64
+      ],
+      "id": "9de03b4f-b246-4d71-8c80-c66a7c90ea85",
+      "name": "valida state bot"
+    },
+    {
+      "parameters": {
+        "description": "Utiliza esta herramienta EXCLUSIVAMENTE cuando el usuario pida hablar con un humano, persona real o soporte. No la uses para otras cosas.",
+        "workflowId": {
+          "__rl": true,
+          "value": "gVIWY3kFAMV9tbD4X5DmA",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gVIWY3kFAMV9tbD4X5DmA",
+          "cachedResultName": "Tool - Pasar a Humano"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "instagram_id": "={{ $('Webhook').item.json.body.entry[0].messaging[0].sender.id }}",
+            "user_id": "={{ $('get data').item.json.user_id }}",
+            "motivo": "={{ $json.input }}"
+          },
+          "matchingColumns": [
+            "instagram_id"
+          ],
+          "schema": [
+            {
+              "id": "instagram_id",
+              "displayName": "instagram_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "motivo",
+              "displayName": "motivo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        304
+      ],
+      "id": "5a4cf186-e0b5-463c-899d-3d76168ac08a",
+      "name": "Call 'Tool - Pasar a Humano'"
+    },
+    {
+      "parameters": {
+        "content": "## Control de respuesta comentario ",
+        "width": 560
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -240,
+        -624
+      ],
+      "typeVersion": 1,
+      "id": "e0a4cb3d-318e-4528-a6d4-03e03557ae22",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Valida el if si es solo pla planes free no se debe renovar el saldo"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1680,
+        304
+      ],
+      "typeVersion": 1,
+      "id": "f04e1550-73f7-4524-b960-fc1eaa2a7778",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "30f60d4f-64db-4d5e-81a8-f821b5fd63c6",
+              "leftValue": "={{ $('trae mensajes usados').item.json.plan_type }}",
+              "rightValue": "free",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1648,
+        112
+      ],
+      "id": "8e834c20-bc2d-4f01-b6a2-98a3abd381ce",
+      "name": "valida plan"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1104,
+        304
+      ],
+      "id": "c6998210-ddec-404f-a981-3521f466eab1",
+      "name": "No Operation, do nothing3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"Alerta Bot <alerta@mitiendavirtual.cl>\",\n  \"to\": [\n    \"{{ $('trae mensajes usados').item.json.email }}\"\n  ],\n  \"subject\": \"🚨 URGENTE: Tu Bot se quedó sin saldo\",\n  \"html\": \"<p>Hola <strong>{{ $('trae mensajes usados').item.json.full_name }}</strong>,</p><p>Tu cliente (ID:  {{ $('Webhook').item.json.body.entry[0].messaging[0].sender.id }} intentó hablar con el bot, pero no pudimos responder porque <strong>tu saldo mensual se ha agotado</strong> o tu plan venció.Para tu seguridad, hemos actualizado tu plan a free, que te da algunas conversaciones mas, para que puedas operar. 🛑</p><p>Para no perder más ventas, recarga tu plan ahora mismo:</p><p>👉 <a href='https://mitiendavirtual.cl'><strong>Click aquí para Recargar Saldo</strong></a></p><p>Saludos,<br>El equipo de MiTiendaVirtual</p>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1360,
+        96
+      ],
+      "id": "a48b94fb-5d60-4ce7-8212-360180f48999",
+      "name": "Urgente aviso cambio de plan",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "kuL2GPl1aX6BckWu",
+          "name": "Resend Api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"Alerta Bot <alerta@mitiendavirtual.cl>\",\n  \"to\": [\n    \"{{ $('trae mensajes usados').item.json.email }}\"\n  ],\n  \"subject\": \"🚨 URGENTE: Tu Bot se quedó sin saldo\",\n  \"html\": \"<p>Hola <strong>{{ $('trae mensajes usados').item.json.full_name }}</strong>,</p><p>Tu cliente (ID:  {{ $('Webhook').item.json.body.entry[0].messaging[0].sender.id }} intentó hablar con el bot, pero no pudimos responder porque <strong>tu saldo mensual se ha agotado</strong> o tu plan venció.Para tu seguridad.🛑</p><p>Para no perder más ventas, recarga tu plan ahora mismo:</p><p>👉 <a href='https://mitiendavirtual.cl'><strong>Click aquí para Recargar Saldo</strong></a></p><p>Saludos,<br>El equipo de MiTiendaVirtual</p>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1344,
+        304
+      ],
+      "id": "756516dc-78db-4702-923d-52fbf58986da",
+      "name": "Urgente sin saldo",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "kuL2GPl1aX6BckWu",
+          "name": "Resend Api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Valida el if si es solo pla planes free no se debe renovar el saldo"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -896,
+        144
+      ],
+      "typeVersion": 1,
+      "id": "18086caf-7b3c-4360-a87b-8355b99f3a08",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "usage_logs",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "sender_id",
+              "keyValue": "={{ \n  $node[\"Webhook\"].json.body?.entry?.[0]?.changes?.[0]?.value?.from?.id || \n  $node[\"Webhook\"].json.body?.entry?.[0]?.messaging?.[0]?.sender?.id || \n  0 \n}}"
+            },
+            {
+              "keyName": "type",
+              "keyValue": "comment"
+            },
+            {
+              "keyName": "media_id",
+              "keyValue": "={{ $node[\"Webhook\"].json.body.entry[0].changes[0].value.media.id }}"
+            },
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $('get data').item.json.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        -400
+      ],
+      "id": "68c98c6f-5a14-47e4-9c28-efbdf3bbff54",
+      "name": "Obtiene conversacion",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "65f5033d-57e4-494c-b974-713ad6afd58f",
+              "leftValue": "={{ $json.can_respond }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        -400
+      ],
+      "id": "6e03f8f3-53b6-486a-864d-2b1b2ed58fd7",
+      "name": "existe conversacion/comentario"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -224
+      ],
+      "id": "9921e886-cdfc-4475-8422-0daae303467d",
+      "name": "No Operation, do nothing4"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "usage_logs",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "message_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook').item.json.body.entry[0].changes?.[0].value.id || $('Webhook').item.json.body.entry[0].messaging?.[0].message.mid }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('get data').item.json.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2320,
+        -64
+      ],
+      "id": "13f97c85-9671-46af-bcd6-a1feebbad81a",
+      "name": "Guardar user_id en Log",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const records = items;\nconst now = new Date();\n\n// 1. DETECCIÓN DE HISTORIAL VACÍO (El \"Pase de Oro\")\n// Si llega [] o [{}], significa que el usuario nunca ha comentado en este post.\nif (records.length === 0 || (records.length === 1 && Object.keys(records[0].json).length === 0)) {\n  return [{\n    json: {\n      can_respond: true,\n      reason: \"Primer contacto: No hay historial previo. ¡Responder!\",\n      total_messages: 0\n    }\n  }];\n}\n\n// 2. Ordenamos para encontrar al \"Padre\" (el más antiguo)\nconst sortedRecords = records.sort((a, b) => \n  new Date(a.json.created_at) - new Date(b.json.created_at)\n);\n\nconst parentRecord = sortedRecords[0].json;\nconst parentDate = new Date(parentRecord.created_at);\nconst minutesSinceParent = (now - parentDate) / (1000 * 60);\nconst hoursSinceParent = minutesSinceParent / 60;\n\n// 3. LÓGICA DE FILTRADO\nlet canRespond = false;\nlet reason = \"\";\n\n// Si el único registro es extremadamente reciente (menos de 1 min), es el trigger actual.\nif (records.length === 1 && minutesSinceParent < 1) {\n    canRespond = true;\n    reason = \"Primer comentario detectado en tiempo real. ¡Responder!\";\n} \n// Si han pasado más de 24 horas desde el primer mensaje, reiniciamos el ciclo.\nelse if (hoursSinceParent >= 24) {\n    canRespond = true;\n    reason = \"Ventana de 24h vencida. Se permite nueva respuesta.\";\n} \n// Bloqueo por spam dentro de la ventana de 24h.\nelse {\n    canRespond = false;\n    reason = `Bloqueado: Dentro de ventana de 24h (${hoursSinceParent.toFixed(2)}h transcurridas).`;\n}\n\nreturn [{\n  json: {\n    can_respond: canRespond,\n    reason: reason,\n    parent_id: parentRecord.message_id || null,\n    first_contact: parentRecord.created_at || now.toISOString(),\n    total_messages_in_thread: records.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        -400
+      ],
+      "id": "2019da21-d97f-47ce-85e4-9fd86e2eb4e2",
+      "name": "sort y análisis padre e hijos"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        304
+      ],
+      "id": "3a8515ff-ceb3-4d3e-a32e-0b528dfabd53",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "x102Fc6eiHRwiPt1",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Usa esta herramienta OBLIGATORIAMENTE para consultar el catálogo de la empresa, ya sea para buscar productos, servicios, arriendos o cualquier ítem disponible. Es tu única fuente para obtener nombres oficiales, precios y enlaces. Requiere: 'query' (término de búsqueda), 'plan' (nivel de usuario) y 'user_id'.",
+        "workflowId": {
+          "__rl": true,
+          "value": "CCEahHzGReI4SAKVig2bc",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/CCEahHzGReI4SAKVig2bc",
+          "cachedResultName": "Tool - Buscador Inteligente"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('query', `Extrae la query desde el texto, que viene en el mensaje  de webhook`, 'string') }}",
+            "plan": "={{ $('trae saldo').item.json.plan_type }}",
+            "user_id": "={{ $('get data').item.json.user_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "plan",
+              "displayName": "plan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        528,
+        304
+      ],
+      "id": "0de63d01-2db7-47c5-805e-177a490ce722",
+      "name": "Call 'Tool - Buscador Inteligente'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Anti-Bucle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Guardar Log Uso DMs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get data": {
+      "main": [
+        [
+          {
+            "node": "Guardar user_id en Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Obtiene conversacion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Verificar Estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anti-Bucle": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "inicializa usage_logs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Comentarios": {
+      "main": [
+        [
+          {
+            "node": "Guardar Log Uso Comments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Comentarios",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update  contador responde comenetarios": {
+      "main": [
+        [
+          {
+            "node": "reponde dm por comentarios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update  contador envia DM": {
+      "main": [
+        [
+          {
+            "node": "reponde dm servicio al cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar Log Uso Comments": {
+      "main": [
+        [
+          {
+            "node": "Update  contador responde comenetarios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar Log Uso DMs": {
+      "main": [
+        [
+          {
+            "node": "Update  contador envia DM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "get data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "actualiza plan free": {
+      "main": [
+        [
+          {
+            "node": "trae saldo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "valida cantidad mensajes quedan": {
+      "main": [
+        [
+          {
+            "node": "trae saldo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "valida plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responde Comentario IG": {
+      "main": [
+        [
+          {
+            "node": "AI Agent Comentarios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "inicializa usage_logs": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "trae mensajes usados": {
+      "main": [
+        [
+          {
+            "node": "valida cantidad mensajes quedan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "trae saldo": {
+      "main": [
+        [
+          {
+            "node": "trae productos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "trae productos": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar Estado": {
+      "main": [
+        [
+          {
+            "node": "valida state bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "valida state bot": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Tool - Pasar a Humano'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "valida plan": {
+      "main": [
+        [
+          {
+            "node": "Urgente aviso cambio de plan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Urgente sin saldo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Urgente aviso cambio de plan": {
+      "main": [
+        [
+          {
+            "node": "actualiza plan free",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Urgente sin saldo": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtiene conversacion": {
+      "main": [
+        [
+          {
+            "node": "sort y análisis padre e hijos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "existe conversacion/comentario": {
+      "main": [
+        [
+          {
+            "node": "Responde Comentario IG",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar user_id en Log": {
+      "main": [
+        [
+          {
+            "node": "trae mensajes usados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sort y análisis padre e hijos": {
+      "main": [
+        [
+          {
+            "node": "existe conversacion/comentario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Tool - Buscador Inteligente'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "90f34b21-501d-4650-a61f-58ceb2b30fa9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
+  },
+  "id": "7OeEVHgT1Ns95TMO",
+  "tags": []
+}

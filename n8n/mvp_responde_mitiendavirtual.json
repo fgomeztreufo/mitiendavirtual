@@ -1,0 +1,729 @@
+{
+  "name": "mvp_responde_mitiendavirtual",
+  "nodes": [
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "path": "api-instagram",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1328,
+        496
+      ],
+      "id": "3b6812bc-2f26-431b-9a2a-3bd7acd0ed4d",
+      "name": "Webhook",
+      "webhookId": "1f73eea1-f7d1-4d71-bdd1-2d6c1e08088a"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v23.0/{{ $json.id }}/replies",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "=Hey ! @{{ $json.username }} gracias por contactarnos, por favor revisas tus DM's"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        80,
+        512
+      ],
+      "id": "561e8a21-3a90-4116-936c-2c47fb194bef",
+      "name": "Responde Comentario IG"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.instagram.com/oauth/access_token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "code",
+              "value": "AQCVh5J1ncVOU0_qDO8huWPRtkfnvTR1nbDAElpnjNOwDEHnlnGAcndQzNzgE6dNdlX9z-dIH3xnv6ArAqGRZ-LCkMPSKV87dXxrK_EqYmoXuMUBRYgc-KqW_Zywo5bKvpKVvunoqsmG55bg3owKwlFtB9O0ZVVj-4OjqGZbNIHYBzQdO5JfR7rI05p7o1L3eiwCDv9aK6ZYub_Ruqu3FnJQdFsr9mS_1m6c3s_Ldb2mOA"
+            },
+            {
+              "name": "redirect_uri",
+              "value": "https://mitiendavirtual.cl/webhook-ig-n8n"
+            },
+            {
+              "name": "client_id",
+              "value": "4117442061851625"
+            },
+            {
+              "name": "client_secret",
+              "value": "7c91e1763d4ede9a5050470f6cc4a966"
+            },
+            {
+              "name": "grant_type",
+              "value": "authorization_code"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -16,
+        176
+      ],
+      "id": "2f65acd2-0faa-4c36-8e91-fc9366c48fd3",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "https://graph.instagram.com/access_token",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "IGAAYR1iuo49ZABZAGF5ZA1FEYnZAKclJRM1NGS3JQdmZAWX0swdlhUeklSREpHbDhiYnZAEWGo4ZATFEbTdkQ2d0SXM2UHFwbllBaVVKQ2lvbXhOYUN0MmNLQlhkWkZAnWjZAvODRCZAV91QTZATSGVfZAVhDQmpNSW8wdkRoM055QUJjdDJpQ0dDZAzByT2RfbERwNy1JODRjUzROalBCUQZDZD"
+            },
+            {
+              "name": "client_secret",
+              "value": "fdbe07783a7b6b6a1d04fe5d71b29954"
+            },
+            {
+              "name": "grant_type",
+              "value": "ig_exchange_token"
+            },
+            {
+              "name": "client_id",
+              "value": "1708461413426134"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        192,
+        176
+      ],
+      "id": "c9564b73-a809-4b94-a925-60f3d1838d7f",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.query[\"hub.challenge\"] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -864,
+        272
+      ],
+      "id": "91a6a473-6fcf-4702-8283-f2c1639798e4",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=ERES: \"Luna\" 🌙, la experta en ventas de [Mi Tienda Virtual].\nNO ERES UNA EMPRESA, ERES UNA PERSONA (\"Yo\").\n\n🕵️ PROTOCOLO DE IDENTIDAD (CÓMO CONSEGUIR EL NOMBRE):\nComo no tienes el nombre automático, TU MISIÓN es conseguirlo para fidelizar, pero con inteligencia:\n\n1. REVISA EL HISTORIAL DEL CHAT (CRÍTICO):\n   - ¿Es el inicio de la conversación? -> Preséntate y pregunta casualmente: \"¡Hola! Soy Luna 🌙. ¿Con quién tengo el gusto hoy?\".\n   - ¿El cliente YA te dijo su nombre antes? -> ¡ÚSALO! (\"Como te decía, Felipe...\", \"Claro Andrea...\").\n   - ¿Ya preguntaste y el cliente lo ignoró? -> NO INSISTAS. Asume que tiene prisa.\n\n2. 🛑 REGLA \"NO SEAS PESADA\":\n   - Si el cliente va directo al grano (\"precio\", \"quiero comprar\") en su primer mensaje, NO LE PREGUNTES EL NOMBRE AÚN.\n   - Responde su duda primero (Vende). Ya habrá tiempo de preguntarle el nombre al final o cuando cierre la venta.\n   - Prioridad: VENTA > NOMBRE.\n\nPERSONALIDAD (CÓMO HABLAS):\n- Tono: Casual, chileno suave, amiga experta.\n- PROHIBIDO: No uses frases corporativas como \"Nuestro plan incluye...\".\n- MEJOR DI: \"Lo bacán de este plan es que...\" o \"Te cuento que el plan Start trae...\".\n- MENSAJES CORTOS: Máximo 2 párrafos pequeños. No mandes biblias.\n- EMPATÍA: Si dicen que no saben de tecnología, diles \"Tranqui, es súper fácil\".\n\nBASE DE DATOS (TUS PRODUCTOS):\n=== PLAN START (GRATIS) ===\n- Es para empezar sin pagar ni uno.\n- Yo (el bot) respondo comentarios y doy bienvenidas, pero no tengo cerebro inteligente en este plan.\n- Límite: 50 chats al mes.\n\n=== PLAN PRO IA ($29.990) ===\n- Aquí sí estoy yo (Luna) a full capacidad para vender sola.\n- Sin límites y aprendo de tu negocio.\n\n=== PREGUNTAS FRECUENTES (RESPUESTAS INTELIGENTES) ===\n\n--- 🟢 PERFIL EMPRENDEDOR (Dudas Miedo/Básicas) ---\nP: ¿Necesito saber programar?\nR: ¡Para nada! Es tan fácil como usar Instagram. Te registras, conectas tu cuenta y listo. Cero código.\n\nP: ¿Me van a bloquear la cuenta?\nR: No, tranqui. Usamos la conexión oficial de Meta (Instagram), así que es 100% seguro y anti-ban.\n\nP: ¿Es gratis de verdad o hay trampa?\nR: El plan Start es $0 por siempre y NO pedimos tarjeta de crédito para empezar. Si te gusta y creces, ahí te pasas al Pro.\n\nP: ¿Y si el bot se equivoca?\nR: Tú siempre tienes el control. Puedes entrar a la conversación cuando quieras. Yo soy tu copiloto, no tu jefe.\n\nP: ¿Horario?\nR: Yo trabajo 24/7. Tú duermes, yo vendo. 🌙\n\n--- 🔴 PERFIL TÉCNICO (Dudas Avanzadas) ---\nP: ¿Tienen integración con Shopify / WooCommerce / Stock en tiempo real?\nR: Por ahora estoy 100% enfocada en ser la mejor vendedora en Instagram Direct. Aún no leo stock en tiempo real de webs externas (estamos creciendo hacia allá 🏗️), pero aprendo todo lo que cargues en mi base de conocimiento para responder dudas de productos.\n\nP: ¿Qué modelo de IA usan?\nR: Usamos lo último en IA Generativa (Llama 3 / Tecnología Groq) para que las respuestas sean instantáneas y muy humanas. Nada de robots tontos.\n\nP: ¿Cómo manejan los Leads?\nR: Yo converso y califico al cliente en el chat. La info queda ahí lista para que tú cierres la venta.\n\n=== EL CIERRE (DINERO) ===\nSi el cliente muestra interés (\"sí\", \"quiero\", \"precio\", \"me interesa\"), DALE EL LINK DE UNA.\nNo expliques más.\nTu frase de cierre: \"¡Dale! 🚀 Empieza gratis aquí: https://mitiendavirtual.cl\"\n\n👋 PROTOCOLO DE DESPEDIDA:\nSi el usuario se despide (\"chao\", \"adiós\", \"nos vemos\", \"gracias por todo\"):\n1. NO INTENTES VENDER MÁS. Cierra la cortina.\n2. Si sabes su nombre (porque te lo dijo), úsalo: \"¡Cuídate Felipe!\".\n3. Si NO sabes su nombre, despídete general: \"¡Cuídate mucho! Aquí estaré 24/7. 🌙\"\n\nINSTRUCCIONES ACTUALES:\nResponde lo que pide el usuario. Aplica el protocolo de identidad para saber con quién hablas, pero sin bloquear la venta.",
+        "options": {
+          "systemMessage": "={{ $('Webhook').item.json.body.entry[0].messaging[0].message.text }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -80,
+        768
+      ],
+      "id": "55a75a97-2c0d-4eb2-95a7-d0239009cdd0",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.entry[0].messaging[0].sender.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        16,
+        992
+      ],
+      "id": "333a536f-d5c8-41f3-a62b-b784322caf53",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "234ca34a-a944-4c9c-8d42-e63cb4498462",
+              "name": "access_token",
+              "value": "IGAA6gyq962ZBlBZAGJ2NURIVGlzYWtqRk9PTUtmbUdpMURacFNyUU5EaDNoNzZA1cnVHTmVlNmhNZAU11TFl3SFc4VDdqVDktX1ZAOR2ozV1RQWWYwanlMWXQ3N1VvZAXpWb2ZAmZAzFVSS1wZAVdfVlJjek9xTmY5WVlDSHkyVVhfUlNyTQZDZD",
+              "type": "string"
+            },
+            {
+              "id": "92b39430-973f-4613-afe1-5ee3547b568a",
+              "name": "id",
+              "value": "={{ $json.body.entry[0].changes[0].value.id }}",
+              "type": "string"
+            },
+            {
+              "id": "31a4583c-6da3-4efb-908f-2e147da18038",
+              "name": "username",
+              "value": "={{ $json.body.entry[0].changes[0].value.from.username }}",
+              "type": "string"
+            },
+            {
+              "id": "2e9628d1-8f41-4cbd-9372-2355c06daba7",
+              "name": "ig_account_id",
+              "value": "={{ $('Webhook').item.json.body.entry[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "42009cba-91e4-4310-9aa4-7303a02f5f2d",
+              "name": "access_token_dm",
+              "value": "EAAT3MwlVEE0BQU4mJzsJD4aMhCQf5KhptZBe3OFBPB0kLxBO8xiZAkSRX5DRtkDqFMDSwfIGW9r1QltsxZBpYsSAZBbaVmn7qfiKQPHu65S0ZCcp0euYL4MKoOiPRDHK75jHcX9W2uF5RfI3LZCDRe5bh8lZAJuutNp4cXLQw3XphcZAFDA5XrZA8cBzv3zOjIlgd70ok8xCRA6tTRO0e",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -240,
+        512
+      ],
+      "id": "26094f93-79c4-475a-8732-56e11ce09686",
+      "name": "Config comentarios"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "234ca34a-a944-4c9c-8d42-e63cb4498462",
+              "name": "access_token",
+              "value": "IGAA6gyq962ZBlBZAGJ2NURIVGlzYWtqRk9PTUtmbUdpMURacFNyUU5EaDNoNzZA1cnVHTmVlNmhNZAU11TFl3SFc4VDdqVDktX1ZAOR2ozV1RQWWYwanlMWXQ3N1VvZAXpWb2ZAmZAzFVSS1wZAVdfVlJjek9xTmY5WVlDSHkyVVhfUlNyTQZDZD",
+              "type": "string"
+            },
+            {
+              "id": "92b39430-973f-4613-afe1-5ee3547b568a",
+              "name": "id",
+              "value": "={{ $json.body.entry[0].changes[0].value.id }}",
+              "type": "string"
+            },
+            {
+              "id": "31a4583c-6da3-4efb-908f-2e147da18038",
+              "name": "username",
+              "value": "={{ $json.body.entry[0].changes[0].value.from.username }}",
+              "type": "string"
+            },
+            {
+              "id": "2e9628d1-8f41-4cbd-9372-2355c06daba7",
+              "name": "ig_account_id",
+              "value": "={{ $('Webhook').item.json.body.entry[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "42009cba-91e4-4310-9aa4-7303a02f5f2d",
+              "name": "access_token_dm",
+              "value": "EAAT3MwlVEE0BQU4mJzsJD4aMhCQf5KhptZBe3OFBPB0kLxBO8xiZAkSRX5DRtkDqFMDSwfIGW9r1QltsxZBpYsSAZBbaVmn7qfiKQPHu65S0ZCcp0euYL4MKoOiPRDHK75jHcX9W2uF5RfI3LZCDRe5bh8lZAJuutNp4cXLQw3XphcZAFDA5XrZA8cBzv3zOjIlgd70ok8xCRA6tTRO0e",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -352,
+        768
+      ],
+      "id": "2ccd4959-f95f-4c8a-9b8b-05892f86c61c",
+      "name": "Config servicio al cliente"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v23.0/me/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Config comentarios').item.json.access_token_dm }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"recipient\": {\n    \"comment_id\": \"{{ $('Webhook').item.json.body.entry[0].changes[0].value.id }}\"\n  },\n  \"message\": {\n    \"text\": \"Hola {{ $('Webhook').item.json.body.entry[0].changes[0].value.from.username }}, soy Luna, una asistente virtual, estoy para ayudarte, tienes alguna duda que pueda resolver 🚀\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        368,
+        512
+      ],
+      "id": "35837290-59c4-44ea-aa8c-734df0d21361",
+      "name": "reponde dm por comentarios"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v23.0/me/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Config servicio al cliente').item.json.access_token_dm }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"recipient\": {\n      \"id\": $('Webhook').item.json.body.entry[0].messaging[0].sender.id\n    },\n    \"message\": {\n      \"text\": $json.output\n    }\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        576,
+        752
+      ],
+      "id": "fa0f738a-50c0-49fe-82d2-341f55088818",
+      "name": "reponde dm servicio al cliente"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "831e1dc1-7745-4387-8bee-b62686f1aea4",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        272,
+        768
+      ],
+      "id": "6cb3a1c3-7a13-48d4-869d-ebab6038e8f2",
+      "name": "valida respuesta ia"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v23.0/me/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Config servicio al cliente').item.json.access_token_dm }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"recipient\": {\n      \"id\": $('Webhook').item.json.body.entry[0].messaging[0].sender.id\n    },\n    \"message\": {\n      \"text\": \"⚠️ En estos momentos tenemos una alta afluencia de público. Trataremos de contactarte lo antes posible. ¡Gracias por tu paciencia!\"\n    }\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        576,
+        992
+      ],
+      "id": "cc3a9982-e99c-4d43-964f-810e890c1134",
+      "name": "reponde dm servicio al cliente1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        880,
+        992
+      ],
+      "id": "093337d3-a26f-4c83-9a4d-9b0f11e51378",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "content": "debemos dejar en una especie de cola para poder contactar al cliente"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        832,
+        1168
+      ],
+      "id": "db5847f3-9866-4356-ad58-567cfa78d445",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9e91be21-c4cf-40d6-94fd-073c58956884",
+              "leftValue": "={{ $json.body.entry[0].changes[0].field }}",
+              "rightValue": "comments",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -624,
+        528
+      ],
+      "id": "0c1f4cb8-b192-48d2-987b-d01acb073388",
+      "name": "valida comments or dm"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7b137810-5cc3-446f-a0ad-115365fc6713",
+              "leftValue": "={{ \n// 1. Si es Comentario (no tiene messaging), déjalo pasar (Falso bucle)\n!$json.body.entry[0].messaging ? false : \n\n// 2. Si es DM, bloquea si es: Eco O Leído O Entrega O Reacción\n($json.body.entry[0].messaging[0].message?.is_echo || \n $json.body.entry[0].messaging[0].read || \n $json.body.entry[0].messaging[0].delivery || \n $json.body.entry[0].messaging[0].reaction) \n}}",
+              "rightValue": "={{ true }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1024,
+        512
+      ],
+      "id": "e4717d45-0888-4b11-803b-8c508afe8e15",
+      "name": "Anti-Bucle"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -816,
+        768
+      ],
+      "id": "9ee71308-1aaa-4fe5-b62f-cc919c53402f",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        976
+      ],
+      "id": "13a776e2-9c1d-4087-b609-5c25ec391a7f",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "1YZrLGuSEWLWsgAo",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "webhhok para pasar a prd"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        80
+      ],
+      "id": "dbfdb34e-056b-456d-b118-5c15bbfd5d7f",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "token de 60 dias"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1dfb609e-be86-41cd-a78e-45e9bc4758d9",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Anti-Bucle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responde Comentario IG": {
+      "main": [
+        [
+          {
+            "node": "reponde dm por comentarios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config comentarios": {
+      "main": [
+        [
+          {
+            "node": "Responde Comentario IG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "valida respuesta ia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config servicio al cliente": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "valida respuesta ia": {
+      "main": [
+        [
+          {
+            "node": "reponde dm servicio al cliente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "reponde dm servicio al cliente1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "reponde dm servicio al cliente1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "valida comments or dm": {
+      "main": [
+        [
+          {
+            "node": "Config comentarios",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Config servicio al cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anti-Bucle": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "valida comments or dm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "ba468358-4176-476a-b651-45283ce4a3ae",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
+  },
+  "id": "4jYDYY1rZTgWcL7WFekch",
+  "tags": []
+}

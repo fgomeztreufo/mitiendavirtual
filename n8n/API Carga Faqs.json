@@ -1,0 +1,237 @@
+{
+  "name": "API Carga Faqs",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "carga-faqs",
+        "options": {
+          "binaryPropertyName": "faqs"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1104,
+        -32
+      ],
+      "id": "8203723e-a68e-4399-94c9-5b5abe21c798",
+      "name": "Webhook",
+      "webhookId": "78bf2165-8975-43b2-a420-06e110412052"
+    },
+    {
+      "parameters": {
+        "tableId": "faqs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "answer",
+              "fieldValue": "={{ $('Code in JavaScript').item.json.answer }}"
+            },
+            {
+              "fieldId": "question",
+              "fieldValue": "={{ $('Code in JavaScript').item.json.question }}"
+            },
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('Code in JavaScript').item.json.user_id }}"
+            },
+            {
+              "fieldId": "is_active",
+              "fieldValue": "={{true}}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{$now}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        64,
+        -32
+      ],
+      "id": "0814a081-6b23-4dd5-b5d6-b150bd80498f",
+      "name": "El Almacén Faqs",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "binaryPropertyName": "faqs0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -832,
+        -32
+      ],
+      "id": "c64533d5-a0fd-4ea4-a58f-5c6a2de30774",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Buscamos los datos procesados en el nodo \"Extract from File\"\n// Usamos $(node_name) para saltar nodos intermedios\nconst extractedData = $('Extract from File').item.json.data || '';\n\n// 2. Rescatamos el user_id desde el Webhook\nconst userId = $('Webhook').item.json.query.user_id;\n\n// 3. Separamos por líneas\nconst lines = extractedData.split(/\\r?\\n/).filter(line => line.trim().includes('|'));\n\n// 4. Mapeamos cada línea a un objeto independiente\nreturn lines.map((line, index) => {\n  const [question, answer] = line.split('|');\n  \n  return {\n    json: {\n      question: question?.trim() || '',\n      answer: answer?.trim() || '',\n      user_id: userId,\n      original_id: `faq_${Date.now()}_${index}`,\n      // Este es el campo que usará el nodo de Texto IA para el RAG\n      full_text: `Pregunta: ${question?.trim()} | Respuesta: ${answer?.trim()}`\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        -32
+      ],
+      "id": "853f51f4-e712-47d8-a424-f2fd3f47615c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "faqs",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $node[\"Webhook\"].json.query.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        -32
+      ],
+      "id": "18526c45-5ad9-481c-aca9-5b6ea55e234d",
+      "name": "Elimina Faqs",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "iDkNhXu6EvzWzssp",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/iDkNhXu6EvzWzssp",
+          "cachedResultName": "Cargar Memoria RAG Faqs"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Code in JavaScript').item.json.user_id }}"
+          },
+          "matchingColumns": [
+            "user_id"
+          ],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        -32
+      ],
+      "id": "1356f5fb-65fa-414e-a4b3-2ced035e0e0b",
+      "name": "Call 'Cargar Memoria RAG Faqs"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "El Almacén Faqs": {
+      "main": [
+        [
+          {
+            "node": "Call 'Cargar Memoria RAG Faqs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Elimina Faqs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "El Almacén Faqs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Elimina Faqs": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "c75df52f-af30-4350-8d67-7fc5e9acae02",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
+  },
+  "id": "DDgbw7AixXdYsP72",
+  "tags": []
+}

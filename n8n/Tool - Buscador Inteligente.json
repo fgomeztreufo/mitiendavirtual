@@ -1,0 +1,256 @@
+{
+  "name": "Tool - Buscador Inteligente",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "query"
+            },
+            {
+              "name": "plan"
+            },
+            {
+              "name": "user_id"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        0
+      ],
+      "id": "e2f89d74-2013-4725-955d-359bf85ccabb",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        496,
+        208
+      ],
+      "id": "ea52b97e-ca6e-41af-be86-c4ff26824e99",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "x102Fc6eiHRwiPt1",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "prompt": "={{ $json.query }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "=user_id",
+                "value": "={{ $json.user_id }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        400,
+        0
+      ],
+      "id": "2868c57a-4136-44e6-be64-4887cfa7e8b7",
+      "name": "Busca catalogo",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "be590122-39b0-4e8a-955b-3507149e5407",
+              "leftValue": "={{ $('When Executed by Another Workflow').item.json.plan }}",
+              "rightValue": "free",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        752,
+        0
+      ],
+      "id": "056bb3cd-69f8-48b6-920f-22366a3d5a58",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "createLink",
+        "originalURL": "={{ $json.document.metadata.imagen_url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-shortio.Shortio",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        -96
+      ],
+      "id": "9116023f-a6e3-4e49-8e75-7373064a9ba8",
+      "name": "Acorta Link",
+      "credentials": {
+        "shortioApi": {
+          "id": "mOvcZGiD7WNf8ydz",
+          "name": "Short.io account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2a10adb5-5bb8-4487-a961-a36e5c731690",
+              "name": "url_final",
+              "value": "={{ $json.shortURL || $node[\"Busca catalogo\"].json.document.metadata.imagen_url }}",
+              "type": "string"
+            },
+            {
+              "id": "34c4cb16-04ab-44cc-9723-80277bed3af5",
+              "name": "item_price",
+              "value": "={{ $node[\"Busca catalogo\"].json.document.metadata.precio }}",
+              "type": "number"
+            },
+            {
+              "id": "e1bdd685-fcc6-4ffb-9e28-7de57e50202a",
+              "name": "item_title",
+              "value": "={{ $node[\"Busca catalogo\"].json.document.pageContent.split('Name: ')[1].split(' - ')[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1296,
+        16
+      ],
+      "id": "69a7f6d4-5c0d-460f-90d4-0d8f00972735",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Busca catalogo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Busca catalogo",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca catalogo": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Acorta Link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acorta Link": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "07fc35ed-dba5-4080-9809-d366e60f8df3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
+  },
+  "id": "CCEahHzGReI4SAKVig2bc",
+  "tags": []
+}

@@ -1,0 +1,459 @@
+{
+  "name": "Cargar Memoria RAG Productos",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        688,
+        80
+      ],
+      "id": "dbc3a4ae-fbc3-4dc0-b6de-1c1cbc35abe2",
+      "name": "Guarda en Cerebro",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        288
+      ],
+      "id": "d85bc0c3-171e-434c-a7f5-d9a3470d0143",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "x102Fc6eiHRwiPt1",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json['texto para la ia'] }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "user_id",
+                "value": "={{ $('set productos').item.json.user_id }}"
+              },
+              {
+                "name": "original_id",
+                "value": "={{ $('set productos').item.json.original_id }}"
+              },
+              {
+                "name": "precio",
+                "value": "={{ $('set productos').item.json.price }}"
+              },
+              {
+                "name": "imagen_url",
+                "value": "={{ $('set productos').item.json.image_url }}"
+              },
+              {
+                "name": "type",
+                "value": "product"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        288
+      ],
+      "id": "a8921daf-45c6-4e71-be62-0e8afe43627a",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "32911dd7-ed06-4daa-b412-96b01fdee23e",
+              "name": "texto para la ia",
+              "value": "=Original_id:  {{ $json.original_id }} - Name: {{ $json.name }} - Descripcion: {{ $json.description }} - Precio: ${{ $json.price.toLocaleString('es-CL') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        80
+      ],
+      "id": "e8ea1c55-d08b-4dcc-a968-75d1756fa038",
+      "name": "Texto IA"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 3
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -688,
+        -32
+      ],
+      "id": "ba17ad39-d94d-44a1-abe2-1dd1cd537cd0",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "user_id"
+            },
+            {
+              "name": "id"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -512,
+        192
+      ],
+      "id": "71af7e61-129a-4bc5-a838-f24872aa59fa",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "products",
+        "returnAll": true,
+        "filterType": "none"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        -32
+      ],
+      "id": "8eeee3e9-b47f-4d28-ad91-0c566447fb5a",
+      "name": "Obtiene productos",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c5eef025-9d91-4802-a27c-0b2440441af1",
+              "name": "result",
+              "value": "Éxito. Documento se ha indexado correctamente",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1072,
+        80
+      ],
+      "id": "df4a7fc0-fd4c-4a40-bb86-6240e971cec0",
+      "name": "Response WorklFlow1"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "documents",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "type",
+              "condition": "eq",
+              "keyValue": "products"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        -32
+      ],
+      "id": "19461e73-5d4e-4916-82b4-e46dce96a4f6",
+      "name": "Elimina Productos All Documents",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "products",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.user_id }}"
+            },
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        192
+      ],
+      "id": "294f7ad6-bc2a-49d1-9c7f-0163cdf8185f",
+      "name": "Obtiene producto by id",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d77292e0-92d6-40b0-8aa1-9a7a2d43c043",
+              "name": "original_id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            },
+            {
+              "id": "b4d96463-5c80-42b6-bb53-5ebb03e43c51",
+              "name": "user_id",
+              "value": "={{ $json.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2a5b2507-9a97-435d-8b19-5abc27709f35",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "e6a64f1f-eaf1-48ed-bfd5-2346983dd2a2",
+              "name": "description",
+              "value": "={{ $json.description }}",
+              "type": "string"
+            },
+            {
+              "id": "5d3634bf-79e1-4c6b-b37a-d11d8ef44e51",
+              "name": "price",
+              "value": "={{ $json.price }}",
+              "type": "number"
+            },
+            {
+              "id": "eeee834b-9de3-4794-b568-8ca2e712bc75",
+              "name": "image_url",
+              "value": "={{ $json.image_url }}",
+              "type": "string"
+            },
+            {
+              "id": "61a9fd0f-8d12-4d83-b56f-42ca8052d09b",
+              "name": "keywords",
+              "value": "={{ $json.keywords }}",
+              "type": "string"
+            },
+            {
+              "id": "4f1200a1-f87e-421e-b37e-9470608a5dbe",
+              "name": "stock",
+              "value": "={{ $json.stock }}",
+              "type": "boolean"
+            },
+            {
+              "id": "55902222-0572-4a44-85b5-2119ce7ac93d",
+              "name": "created_at",
+              "value": "={{ $json.created_at }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        48,
+        80
+      ],
+      "id": "d7d2b1d1-20c2-41cb-a10a-1b2989935819",
+      "name": "set productos"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Guarda en Cerebro",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Guarda en Cerebro",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto IA": {
+      "main": [
+        [
+          {
+            "node": "Guarda en Cerebro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Elimina Productos All Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Obtiene producto by id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtiene productos": {
+      "main": [
+        [
+          {
+            "node": "set productos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guarda en Cerebro": {
+      "main": [
+        [
+          {
+            "node": "Response WorklFlow1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Elimina Productos All Documents": {
+      "main": [
+        [
+          {
+            "node": "Obtiene productos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtiene producto by id": {
+      "main": [
+        [
+          {
+            "node": "set productos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set productos": {
+      "main": [
+        [
+          {
+            "node": "Texto IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "96326b7d-425b-4bab-9440-3e6b8508c9de",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
+  },
+  "id": "xZaatz-K256GufGgXc3VD",
+  "tags": []
+}

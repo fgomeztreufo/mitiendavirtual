@@ -1,0 +1,281 @@
+{
+  "name": "API Carga Productos",
+  "nodes": [
+    {
+      "parameters": {
+        "tableId": "products",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('Webhook').item.json.body.user_id }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $('Webhook').item.json.body.name }}"
+            },
+            {
+              "fieldId": "price",
+              "fieldValue": "={{ $('Webhook').item.json.body.price }}"
+            },
+            {
+              "fieldId": "description",
+              "fieldValue": "={{ $('Webhook').item.json.body.description }}"
+            },
+            {
+              "fieldId": "keywords",
+              "fieldValue": "={{ $('Webhook').item.json.body.keywords }}"
+            },
+            {
+              "fieldId": "image_url",
+              "fieldValue": "=https://iesmzunoepfwkxilvxdv.supabase.co/storage/v1/object/public/{{ $json.Key }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "4fdb522a-dc10-4ed2-8b34-cf4e49416050",
+      "name": "El Almacén",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "subir-productos",
+        "options": {
+          "binaryPropertyName": "foto"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -736,
+        0
+      ],
+      "id": "83f42273-6e40-4680-a2f4-4fa9b6ccfcc9",
+      "name": "Webhook",
+      "webhookId": "f8781c4d-5cab-4589-a98a-93025e66b61f"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://iesmzunoepfwkxilvxdv.supabase.co/storage/v1/object/catalog/{{ $node[\"Webhook\"].json.body.user_id }}/{{$binary.data.fileName}}.webp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "image/jpeg"
+            },
+            {
+              "name": "x-upsert",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "3945b313-e283-4b7e-860a-3022128dcb6c",
+      "name": "Resource Storage",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        },
+        "httpHeaderAuth": {
+          "id": "bRPHwOivYfq5D2ib",
+          "name": "supa base secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "xZaatz-K256GufGgXc3VD",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/xZaatz-K256GufGgXc3VD",
+          "cachedResultName": "Cargar Memoria RAG Productos"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Webhook').item.json.body.user_id }}",
+            "id": "={{ $json.id.toString() }}"
+          },
+          "matchingColumns": [
+            "user_id"
+          ],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        0
+      ],
+      "id": "840f1f88-4e25-470a-be3f-c553d42e3cce",
+      "name": "Call 'Cargar Memoria RAG Productos"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tinify.com/shrink",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "foto0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -464,
+        0
+      ],
+      "id": "a188d104-e27b-4961-880d-ceaf6330210e",
+      "name": "Tinify Compresor",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bRPHwOivYfq5D2ib",
+          "name": "supa base secret"
+        },
+        "httpBasicAuth": {
+          "id": "3tjByhT6F2UahnR0",
+          "name": "tinify auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.output.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -256,
+        0
+      ],
+      "id": "476afcbd-96bd-429b-b0fc-e25f961edc32",
+      "name": "Descargador"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Tinify Compresor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resource Storage": {
+      "main": [
+        [
+          {
+            "node": "El Almacén",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "El Almacén": {
+      "main": [
+        [
+          {
+            "node": "Call 'Cargar Memoria RAG Productos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tinify Compresor": {
+      "main": [
+        [
+          {
+            "node": "Descargador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargador": {
+      "main": [
+        [
+          {
+            "node": "Resource Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "62cff18b-429e-4d2f-ab31-b9310acf712e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
+  },
+  "id": "bpKP-CrDv9MyzCOWRuQTb",
+  "tags": []
+}

@@ -1,0 +1,170 @@
+{
+  "name": "Renovador, \"Mantenimiento token\"",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "instances",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Get many rows').item.json.user_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "access_token",
+              "fieldValue": "={{ $('Get many rows').item.json.access_token }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        -256
+      ],
+      "id": "b71aa896-18c3-40fe-94e1-d8c38026be0e",
+      "name": "Update a access_token",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "instances",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -672,
+        -256
+      ],
+      "id": "e78a357f-ca2b-4f9a-b199-df0cef9826f5",
+      "name": "Get many rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://graph.facebook.com/v23.0/oauth/access_token",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fb_exchange_token",
+              "value": "={{ $json.access_token }}"
+            },
+            {
+              "name": "client_secret",
+              "value": "62c35d130a8b92a39bf72023dcfb13ff"
+            },
+            {
+              "name": "grant_type",
+              "value": "fb_exchange_token"
+            },
+            {
+              "name": "client_id",
+              "value": "1397698478805069"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -416,
+        -256
+      ],
+      "id": "b448cb43-136c-4bef-9b4c-8df26e8511ed",
+      "name": "access_token_extension"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "daysInterval": 20
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -960,
+        -256
+      ],
+      "id": "66d56eb8-4b23-45e9-b0fa-bec6c35b36d4",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Update a access_token": {
+      "main": [
+        []
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "access_token_extension",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "access_token_extension": {
+      "main": [
+        [
+          {
+            "node": "Update a access_token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "68524067-f649-430f-99c9-953fa8cda2a7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
+  },
+  "id": "cgfbIn_2Bt0-HrPo6Zmc3",
+  "tags": []
+}

@@ -1,0 +1,407 @@
+{
+  "name": "notificacion mercado pago",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "payment-notification",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1312,
+        80
+      ],
+      "id": "8e8c4b89-80de-4e5d-a8d0-4bd526f294dd",
+      "name": "Webhook - Notificación MP",
+      "webhookId": "b03beda9-4796-4444-8981-812e99ca1c78"
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://api.mercadopago.com/v1/payments/' + $json.body.data.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -592,
+        64
+      ],
+      "id": "9fae481e-82a3-4834-b6e9-4f6e9cb3a776",
+      "name": "Consultar Estado Pago",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Raq5ot35F9zaYSp4",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "value2": "approved"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        64
+      ],
+      "id": "62706fac-22cf-4d4d-b89b-43eb1e012360",
+      "name": "Es Aprobado?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2966a885-b064-4f2e-80af-73caea93a5fd",
+              "leftValue": "={{ $json.body.data.id }}",
+              "rightValue": "={{ 'payment'}}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -960,
+        80
+      ],
+      "id": "dc176a2c-76ac-409c-be66-edb50d80306c",
+      "name": "filter-payments"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Consultar Estado Pago').item.json.additional_info.items[0].title }}",
+                    "rightValue": "Emprendedor",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4e155e2e-5b72-43d2-8db7-0d2019f01516"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "cdde25d3-2de4-4ac9-820b-9362ff80e3da",
+                    "leftValue": "={{ $('Consultar Estado Pago').item.json.additional_info.items[0].title }}",
+                    "rightValue": "=Empresario",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": "={{ false }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        144,
+        48
+      ],
+      "id": "358e31ed-74c6-48df-9a16-7bf385e2d1b3",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "profiles",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.user_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "plan_type",
+              "fieldValue": "={{ $('Consultar Estado Pago').item.json.additional_info.items[0].title }}"
+            },
+            {
+              "fieldId": "monthly_limit",
+              "fieldValue": "1000"
+            },
+            {
+              "fieldId": "messages_used",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "plan_expires_at",
+              "fieldValue": "={{ $now.plus(30, 'days') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        384,
+        -64
+      ],
+      "id": "39080fd3-ccc8-45c2-8232-e09cfcaa2b71",
+      "name": "Activar Plan en Emprendedor",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "profiles",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.user_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "plan_type",
+              "fieldValue": "={{ $('Consultar Estado Pago').item.json.additional_info.items[0].title }}"
+            },
+            {
+              "fieldId": "monthly_limit",
+              "fieldValue": "5000"
+            },
+            {
+              "fieldId": "messages_used",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "plan_expires_at",
+              "fieldValue": "={{ $now.plus(30, 'days') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        384,
+        160
+      ],
+      "id": "3676bcbf-fdea-4572-901b-b5efd5954b7f",
+      "name": "Activar Plan en Empresario",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "payment_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $json.external_reference }}"
+            },
+            {
+              "fieldId": "payment_id",
+              "fieldValue": "={{ $json.id.toString() }}"
+            },
+            {
+              "fieldId": "amount",
+              "fieldValue": "={{ $json.transaction_amount }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.status }}"
+            },
+            {
+              "fieldId": "plan_name",
+              "fieldValue": "={{ $json.description || $json.reason || 'Plan Suscripcion' }}"
+            },
+            {
+              "fieldId": "payment_date",
+              "fieldValue": "={{ $json.date_approved }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        64
+      ],
+      "id": "bf8d2380-5e86-443b-8812-03a6892e7da7",
+      "name": "Guardar en Payment Logs",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "##falta el flujo de rechazo o sin saldo revisar"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -224,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "2f8c44e0-2635-4340-ba7d-a7e1e2e52098",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Notificación MP": {
+      "main": [
+        [
+          {
+            "node": "filter-payments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar Estado Pago": {
+      "main": [
+        [
+          {
+            "node": "Guardar en Payment Logs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es Aprobado?": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter-payments": {
+      "main": [
+        [
+          {
+            "node": "Consultar Estado Pago",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Activar Plan en Emprendedor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Activar Plan en Empresario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar en Payment Logs": {
+      "main": [
+        [
+          {
+            "node": "Es Aprobado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "2626c49d-676d-420c-b112-09f95e09e7fc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
+  },
+  "id": "jDT6Nivq7hYtuTW6UHCMR",
+  "tags": []
+}

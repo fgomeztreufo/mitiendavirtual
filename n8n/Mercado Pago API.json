@@ -1,0 +1,99 @@
+{
+  "name": "Mercado Pago API",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "create-payment",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "145e4336-8125-4ce1-aaa2-47b5017c6f9d",
+      "name": "Webhook - Recibir Orden",
+      "webhookId": "7d1eb20d-4133-499b-8b20-057b38154078"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mercadopago.com/checkout/preferences",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "items",
+              "value": "={{ [\n  {\n    \"title\": $json.body.plan_name,\n    \"quantity\": 1,\n    \"currency_id\": \"CLP\",\n    \"unit_price\": parseInt($json.body.amount)\n  }\n] }}"
+            },
+            {
+              "name": "back_urls",
+              "value": "={{ {\n\"success\": \"https://mitiendavirtual.cl/payment-result?state=success\",\n\"failure\": \"https://mitiendavirtual.cl/payment-result?state=failure\",\n\"pending\": \"https://mitiendavirtual.cl/payment-result?state=pending\"\n} }}"
+            },
+            {
+              "name": "auto_return",
+              "value": "approved"
+            },
+            {
+              "name": "external_reference",
+              "value": "={{ $json.body.user_id }}"
+            },
+            {
+              "name": "statement_descriptor",
+              "value": "MIVENDEDORIA"
+            },
+            {
+              "name": "notification_url",
+              "value": "https://webhook.mitiendavirtual.cl/webhook/payment-notification"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "531da429-9ea2-4ec3-8587-96cd75cbd373",
+      "name": "MercadoPago API",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Raq5ot35F9zaYSp4",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Recibir Orden": {
+      "main": [
+        [
+          {
+            "node": "MercadoPago API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "6f40056a-da51-4754-913d-0344a56f20ce",
+  "meta": {
+    "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
+  },
+  "id": "u7Yj8nQneu2cJvSDmp_ST",
+  "tags": []
+}

@@ -1,0 +1,365 @@
+{
+  "name": "Cargar Memoria RAG Faqs",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        80
+      ],
+      "id": "939d277a-0e98-4e9f-a913-6f360ca35d06",
+      "name": "Guarda en Cerebro",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        336,
+        272
+      ],
+      "id": "0738f4da-484e-4c69-b6f6-e9f0d6b4dd56",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "x102Fc6eiHRwiPt1",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $('Texto IA').item.json['texto para la ia'] }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "user_id",
+                "value": "={{ $('Obtiene faqs All').item.json.user_id }}"
+              },
+              {
+                "name": "original_id",
+                "value": "={{ $('Obtiene faqs All').item.json.id }}"
+              },
+              {
+                "name": "type",
+                "value": "faqs"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        576,
+        256
+      ],
+      "id": "4812c4de-d936-4b85-a94b-b1e9f63ee22f",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "32911dd7-ed06-4daa-b412-96b01fdee23e",
+              "name": "texto para la ia",
+              "value": "=Pregunta{{ $('Obtiene faqs All').item.json.question }}: | Respuesta:{{ $('Obtiene faqs All').item.json.answer }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        160,
+        80
+      ],
+      "id": "63b36c8f-5c7b-4789-a807-11e6a951cd58",
+      "name": "Texto IA"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 3
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1120,
+        80
+      ],
+      "id": "09230b20-2820-41cd-ba25-95009572c1dc",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "user_id"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -704,
+        304
+      ],
+      "id": "4a38a77e-054e-4c67-9f1e-6999467ffdb6",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c5eef025-9d91-4802-a27c-0b2440441af1",
+              "name": "result",
+              "value": "Éxito. Documento se ha indexado correctamente",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        848,
+        80
+      ],
+      "id": "fa142561-0490-4d38-9a5a-b5e07b6f9e4b",
+      "name": "Response WorklFlow1"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "documents",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "type",
+              "condition": "eq",
+              "keyValue": "faqs"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -784,
+        80
+      ],
+      "id": "98e1c4d0-17d2-461a-9b4e-0dc67725c237",
+      "name": "Elimina Faqs All documents",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "documents",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.user_id }}"
+            },
+            {
+              "keyName": "type",
+              "condition": "eq",
+              "keyValue": "faqs"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        304
+      ],
+      "id": "74613075-16fa-4ddb-b682-68a05f1f72c3",
+      "name": "Elimina Faqs By user_id",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "faqs",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        80
+      ],
+      "id": "69854b96-ee25-4cdc-902c-0d067896e2df",
+      "name": "Obtiene faqs All",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Guarda en Cerebro",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Guarda en Cerebro",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Texto IA": {
+      "main": [
+        [
+          {
+            "node": "Guarda en Cerebro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Elimina Faqs All documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Elimina Faqs By user_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guarda en Cerebro": {
+      "main": [
+        [
+          {
+            "node": "Response WorklFlow1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Elimina Faqs All documents": {
+      "main": [
+        [
+          {
+            "node": "Obtiene faqs All",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Elimina Faqs By user_id": {
+      "main": [
+        [
+          {
+            "node": "Obtiene faqs All",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtiene faqs All": {
+      "main": [
+        [
+          {
+            "node": "Texto IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "4a16c259-0297-482f-bfd6-02901ddad19a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
+  },
+  "id": "iDkNhXu6EvzWzssp",
+  "tags": []
+}

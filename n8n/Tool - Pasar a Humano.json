@@ -1,0 +1,502 @@
+{
+  "name": "Tool - Pasar a Humano",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "instagram_id"
+            },
+            {
+              "name": "user_id"
+            },
+            {
+              "name": "motivo"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1232,
+        -48
+      ],
+      "id": "b7a5eb70-1948-4bf1-80ea-c74036294bde",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "tableId": "chat_states",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "instagram_id",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.instagram_id }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "human"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -48
+      ],
+      "id": "8075cc87-9eed-493b-97c3-3641047f4a4e",
+      "name": "inserta estado human",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"Alerta Bot <alerta@mitiendavirtual.cl>\",\n  \"to\": [\n    \"{{ $json.email }}\"\n  ],\n  \"subject\": \"{{ $('When Executed by Another Workflow').item.json.motivo == 'VENTA' ? '🔥 ¡NUEVA VENTA POTENCIAL!' : '🚨 ATENCIÓN: Cliente solicita humano' }} (ID: {{ $('When Executed by Another Workflow').item.json.instagram_id }})\",\n  \"html\": \"<p>Hola Admin,</p><p>El cliente con ID <strong>{{ $('When Executed by Another Workflow').item.json.instagram_id }}</strong> {{ $('When Executed by Another Workflow').item.json.motivo == 'INTENCIÓN DE VENTA DETECTADA' ? 'está listo para comprar y necesita que cierres la venta.' : 'ha solicitado hablar con una persona por un problema.' }}</p><p>🛑 <strong>El Bot se ha pausado</strong> para este usuario.</p><p><strong>Motivo detectado por IA:</strong> {{ $('When Executed by Another Workflow').item.json.motivo }}</p><p>👉 <a href='https://www.instagram.com/direct/inbox/'><strong>Ir a la Bandeja de Instagram para cerrar la venta</strong></a></p><p>Saludos,<br>Tu Bot de Ventas</p>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        944,
+        -48
+      ],
+      "id": "3bd2b672-81eb-4180-b678-71511f95a49e",
+      "name": "Urgente Solicitar Humano",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "kuL2GPl1aX6BckWu",
+          "name": "Resend Api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c5eef025-9d91-4802-a27c-0b2440441af1",
+              "name": "result",
+              "value": "Éxito. El estado se cambió a humano y se envió la notificación. Despídete del usuario.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1168,
+        -48
+      ],
+      "id": "c1de8f72-e659-4cc0-b33e-369a5241da8f",
+      "name": "Response WorklFlow"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "chat_states",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "instagram_id",
+              "keyValue": "={{ $json.instagram_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        -32
+      ],
+      "id": "04df8543-3913-4139-8fc4-03d4d6711128",
+      "name": "busca si ya tuvo un conversacion",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f3396a7e-c40a-4eca-9190-362b4fc21bdb",
+              "leftValue": "={{ $json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        192,
+        -32
+      ],
+      "id": "138778e2-ca95-48f0-a36a-658d5b545ec3",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "chat_states",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "instagram_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.instagram_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "human"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        128
+      ],
+      "id": "e8fbdbee-d02f-428d-9efe-afd4dcaf4b14",
+      "name": "Actualiza estado human",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### Si el cliente ya existe actualiza su estado a human",
+        "height": 96,
+        "width": 208
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        608,
+        160
+      ],
+      "typeVersion": 1,
+      "id": "4476b8b0-7328-41b0-947d-dcb87e721cd4",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "profiles",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        704,
+        -48
+      ],
+      "id": "5bf5648b-e616-4482-b401-6f1bd2f8c4ae",
+      "name": "Obtiene el registro por user_id",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "89835816-104e-4325-af01-943780db72a3",
+              "leftValue": "={{ $json.motivo }}",
+              "rightValue": "INTENCIÓN DE VENTA DETECTADA",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -944,
+        -48
+      ],
+      "id": "ec8d9fb7-d801-4046-bcb9-a05a3766d318",
+      "name": "detecta venta"
+    },
+    {
+      "parameters": {
+        "tableId": "leads",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.user_id }}"
+            },
+            {
+              "fieldId": "cliente_contacto",
+              "fieldValue": "={{ $('When Executed by Another Workflow').item.json.instagram_id }}"
+            },
+            {
+              "fieldId": "resumen_intencion",
+              "fieldValue": "Intención de compra detectada en chat"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        -176
+      ],
+      "id": "8234df8f-539f-400d-8b04-138d364d6d2a",
+      "name": "Inserta venta",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c5eef025-9d91-4802-a27c-0b2440441af1",
+              "name": "result",
+              "value": "Éxito. La venta se notificado a un  humano y se envió la notificación. Despídete del usuario.",
+              "type": "string"
+            },
+            {
+              "id": "a530a2e7-4252-464e-8cfb-b568a3b55964",
+              "name": "instagram_id",
+              "value": "={{ $('When Executed by Another Workflow').item.json.instagram_id }}",
+              "type": "string"
+            },
+            {
+              "id": "5eeef79b-2c80-4020-9bf0-df03ab938efb",
+              "name": "user_id",
+              "value": "={{ $('When Executed by Another Workflow').item.json.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "e24e166a-8505-43de-a202-372a65447ddb",
+              "name": "motivo",
+              "value": "={{ $('When Executed by Another Workflow').item.json.motivo }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -384,
+        -176
+      ],
+      "id": "46049183-1c5f-4411-9efc-385de380511c",
+      "name": "Response WorklFlow1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "detecta venta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "inserta estado human": {
+      "main": [
+        [
+          {
+            "node": "Obtiene el registro por user_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Urgente Solicitar Humano": {
+      "main": [
+        [
+          {
+            "node": "Response WorklFlow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "busca si ya tuvo un conversacion": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "inserta estado human",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Actualiza estado human",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualiza estado human": {
+      "main": [
+        [
+          {
+            "node": "Obtiene el registro por user_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtiene el registro por user_id": {
+      "main": [
+        [
+          {
+            "node": "Urgente Solicitar Humano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "detecta venta": {
+      "main": [
+        [
+          {
+            "node": "Inserta venta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "busca si ya tuvo un conversacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserta venta": {
+      "main": [
+        [
+          {
+            "node": "Response WorklFlow1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Response WorklFlow1": {
+      "main": [
+        [
+          {
+            "node": "busca si ya tuvo un conversacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "7230225d-017e-455b-99a6-2f31af3a927f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
+  },
+  "id": "gVIWY3kFAMV9tbD4X5DmA",
+  "tags": []
+}
