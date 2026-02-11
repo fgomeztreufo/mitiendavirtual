@@ -160,31 +160,52 @@ Nombre: ${ownerName} (Úsalo solo si te preguntan con quién hablar).
 
   const handleDisconnectInstagram = async () => {
     if (!instance?.id) return;
-
+  
     const result = await Swal.fire({
       title: '¿Desconectar Instagram?',
-      text: "Tu vendedor dejará de responder mensajes automáticamente.",
+      text: "Tu vendedor dejará de responder. Esto también eliminará la suscripción en los servidores de Facebook.",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#EF4444', 
       cancelButtonColor: '#374151',
-      confirmButtonText: 'Sí, desconectar',
+      confirmButtonText: 'Sí, desvincular todo',
       cancelButtonText: 'Cancelar'
     });
-
+  
     if (result.isConfirmed) {
       try {
+        setSaving(true); // Reutilizamos el estado de carga
+  
+        // 1. Avisar a n8n para que ejecute el DELETE a Meta
+        const response = await fetch('https://webhook.mitiendavirtual.cl/webhook/instagram-unsuscribed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: session.user.id,
+            instagramId: instance.provider_id,
+            accessToken: instance.access_token // Asegúrate de tener el token accesible
+          })
+        });
+  
+        if (!response.ok) throw new Error('Error al comunicar con el servidor de desuscripción');
+  
+        // 2. Si el webhook respondió bien, limpiamos Supabase
         const { error } = await supabase
           .from('instances')
-          .update({ provider_id: null }) 
-          .eq('id', instance.id)
-
-        if (error) throw error
+          .update({ 
+            provider_id: null,
+            // access_token: null // Opcional: limpiar también el token
+          }) 
+          .eq('id', instance.id);
+  
+        if (error) throw error;
         
-        Swal.fire('¡Desconectado!', 'Tu cuenta ha sido desvinculada.', 'success')
-        onUpdate(); // Recargar padre
+        Swal.fire('¡Desconectado!', 'La suscripción ha sido eliminada correctamente.', 'success');
+        onUpdate(); 
       } catch (error: any) {
-        Swal.fire('Error', 'No se pudo desconectar: ' + error.message, 'error')
+        Swal.fire('Error', 'No se pudo completar la desuscripción: ' + error.message, 'error');
+      } finally {
+        setSaving(false);
       }
     }
   }
