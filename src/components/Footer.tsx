@@ -3,11 +3,14 @@ export default function Footer() {
   
   return (
     <footer className="mt-12 border-t border-gray-800 pt-8 pb-4">
-      <div className="flex flex-col md:flex-row justify-between items-center text-gray-500 text-sm">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center text-gray-500 text-sm">
         
         <div className="mb-4 md:mb-0">
           <span className="font-bold text-gray-300">MiTiendaVirtual</span> © {currentYear}
-          <p className="text-xs mt-1">Potenciando Pymes con Inteligencia Artificial.</p>
+          {/* Línea crítica para la verificación de Meta */}
+          <p className="text-xs mt-1 text-gray-400">
+            Representante Legal: <span className="text-gray-300">Felipe Gomez Treufo</span>
+          </p>
         </div>
 
         <div className="flex gap-6">
@@ -21,6 +24,9 @@ export default function Footer() {
           <span className="text-xs">Sistemas Operativos</span>
         </div>
 
+      </div>
+      <div className="mt-4 text-center text-[10px] text-gray-600 border-t border-gray-900 pt-4">
+        Potenciando Pymes con Inteligencia Artificial.
       </div>
     </footer>
   )

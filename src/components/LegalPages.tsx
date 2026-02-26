@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// --- PLANTILLA DE DISEÑO ---
+// --- PLANTILLA DE DISEÑO UNIFICADA ---
 const LegalLayout = ({ title, children }: { title: string, children: React.ReactNode }) => {
   const navigate = useNavigate();
   return (
@@ -9,12 +9,12 @@ const LegalLayout = ({ title, children }: { title: string, children: React.React
       <div className="max-w-3xl mx-auto">
         <button 
           onClick={() => navigate('/')}
-          className="mb-8 text-sm text-blue-500 hover:text-blue-400 flex items-center gap-2"
+          className="mb-8 text-sm text-blue-500 hover:text-blue-400 flex items-center gap-2 transition-colors"
         >
           ← Volver al inicio
         </button>
         <h1 className="text-3xl font-bold text-white mb-6 border-b border-gray-800 pb-4">{title}</h1>
-        <div className="space-y-4 text-sm leading-relaxed">
+        <div className="space-y-6 text-sm leading-relaxed">
           {children}
         </div>
       </div>
@@ -25,41 +25,88 @@ const LegalLayout = ({ title, children }: { title: string, children: React.React
 // --- 1. POLÍTICA DE PRIVACIDAD ---
 export const PrivacyPolicy = () => (
   <LegalLayout title="Política de Privacidad">
-    <p>Última actualización: Enero 2026</p>
-    <p>En <strong>mitiendavirtual.cl</strong>, respetamos su privacidad y estamos comprometidos a protegerla mediante el cumplimiento de esta política.</p>
-    <h3 className="text-white font-bold mt-4">1. Información que recopilamos</h3>
-    <p>Recopilamos información que usted nos proporciona directamente al registrarse, como su nombre, correo electrónico e información de perfil público de Google o Instagram, necesaria para el funcionamiento del servicio de automatización.</p>
-    <h3 className="text-white font-bold mt-4">2. Uso de la información</h3>
-    <p>Utilizamos su información para proporcionar, mantener y mejorar nuestros servicios de automatización (Chatbots), así como para comunicarnos con usted sobre actualizaciones del servicio.</p>
-    <h3 className="text-white font-bold mt-4">3. Compartir información</h3>
-    <p>No vendemos ni alquilamos sus datos personales a terceros. Solo compartimos información con proveedores de servicios (como Google Cloud o Meta) estrictamente necesarios para la operación de la plataforma.</p>
+    <p className="italic text-gray-500">Última actualización: 26 de febrero, 2026</p>
+    <p>
+      En <strong>mitiendavirtual.cl</strong>, propiedad de <strong>Felipe Gomez Treufo</strong>, la privacidad de nuestros usuarios es una prioridad. Esta política describe cómo recopilamos y protegemos sus datos bajo la <strong>Ley 19.628</strong> de Protección de la Vida Privada en Chile.
+    </p>
+
+    <section>
+      <h3 className="text-white font-bold mb-2">1. Responsable del Tratamiento</h3>
+      <p>
+        El responsable legal de sus datos personales es <strong>Felipe Gomez Treufo</strong>, con domicilio en <strong>Los Castaños 1088, Puente Alto, Región Metropolitana, Chile</strong>. 
+        Contacto: <span className="text-blue-400">contacto@mitiendavirtual.cl</span>.
+      </p>
+    </section>
+
+    <section>
+      <h3 className="text-white font-bold mb-2">2. Datos Recopilados</h3>
+      <p>
+        Recopilamos información de registro (nombre y correo electrónico) y datos técnicos proporcionados por las APIs de Meta (Instagram/Facebook) necesarios exclusivamente para la ejecución de servicios de automatización de mensajería e Inteligencia Artificial.
+      </p>
+    </section>
+
+    <section>
+      <h3 className="text-white font-bold mb-2">3. Uso y Seguridad</h3>
+      <p>
+        No vendemos ni compartimos sus datos con terceros para fines publicitarios. Los datos se procesan con el único fin de gestionar sus suscripciones y flujos de Chatbots. Contamos con autenticación en dos pasos activa en toda nuestra infraestructura para garantizar la seguridad de la información.
+      </p>
+    </section>
   </LegalLayout>
 );
 
 // --- 2. TÉRMINOS Y CONDICIONES ---
 export const TermsOfService = () => (
   <LegalLayout title="Términos y Condiciones">
-    <p>Bienvenido a <strong>mitiendavirtual.cl</strong>.</p>
-    <h3 className="text-white font-bold mt-4">1. Aceptación de los términos</h3>
-    <p>Al acceder o utilizar nuestros servicios, usted acepta estar legalmente vinculado por estos términos. Si no está de acuerdo, no utilice nuestros servicios.</p>
-    <h3 className="text-white font-bold mt-4">2. Uso del servicio</h3>
-    <p>Usted se compromete a utilizar nuestros servicios de automatización solo para fines legales y comerciales legítimos. Está prohibido el uso de nuestros bots para enviar SPAM o contenido ofensivo.</p>
-    <h3 className="text-white font-bold mt-4">3. Responsabilidad</h3>
-    <p>mitiendavirtual.cl no se hace responsable por las interrupciones del servicio causadas por terceros (caídas de Instagram, WhatsApp o proveedores de internet).</p>
+    <p className="italic text-gray-500">Última actualización: 26 de febrero, 2026</p>
+    <p>
+      Bienvenido a <strong>mitiendavirtual.cl</strong>. Al utilizar nuestros servicios de automatización, usted acepta los presentes términos operados por <strong>Felipe Gomez Treufo</strong>.
+    </p>
+
+    <section>
+      <h3 className="text-white font-bold mb-2">1. Planes de Suscripción</h3>
+      <p>Ofrecemos los siguientes niveles de servicio:</p>
+      <ul className="list-disc pl-5 mt-2 space-y-2">
+        <li><strong>Plan Free:</strong> $0 mensual - Límite de 10 productos [cite: 2026-02-21].</li>
+        <li><strong>Plan Basic:</strong> $14.990 mensual - Límite de 50 productos [cite: 2026-02-21].</li>
+        <li><strong>Plan Pro:</strong> $39.990 mensual - Límite de 500 productos [cite: 2026-02-21].</li>
+        <li><strong>Plan Full:</strong> $59.990 mensual - Límite de 2.000 productos y mensajes IA ilimitados bajo política de "Fair Use" [cite: 2026-02-21].</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3 className="text-white font-bold mb-2">2. Representación Legal</h3>
+      <p>
+        El titular y representante legal del sitio es <strong>Felipe Gomez Treufo</strong>, domiciliado en <strong>Los Castaños 1088, Puente Alto</strong>. Este servicio se presta como profesional independiente bajo las normativas legales vigentes en la República de Chile.
+      </p>
+    </section>
+
+    <section>
+      <h3 className="text-white font-bold mb-2">3. Limitación de Responsabilidad</h3>
+      <p>
+        No nos hacemos responsables por interrupciones en los servicios de terceros como Instagram, WhatsApp o fallos de conexión ajenos a nuestra plataforma.
+      </p>
+    </section>
   </LegalLayout>
 );
 
-// --- 3. ELIMINACIÓN DE DATOS (REQUISITO DE META) ---
+// --- 3. ELIMINACIÓN DE DATOS (REQUISITO OBLIGATORIO META) ---
 export const DataDeletion = () => (
   <LegalLayout title="Instrucciones de Eliminación de Datos">
-    <p>De acuerdo con las reglas de la Plataforma de Facebook/Meta, proporcionamos las instrucciones para que los usuarios soliciten la eliminación de sus datos.</p>
-    <h3 className="text-white font-bold mt-4">¿Cómo solicitar el borrado?</h3>
-    <p>Si desea eliminar su cuenta y todos los datos asociados de nuestros servidores, siga estos pasos:</p>
-    <ol className="list-decimal pl-5 space-y-2 mt-2">
-      <li>Envíe un correo electrónico a <strong>contacto@mitiendavirtual.cl</strong> (o su correo de soporte).</li>
-      <li>Use el asunto: "Solicitud de Eliminación de Datos".</li>
-      <li>Incluya el correo electrónico asociado a su cuenta.</li>
-    </ol>
-    <p className="mt-4">Procesaremos su solicitud en un plazo máximo de 72 horas hábiles y le confirmaremos la eliminación total de sus registros.</p>
+    <p>
+      Cumpliendo con las políticas de la Plataforma de Meta, garantizamos el derecho de los usuarios a solicitar la eliminación total de sus datos almacenados.
+    </p>
+
+    <section>
+      <h3 className="text-white font-bold mb-2">¿Cómo solicitar el borrado permanente?</h3>
+      <p>Para eliminar su cuenta y registros de nuestros servidores, siga este procedimiento:</p>
+      <ol className="list-decimal pl-5 mt-2 space-y-2">
+        <li>Envíe un correo electrónico a <strong>contacto@mitiendavirtual.cl</strong>.</li>
+        <li>Asunto: <strong>"Solicitud de Eliminación de Datos - [Su Nombre]"</strong>.</li>
+        <li>Detalle el correo electrónico con el que se registró en la plataforma.</li>
+      </ol>
+      <p className="mt-4 text-gray-400">
+        Confirmaremos la recepción y procesaremos la eliminación definitiva en un plazo no mayor a 72 horas hábiles.
+      </p>
+    </section>
   </LegalLayout>
 );

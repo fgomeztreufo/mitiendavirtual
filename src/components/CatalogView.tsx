@@ -1,230 +1,240 @@
-// src/components/CatalogView.tsx
 import { useState } from 'react'
-import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
 
-interface CatalogViewProps {
-  session: Session
-}
-
-export default function CatalogView({ session }: CatalogViewProps) {
+export default function CatalogView({ session, profile, onProductAdded,goToPlans }: any) {
   const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    description: '',
-    keywords: ''
-  })
+  const [formData, setFormData] = useState({ name: '', price: '', description: '' })
   const [file, setFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
-  // Manejar cambios en inputs de texto
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
-  }
+  // --- LÓGICA DE RESTRICCIÓN ---
+  // Nota: Asegúrate que en n8n el plan se llame 'Básico' igual que aquí
+  const planType = profile?.plan_type || 'Free';
+  const currentCount = Number(profile?.current_products) || 0;
+  
+  const capacityMap: Record<string, number> = {
+    'Free': 10, 
+    'Básico': 50, 
+    'Pro': 500, 
+    'Full': 2000
+  };
 
-  // Manejar selección de archivo
+  const limit = capacityMap[planType] || 10;
+  const isFull = currentCount >= limit && planType !== 'Full';
+  const percentage = Math.min((currentCount / limit) * 100, 100);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0])
+      const selectedFile = e.target.files[0];
+      
+      // Limpiar URL previa para evitar fugas de memoria
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      
+      setFile(selectedFile);
+      setPreviewUrl(URL.createObjectURL(selectedFile));
     }
   }
 
-  // Enviar al Webhook de n8n
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     
-    if (!file) {
-      Swal.fire('Falta la foto', 'Por favor selecciona una imagen del producto.', 'warning')
-      return
+    if (isFull) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Límite alcanzado',
+            text: `Tu plan ${planType} ha llegado al límite de productos (${limit}).`,
+            confirmButtonColor: '#2563eb'
+        });
+        return;
     }
 
+    if (!file) {
+      Swal.fire('Falta la foto', 'Por favor selecciona una imagen del producto.', 'warning');
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      setLoading(true)
-      
-      // 1. Crear el paquete de datos (FormData)
-      const dataToSend = new FormData()
-      dataToSend.append('user_id', session.user.id) // ID vital para la carpeta
-      dataToSend.append('name', formData.name)
-      dataToSend.append('price', formData.price)
-      dataToSend.append('description', formData.description)
-      // Si no hay keywords, usa el nombre como comodín
-      dataToSend.append('keywords', formData.keywords || formData.name) 
-      dataToSend.append('foto', file) // El archivo binario
-
-      // 2. URL DEL WEBHOOK (Actualizada ✅)
-      // Nota: Si pasas a producción en n8n, recuerda quitar el "-test" de la URL
-      const WEBHOOK_URL = 'https://webhook.mitiendavirtual.cl/webhook/subir-productos'
-      
-      const response = await fetch(WEBHOOK_URL, {
+      const data = new FormData();
+      data.append('user_id', session.user.id);
+      data.append('name', formData.name);
+      data.append('price', formData.price);
+      data.append('description', formData.description);
+      data.append('foto', file); 
+      const res = await fetch('https://webhook.mitiendavirtual.cl/webhook/subir-productos', {
         method: 'POST',
-        body: dataToSend
-        // No agregamos Content-Type header porque FormData lo hace automático
-      })
+        body: data
+      });
 
-      if (response.ok) {
-        Swal.fire({
-            title: '¡Producto Subido! 🚀',
-            text: 'Tu Inteligencia Artificial ya puede vender este producto.',
-            icon: 'success',
-            confirmButtonColor: '#10B981'
-        })
-        // Limpiar formulario para subir otro
-        setFormData({ name: '', price: '', description: '', keywords: '' })
-        setFile(null)
-        // Resetear el input file visualmente
-        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
+      if (res.status === 409) throw new Error('LIMITE_N8N');
+      if (!res.ok) throw new Error('SERVER_ERROR');
+      // --- NUEVA LÓGICA DE ACTUALIZACIÓN ---
+      const responseData = await res.json();
+      Swal.fire({
+          title: '¡Guardado con éxito!',
+          text: 'Tu IA ya conoce este producto.',
+          icon: 'success',
+          confirmButtonColor: '#10B981'
+      });
 
-      } else {
-        throw new Error('Error en n8n')
+      // --- RESETEO TOTAL DEL FORMULARIO ---
+      setFormData({ name: '', price: '', description: '' });
+      setFile(null);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+
+      // Resetear el input físicamente para que permita cargar la misma imagen u otra nueva
+      const fileInput = document.getElementById('product-image') as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+      
+      // Notificar al Dashboard para refrescar el contador
+      if (onProductAdded) {
+        onProductAdded(responseData.newCount); 
       }
 
-    } catch (error) {
-      console.error(error)
-      Swal.fire({
-        icon: 'error',
-        title: 'Error al subir',
-        text: 'Asegúrate de que el flujo en n8n esté activo o en modo "Listen".'
-      })
+    } catch (err: any) {
+      if (err.message === 'LIMITE_N8N') {
+        Swal.fire('Límite en Servidor', 'Has superado tu cuota en n8n.', 'error');
+      } else {
+        Swal.fire('Error', 'Hubo un problema al conectar con n8n.', 'error');
+      }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   return (
-    <div className="animate-fade-in max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Gestión de Catálogo 📦</h1>
-        <p className="text-gray-400">Sube productos para que tu Inteligencia Artificial pueda venderlos.</p>
+    <div className="animate-fade-in p-4 md:p-8">
+      {/* HEADER DINÁMICO */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-black text-white italic tracking-tighter uppercase">Mi Catálogo</h1>
+          {planType === 'Full' && (
+            <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/50 px-3 py-1 rounded-full text-[10px] font-black flex items-center gap-1 animate-pulse">
+              👑 VIP FULL
+            </span>
+          )}
+        </div>
+        
+        {/* BARRA DE CAPACIDAD */}
+        <div className={`p-4 rounded-2xl w-full md:w-64 border transition-all ${planType === 'Full' ? 'bg-yellow-500/5 border-yellow-500/30' : 'bg-gray-900 border-gray-800'}`}>
+          <div className="flex justify-between text-[10px] font-black mb-2 tracking-widest uppercase">
+            <span className="text-gray-500">Capacidad</span>
+            <span className="text-white">{planType === 'Full' ? '∞ ILIMITADO' : `${currentCount} / ${limit}`}</span>
+          </div>
+          <div className="h-1.5 w-full bg-black rounded-full overflow-hidden">
+            <div 
+                className={`h-full transition-all duration-1000 ${planType === 'Full' ? 'bg-gradient-to-r from-yellow-600 to-orange-400' : isFull ? 'bg-red-500' : 'bg-blue-600'}`}
+                style={{ width: `${planType === 'Full' ? 100 : percentage}%` }}
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        
-        {/* FORMULARIO DE CARGA */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-lg">
-          <h2 className="text-xl font-bold text-blue-400 mb-6 flex items-center gap-2">
-            <span>➕</span> Agregar Nuevo Producto
-          </h2>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
+        <div className="lg:col-span-3 bg-[#111827] border border-gray-800 rounded-[2rem] p-8 relative overflow-hidden">
+        {isFull && (
+       <div className="absolute inset-0 bg-black/90 backdrop-blur-md z-20 flex flex-col items-center justify-center p-6 text-center">
+          <span className="text-4xl mb-4">🔒</span>
+          <h3 className="text-xl font-bold text-white mb-2 uppercase">Plan {planType} al máximo</h3>
+          <p className="text-gray-400 text-xs mb-8">Has alcanzado el límite de {limit} productos.</p>
+          
+          {/* CAMBIA EL ONCLICK AQUÍ */}
+          <button 
+            type="button"
+            onClick={goToPlans} 
+            className="bg-white text-black px-10 py-3 rounded-2xl font-black text-xs uppercase hover:scale-105 transition-all"
+          >
+            Mejorar mi Plan
+          </button>
+       </div>
+    )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">NOMBRE DEL PRODUCTO *</label>
-              <input 
-                type="text" 
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Ej: Zapatillas Nike Air"
-                className="w-full bg-black border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors"
-                required
-              />
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-2 gap-6 text-left">
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Nombre del Producto</label>
+                <input required
+                  className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all text-sm"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  placeholder="Ej: Zapatillas Adidas"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Precio ($ CLP)</label>
+                <input required type='number'
+                  className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all text-sm"
+                  value={formData.price}
+                  onChange={(e) => setFormData({...formData, price: e.target.value})}
+                  placeholder="9990"
+                />
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">PRECIO *</label>
-                    <input 
-                        type="number" 
-                        name="price"
-                        value={formData.price}
-                        onChange={handleChange}
-                        placeholder="Ej: 50000"
-                        className="w-full bg-black border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors"
-                        required
-                    />
-                </div>
-                <div>
-                     <label className="block text-xs font-bold text-gray-500 mb-1">FOTO *</label>
-                     <input 
-                        type="file" 
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-600/20 file:text-blue-400 hover:file:bg-blue-600/30"
-                        required
-                    />
-                </div>
+            <div className="flex flex-col gap-2 text-left">
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Foto Real del Producto</label>
+              <label className="h-40 border-2 border-dashed border-gray-800 rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-blue-500/5 transition-all overflow-hidden relative group">
+                {previewUrl ? (
+                  <img src={previewUrl} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform" alt="Preview" />
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <span className="text-2xl mb-2">📸</span>
+                    <span className="text-gray-600 font-bold text-[10px] uppercase tracking-tighter">Click para seleccionar imagen</span>
+                  </div>
+                )}
+                {/* ID AÑADIDO PARA RESETEO FÍSICO */}
+                <input id="product-image" type="file" className="hidden" onChange={handleFileChange} accept="image/*" />
+              </label>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">DESCRIPCIÓN (Para convencer) *</label>
-              <textarea 
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows={3}
-                placeholder="Ej: Ideales para correr maratones, suela de gel, disponibles en talla 40-44..."
-                className="w-full bg-black border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors"
-                required
-              />
+            <div className="flex flex-col gap-2 text-left">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Descripción para la IA</label>
+                <textarea required
+                    className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all text-sm h-24"
+                    value={formData.description}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    placeholder="Detalla tallas, materiales y beneficios..."
+                />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">PALABRAS CLAVE (Búsqueda)</label>
-              <input 
-                type="text" 
-                name="keywords"
-                value={formData.keywords}
-                onChange={handleChange}
-                placeholder="Ej: zapatillas, nike, deporte, running (separadas por coma)"
-                className="w-full bg-black border border-gray-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors"
-              />
-              <p className="text-[10px] text-gray-600 mt-1">Si lo dejas vacío, usaremos el nombre del producto.</p>
-            </div>
-
-            <button 
-                type="submit" 
-                disabled={loading}
-                className={`w-full py-4 rounded-xl font-bold shadow-lg text-lg transition-all transform hover:-translate-y-1 mt-4 ${loading ? 'bg-gray-700 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white'}`}
-            >
-                {loading ? 'Subiendo...' : '🚀 Guardar en Catálogo'}
+            <button type="submit" disabled={loading || isFull} className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-xl ${loading ? 'bg-gray-800 text-gray-600' : 'bg-blue-600 hover:bg-blue-500 hover:scale-[1.01] shadow-blue-900/20'}`}>
+              {loading ? 'Subiendo Producto...' : '🚀 Guardar en Catálogo'}
             </button>
-
           </form>
         </div>
 
-        {/* VISTA PREVIA EDUCATIVA */}
-        <div className="space-y-6">
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-                <h3 className="text-gray-300 font-bold mb-4">¿Cómo se verá en Instagram? 📸</h3>
-                
-                {/* Simulación Chat */}
-                <div className="bg-black border border-gray-800 rounded-lg p-4 max-w-sm mx-auto">
-                    <div className="flex justify-end mb-4">
-                        <div className="bg-blue-600 text-white px-4 py-2 rounded-2xl rounded-tr-none text-sm">
-                            ¿Tienes {formData.name || 'este producto'}?
-                        </div>
-                    </div>
-                    <div className="flex gap-2">
-                        <div className="w-8 h-8 bg-purple-500 rounded-full flex-shrink-0"></div>
-                        <div className="space-y-2">
-                            <div className="bg-gray-800 text-gray-200 px-4 py-2 rounded-2xl rounded-tl-none text-sm">
-                                ¡Sí! Tenemos <strong>{formData.name || 'Producto'}</strong> a ${formData.price || '0'}. Mira:
-                            </div>
-                            {file ? (
-                                <div className="rounded-xl overflow-hidden border border-gray-700 h-32 w-48 bg-gray-800 relative">
-                                    <img src={URL.createObjectURL(file)} alt="Preview" className="w-full h-full object-cover" />
-                                </div>
-                            ) : (
-                                <div className="rounded-xl overflow-hidden border border-gray-700 border-dashed h-32 w-48 bg-gray-900 flex items-center justify-center text-gray-600 text-xs">
-                                    Foto del producto
-                                </div>
-                            )}
-                        </div>
-                    </div>
+        {/* VISTA PREVIA CLIENTE */}
+        <div className="lg:col-span-2 flex flex-col items-center">
+          <p className="text-[10px] font-black text-gray-500 uppercase mb-6 tracking-widest italic">Referencia de Vista Cliente</p>
+          <div className="w-full max-w-[260px] bg-black border-[8px] border-[#1f2937] rounded-[3rem] aspect-[9/16] p-4 shadow-2xl relative overflow-hidden">
+            <div className="flex items-center gap-2 mb-8 border-b border-gray-900 pb-2">
+                <div className="w-6 h-6 bg-gradient-to-tr from-orange-500 to-pink-500 rounded-full" />
+                <div className="h-2 w-16 bg-gray-800 rounded-full" />
+            </div>
+            <div className="space-y-4">
+              <div className="flex justify-end">
+                <div className="bg-blue-600 text-white text-[9px] px-3 py-2 rounded-2xl rounded-tr-none max-w-[80%]">
+                  ¿Tienen <strong>{formData.name || 'zapatillas'}</strong>?
                 </div>
+              </div>
+              <div className="flex gap-2">
+                <div className="w-6 h-6 bg-purple-600 rounded-full flex-shrink-0 flex items-center justify-center text-[10px]">🤖</div>
+                <div className="bg-[#1f2937] text-gray-200 text-[9px] px-3 py-2 rounded-2xl rounded-tl-none space-y-2">
+                  <p>¡Hola! Sí, lo tenemos disponible por <strong>${formData.price || '0'}</strong>.</p>
+                  <div className="w-full aspect-square bg-black rounded-xl border border-gray-700 overflow-hidden flex items-center justify-center">
+                    {previewUrl ? (
+                      <img src={previewUrl} className="w-full h-full object-cover" alt="Chat Preview" />
+                    ) : (
+                      <span className="text-xl opacity-20">📷</span>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
-
-            <div className="p-4 bg-yellow-900/10 border border-yellow-900/30 rounded-lg">
-                <p className="text-sm text-yellow-500">
-                    <strong>💡 Tip Pro:</strong> Agrega palabras clave como "oferta", "barato" o sinónimos para que el bot encuentre el producto aunque el cliente lo pida de otra forma.
-                </p>
-            </div>
+          </div>
         </div>
-
       </div>
     </div>
   )
