@@ -1,112 +1,64 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
-// --- PLANTILLA DE DISEÑO UNIFICADA ---
-const LegalLayout = ({ title, children }: { title: string, children: React.ReactNode }) => {
-  const navigate = useNavigate();
-  return (
-    <div className="min-h-screen bg-black text-gray-300 p-8 font-sans">
-      <div className="max-w-3xl mx-auto">
-        <button 
-          onClick={() => navigate('/')}
-          className="mb-8 text-sm text-blue-500 hover:text-blue-400 flex items-center gap-2 transition-colors"
-        >
-          ← Volver al inicio
-        </button>
-        <h1 className="text-3xl font-bold text-white mb-6 border-b border-gray-800 pb-4">{title}</h1>
-        <div className="space-y-6 text-sm leading-relaxed">
-          {children}
-        </div>
+// Layout base para todas las páginas legales/soporte
+const LegalDashboardLayout = ({ title, children, onClose }: { title: string, children: React.ReactNode, onClose: () => void }) => (
+  <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-8 animate-in fade-in duration-500">
+    <button 
+      onClick={onClose} 
+      className="mb-6 text-xs text-blue-500 font-bold hover:text-blue-400 transition-colors uppercase tracking-widest"
+    >
+      ← Volver al Panel Principal
+    </button>
+    <h1 className="text-2xl font-bold text-white mb-6 border-b border-gray-800 pb-4">{title}</h1>
+    <div className="space-y-4 text-gray-300 text-sm leading-relaxed">
+      {children}
+    </div>
+  </div>
+);
+
+// --- VISTA DE SOPORTE PROFESIONAL ---
+export const SupportPage = ({ onClose }: { onClose: () => void }) => (
+  <LegalDashboardLayout title="Centro de Soporte y Ayuda" onClose={onClose}>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+      <div className="bg-gray-800/40 p-6 rounded-xl border border-gray-700 hover:border-blue-500 transition-all">
+        <h3 className="text-white font-bold text-lg mb-2">Soporte vía Email</h3>
+        <p className="text-gray-400 text-xs mb-4">Respuesta técnica garantizada en menos de 24 horas.</p>
+        <a href="mailto:contacto@mitiendavirtual.cl" className="text-blue-400 font-medium hover:underline">contacto@mitiendavirtual.cl</a>
+      </div>
+      <div className="bg-gray-800/40 p-6 rounded-xl border border-gray-700 hover:border-green-500 transition-all">
+        <h3 className="text-white font-bold text-lg mb-2">WhatsApp Prioritario</h3>
+        <p className="text-gray-400 text-xs mb-4">Atención exclusiva para planes Pro y Full.</p>
+        <a href="https://wa.me/56954080571" target="_blank" className="text-green-400 font-medium hover:underline">Chat de Asistencia</a>
       </div>
     </div>
-  );
-};
-
-// --- 1. POLÍTICA DE PRIVACIDAD ---
-export const PrivacyPolicy = () => (
-  <LegalLayout title="Política de Privacidad">
-    <p className="italic text-gray-500">Última actualización: 26 de febrero, 2026</p>
-    <p>
-      En <strong>mitiendavirtual.cl</strong>, propiedad de <strong>Felipe Gomez Treufo</strong>, la privacidad de nuestros usuarios es una prioridad. Esta política describe cómo recopilamos y protegemos sus datos bajo la <strong>Ley 19.628</strong> de Protección de la Vida Privada en Chile.
-    </p>
-
-    <section>
-      <h3 className="text-white font-bold mb-2">1. Responsable del Tratamiento</h3>
-      <p>
-        El responsable legal de sus datos personales es <strong>Felipe Gomez Treufo</strong>, con domicilio en <strong>Los Castaños 1088, Puente Alto, Región Metropolitana, Chile</strong>. 
-        Contacto: <span className="text-blue-400">contacto@mitiendavirtual.cl</span>.
-      </p>
-    </section>
-
-    <section>
-      <h3 className="text-white font-bold mb-2">2. Datos Recopilados</h3>
-      <p>
-        Recopilamos información de registro (nombre y correo electrónico) y datos técnicos proporcionados por las APIs de Meta (Instagram/Facebook) necesarios exclusivamente para la ejecución de servicios de automatización de mensajería e Inteligencia Artificial.
-      </p>
-    </section>
-
-    <section>
-      <h3 className="text-white font-bold mb-2">3. Uso y Seguridad</h3>
-      <p>
-        No vendemos ni compartimos sus datos con terceros para fines publicitarios. Los datos se procesan con el único fin de gestionar sus suscripciones y flujos de Chatbots. Contamos con autenticación en dos pasos activa en toda nuestra infraestructura para garantizar la seguridad de la información.
-      </p>
-    </section>
-  </LegalLayout>
+  </LegalDashboardLayout>
 );
 
-// --- 2. TÉRMINOS Y CONDICIONES ---
-export const TermsOfService = () => (
-  <LegalLayout title="Términos y Condiciones">
-    <p className="italic text-gray-500">Última actualización: 26 de febrero, 2026</p>
-    <p>
-      Bienvenido a <strong>mitiendavirtual.cl</strong>. Al utilizar nuestros servicios de automatización, usted acepta los presentes términos operados por <strong>Felipe Gomez Treufo</strong>.
-    </p>
-
-    <section>
-      <h3 className="text-white font-bold mb-2">1. Planes de Suscripción</h3>
-      <p>Ofrecemos los siguientes niveles de servicio:</p>
-      <ul className="list-disc pl-5 mt-2 space-y-2">
-        <li><strong>Plan Free:</strong> $0 mensual - Límite de 10 productos [cite: 2026-02-21].</li>
-        <li><strong>Plan Basic:</strong> $14.990 mensual - Límite de 50 productos [cite: 2026-02-21].</li>
-        <li><strong>Plan Pro:</strong> $39.990 mensual - Límite de 500 productos [cite: 2026-02-21].</li>
-        <li><strong>Plan Full:</strong> $59.990 mensual - Límite de 2.000 productos y mensajes IA ilimitados bajo política de "Fair Use" [cite: 2026-02-21].</li>
-      </ul>
-    </section>
-
-    <section>
-      <h3 className="text-white font-bold mb-2">2. Representación Legal</h3>
-      <p>
-        El titular y representante legal del sitio es <strong>Felipe Gomez Treufo</strong>, domiciliado en <strong>Los Castaños 1088, Puente Alto</strong>. Este servicio se presta como profesional independiente bajo las normativas legales vigentes en la República de Chile.
-      </p>
-    </section>
-
-    <section>
-      <h3 className="text-white font-bold mb-2">3. Limitación de Responsabilidad</h3>
-      <p>
-        No nos hacemos responsables por interrupciones en los servicios de terceros como Instagram, WhatsApp o fallos de conexión ajenos a nuestra plataforma.
-      </p>
-    </section>
-  </LegalLayout>
+// --- TÉRMINOS Y CONDICIONES ---
+export const TermsOfService = ({ onClose }: { onClose: () => void }) => (
+  <LegalDashboardLayout title="Términos y Condiciones" onClose={onClose}>
+    <p>Operado por <strong>Felipe Gomez Treufo</strong> en Los Castaños 1088, Puente Alto.</p>
+    <h3 className="text-white font-bold mt-4">Planes y Precios (CLP):</h3>
+    <ul className="list-disc pl-5 space-y-1">
+      <li><strong>Plan Free:</strong> $0 - 10 productos.</li>
+      <li><strong>Plan Basic:</strong> $14.990 - 50 productos.</li>
+      <li><strong>Plan Pro:</strong> $39.990 - 500 productos.</li>
+      <li><strong>Plan Full:</strong> $59.990 - 2.000 productos e IA Ilimitada.</li>
+    </ul>
+  </LegalDashboardLayout>
 );
 
-// --- 3. ELIMINACIÓN DE DATOS (REQUISITO OBLIGATORIO META) ---
-export const DataDeletion = () => (
-  <LegalLayout title="Instrucciones de Eliminación de Datos">
-    <p>
-      Cumpliendo con las políticas de la Plataforma de Meta, garantizamos el derecho de los usuarios a solicitar la eliminación total de sus datos almacenados.
-    </p>
+// --- PRIVACIDAD ---
+export const PrivacyPolicy = ({ onClose }: { onClose: () => void }) => (
+  <LegalDashboardLayout title="Política de Privacidad" onClose={onClose}>
+    <p>Cumplimos con la Ley 19.628. Responsable legal: <strong>Felipe Gomez Treufo</strong>.</p>
+    <p>Dirección legal: Los Castaños 1088, Puente Alto, Chile.</p>
+  </LegalDashboardLayout>
+);
 
-    <section>
-      <h3 className="text-white font-bold mb-2">¿Cómo solicitar el borrado permanente?</h3>
-      <p>Para eliminar su cuenta y registros de nuestros servidores, siga este procedimiento:</p>
-      <ol className="list-decimal pl-5 mt-2 space-y-2">
-        <li>Envíe un correo electrónico a <strong>contacto@mitiendavirtual.cl</strong>.</li>
-        <li>Asunto: <strong>"Solicitud de Eliminación de Datos - [Su Nombre]"</strong>.</li>
-        <li>Detalle el correo electrónico con el que se registró en la plataforma.</li>
-      </ol>
-      <p className="mt-4 text-gray-400">
-        Confirmaremos la recepción y procesaremos la eliminación definitiva en un plazo no mayor a 72 horas hábiles.
-      </p>
-    </section>
-  </LegalLayout>
+// --- ELIMINACIÓN DE DATOS (REQUISITO META) ---
+export const DataDeletion = ({ onClose }: { onClose: () => void }) => (
+  <LegalDashboardLayout title="Eliminación de Datos" onClose={onClose}>
+    <p>Para eliminar su cuenta y datos de Meta, escriba a <strong>contacto@mitiendavirtual.cl</strong>.</p>
+  </LegalDashboardLayout>
 );
