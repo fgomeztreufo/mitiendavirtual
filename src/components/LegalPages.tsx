@@ -35,16 +35,59 @@ export const SupportPage = ({ onClose }: { onClose: () => void }) => (
 );
 
 // --- TÉRMINOS Y CONDICIONES ---
+// --- TÉRMINOS Y CONDICIONES ACTUALIZADO ---
 export const TermsOfService = ({ onClose }: { onClose: () => void }) => (
   <LegalDashboardLayout title="Términos y Condiciones" onClose={onClose}>
-    <p>Operado por <strong>Felipe Gomez Treufo</strong> en Los Castaños 1088, Puente Alto.</p>
-    <h3 className="text-white font-bold mt-4">Planes y Precios (CLP):</h3>
-    <ul className="list-disc pl-5 space-y-1">
-      <li><strong>Plan Free:</strong> $0 - 10 productos.</li>
-      <li><strong>Plan Basic:</strong> $14.990 - 50 productos.</li>
-      <li><strong>Plan Pro:</strong> $39.990 - 500 productos.</li>
-      <li><strong>Plan Full:</strong> $59.990 - 2.000 productos e IA Ilimitada.</li>
-    </ul>
+    <p>Operado por <strong>Felipe Gomez Treufo</strong> en Los Castaños 1088, Puente Alto, Chile.</p>
+    
+    <h3 className="text-white font-bold mt-6 mb-3 text-lg">Detalle de Planes y Límites (CLP):</h3>
+    <div className="overflow-x-auto">
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="border-b border-gray-800 text-gray-400">
+            <th className="py-2">Plan</th>
+            <th className="py-2">Precio</th>
+            <th className="py-2">Productos</th>
+            <th className="py-2">Mensajes DM (IA)</th>
+          </tr>
+        </thead>
+        <tbody className="text-gray-300">
+          <tr className="border-b border-gray-800/50">
+            <td className="py-3 font-bold text-blue-400">Free</td>
+            <td className="py-3">$0</td>
+            <td className="py-3">10</td>
+            <td className="py-3">50 mensuales [cite: 2026-02-21]</td>
+          </tr>
+          <tr className="border-b border-gray-800/50">
+            <td className="py-3 font-bold text-blue-400">Basic</td>
+            <td className="py-3">$14.990</td>
+            <td className="py-3">50</td>
+            <td className="py-3">500 mensuales [cite: 2026-02-21]</td>
+          </tr>
+          <tr className="border-b border-gray-800/50">
+            <td className="py-3 font-bold text-blue-400">Pro</td>
+            <td className="py-3">$39.990</td>
+            <td className="py-3">500</td>
+            <td className="py-3">2.000 mensuales [cite: 2026-02-21]</td>
+          </tr>
+          <tr>
+            <td className="py-3 font-bold text-blue-400">Full</td>
+            <td className="py-3">$59.990</td>
+            <td className="py-3">2.000</td>
+            <td className="py-3">Ilimitados* [cite: 2026-02-21]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <p className="text-[10px] text-gray-500 mt-4">
+      * Los mensajes ilimitados del Plan Full están sujetos a nuestra <strong>Política de Uso Justo (Fair Use)</strong> para evitar abusos del sistema.
+    </p>
+
+    <h3 className="text-white font-bold mt-6 mb-2">Responsabilidad del Servicio</h3>
+    <p>
+      mitiendavirtual.cl no se responsabiliza por suspensiones de cuentas de Meta derivadas del uso inadecuado de la herramienta o violación de las políticas de Instagram por parte del usuario.
+    </p>
   </LegalDashboardLayout>
 );
 
