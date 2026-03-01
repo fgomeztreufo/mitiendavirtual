@@ -4,19 +4,39 @@ interface FooterProps {
 
 export default function Footer({ onNavigate }: FooterProps) {
   return (
-    <footer className="mt-12 border-t border-gray-800 pt-8 pb-4">
-      <div className="flex flex-col md:flex-row justify-between items-center text-gray-500 text-sm">
-        <div className="text-center md:text-left">
-          <span className="font-bold text-gray-300">MiTiendaVirtual</span> © 2026
-          <p className="text-[10px] text-gray-500">Rep. Legal: Felipe Gomez Treufo</p>
-        </div>
-        <div className="flex gap-6 mt-4 md:mt-0">
-          <button onClick={() => onNavigate('support')} className="hover:text-white transition-colors">Soporte</button>
-          <button onClick={() => onNavigate('terms')} className="hover:text-white transition-colors">Términos</button>
-          <button onClick={() => onNavigate('privacy')} className="hover:text-white transition-colors">Privacidad</button>
-          <button onClick={() => onNavigate('data-deletion')} className="text-[10px] hover:text-red-400 transition-colors">Eliminar Datos</button>
-        </div>
+    <footer className="bg-gray-900 text-gray-400 py-10 px-6 border-t border-gray-800">
+    <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+      
+      {/* Columna de Marca */}
+      <div>
+        <h3 className="text-white font-bold text-lg mb-2">MiTiendaVirtual</h3>
+        <p className="text-sm">Potenciando tu comercio con IA y automatización.</p>
       </div>
-    </footer>
+  
+      {/* Columna de Información Legal (VITAL PARA META) */}
+      <div className="text-sm">
+        <h4 className="text-white font-semibold mb-4 uppercase tracking-wider text-xs">Información Legal</h4>
+        <ul className="space-y-2">
+          <li><span className="text-gray-500">Operado por:</span> <b className="text-gray-300">FELIPE ALONSO GOMEZ TREUFO</b></li>
+          <li><span className="text-gray-500">RUT:</span> 16.208.020-2</li>
+          <li><span className="text-gray-500">Dirección:</span> LOS CASTAÑOS 1088, PUENTE ALTO</li>
+          <li>Santiago, Chile</li>
+        </ul>
+      </div>
+  
+      {/* Columna de Enlaces */}
+      <div className="text-sm md:text-right">
+        <h4 className="text-white font-semibold mb-4 uppercase tracking-wider text-xs">Soporte</h4>
+        <ul className="space-y-2">
+          <li><a href="/terms" className="hover:text-blue-400 transition-colors">Términos y Condiciones</a></li>
+          <li><a href="/privacy" className="hover:text-blue-400 transition-colors">Política de Privacidad</a></li>
+        </ul>
+      </div>
+  
+    </div>
+    <div className="mt-10 pt-6 border-t border-gray-800 text-center text-xs">
+      © 2026 MiTiendaVirtual. Todos los derechos reservados.
+    </div>
+  </footer>
   )
 }
