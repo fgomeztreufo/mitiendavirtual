@@ -1,107 +1,103 @@
 import React from 'react';
 
-// Layout base para todas las páginas legales/soporte
-const LegalDashboardLayout = ({ title, children, onClose }: { title: string, children: React.ReactNode, onClose: () => void }) => (
-  <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-8 animate-in fade-in duration-500">
-    <button 
-      onClick={onClose} 
-      className="mb-6 text-xs text-blue-500 font-bold hover:text-blue-400 transition-colors uppercase tracking-widest"
-    >
-      ← Volver al Panel Principal
-    </button>
-    <h1 className="text-2xl font-bold text-white mb-6 border-b border-gray-800 pb-4">{title}</h1>
-    <div className="space-y-4 text-gray-300 text-sm leading-relaxed">
-      {children}
+// --- LAYOUT BASE (MODO OVERLAY) ---
+const LegalLayout = ({ title, subtitle, children, onClose }: { title: string, subtitle: string, children: React.ReactNode, onClose: () => void }) => (
+  <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col overflow-y-auto animate-in fade-in duration-300 font-sans">
+    <div className="max-w-4xl mx-auto w-full p-6 md:p-20 flex-grow">
+      
+      {/* Cabecera con Botón de Cierre Funcional */}
+      <div className="flex items-center justify-between mb-12 border-b border-white/10 pb-8">
+        <div>
+          <h1 className="text-4xl font-black text-white tracking-tight uppercase">{title}</h1>
+          <p className="text-blue-500 font-mono text-xs mt-2 tracking-[0.3em] uppercase">{subtitle}</p>
+        </div>
+        <button 
+          onClick={onClose} // <--- ESTO ES LO QUE HACE QUE EL BOTÓN FUNCIONE
+          className="group flex items-center gap-3 px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xs font-bold text-gray-400 hover:text-white hover:bg-red-500/20 hover:border-red-500/50 transition-all uppercase tracking-widest shadow-2xl active:scale-95"
+        >
+          <span>Cerrar</span>
+          <svg className="w-5 h-5 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Contenido Profesional */}
+      <div className="bg-[#0A0B10] border border-white/5 rounded-3xl p-8 md:p-12 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+        <div className="space-y-10 text-gray-400 text-[16px] leading-relaxed font-light">
+          {children}
+        </div>
+      </div>
+
+      <div className="mt-12 text-center">
+        <p className="text-[10px] text-gray-700 uppercase tracking-[0.5em]">
+          Documentación Oficial • MiTiendaVirtual • 2026
+        </p>
+      </div>
     </div>
   </div>
 );
 
-// --- VISTA DE SOPORTE PROFESIONAL ---
-export const SupportPage = ({ onClose }: { onClose: () => void }) => (
-  <LegalDashboardLayout title="Centro de Soporte y Ayuda" onClose={onClose}>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-      <div className="bg-gray-800/40 p-6 rounded-xl border border-gray-700 hover:border-blue-500 transition-all">
-        <h3 className="text-white font-bold text-lg mb-2">Soporte vía Email</h3>
-        <p className="text-gray-400 text-xs mb-4">Respuesta técnica garantizada en menos de 24 horas.</p>
-        <a href="mailto:contacto@mitiendavirtual.cl" className="text-blue-400 font-medium hover:underline">contacto@mitiendavirtual.cl</a>
-      </div>
-      <div className="bg-gray-800/40 p-6 rounded-xl border border-gray-700 hover:border-green-500 transition-all">
-        <h3 className="text-white font-bold text-lg mb-2">WhatsApp Prioritario</h3>
-        <p className="text-gray-400 text-xs mb-4">Atención exclusiva para planes Pro y Full.</p>
-        <a href="https://wa.me/56954080571" target="_blank" className="text-green-400 font-medium hover:underline">Chat de Asistencia</a>
-      </div>
-    </div>
-  </LegalDashboardLayout>
-);
-
-// --- TÉRMINOS Y CONDICIONES ---
-// --- TÉRMINOS Y CONDICIONES ACTUALIZADO ---
-export const TermsOfService = ({ onClose }: { onClose: () => void }) => (
-  <LegalDashboardLayout title="Términos y Condiciones" onClose={onClose}>
-    <p>Operado por <strong>Felipe Gomez Treufo</strong> en Los Castaños 1088, Puente Alto, Chile.</p>
-    
-    <h3 className="text-white font-bold mt-6 mb-3 text-lg">Detalle de Planes y Límites (CLP):</h3>
-    <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="border-b border-gray-800 text-gray-400">
-            <th className="py-2">Plan</th>
-            <th className="py-2">Precio</th>
-            <th className="py-2">Productos</th>
-            <th className="py-2">Mensajes DM (IA)</th>
-          </tr>
-        </thead>
-        <tbody className="text-gray-300">
-          <tr className="border-b border-gray-800/50">
-            <td className="py-3 font-bold text-blue-400">Free</td>
-            <td className="py-3">$0</td>
-            <td className="py-3">10</td>
-            <td className="py-3">50 mensuales [cite: 2026-02-21]</td>
-          </tr>
-          <tr className="border-b border-gray-800/50">
-            <td className="py-3 font-bold text-blue-400">Basic</td>
-            <td className="py-3">$14.990</td>
-            <td className="py-3">50</td>
-            <td className="py-3">500 mensuales [cite: 2026-02-21]</td>
-          </tr>
-          <tr className="border-b border-gray-800/50">
-            <td className="py-3 font-bold text-blue-400">Pro</td>
-            <td className="py-3">$39.990</td>
-            <td className="py-3">500</td>
-            <td className="py-3">2.000 mensuales [cite: 2026-02-21]</td>
-          </tr>
-          <tr>
-            <td className="py-3 font-bold text-blue-400">Full</td>
-            <td className="py-3">$59.990</td>
-            <td className="py-3">2.000</td>
-            <td className="py-3">Ilimitados* [cite: 2026-02-21]</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    
-    <p className="text-[10px] text-gray-500 mt-4">
-      * Los mensajes ilimitados del Plan Full están sujetos a nuestra <strong>Política de Uso Justo (Fair Use)</strong> para evitar abusos del sistema.
-    </p>
-
-    <h3 className="text-white font-bold mt-6 mb-2">Responsabilidad del Servicio</h3>
-    <p>
-      mitiendavirtual.cl no se responsabiliza por suspensiones de cuentas de Meta derivadas del uso inadecuado de la herramienta o violación de las políticas de Instagram por parte del usuario.
-    </p>
-  </LegalDashboardLayout>
-);
-
-// --- PRIVACIDAD ---
-export const PrivacyPolicy = ({ onClose }: { onClose: () => void }) => (
-  <LegalDashboardLayout title="Política de Privacidad" onClose={onClose}>
-    <p>Cumplimos con la Ley 19.628. Responsable legal: <strong>Felipe Gomez Treufo</strong>.</p>
-    <p>Dirección legal: Los Castaños 1088, Puente Alto, Chile.</p>
-  </LegalDashboardLayout>
-);
-
-// --- ELIMINACIÓN DE DATOS (REQUISITO META) ---
+// --- VISTA: ELIMINACIÓN DE DATOS (REQUISITO META) ---
 export const DataDeletion = ({ onClose }: { onClose: () => void }) => (
-  <LegalDashboardLayout title="Eliminación de Datos" onClose={onClose}>
-    <p>Para eliminar su cuenta y datos de Meta, escriba a <strong>contacto@mitiendavirtual.cl</strong>.</p>
-  </LegalDashboardLayout>
+  <LegalLayout title="Eliminación" subtitle="Protocolo de Datos de Usuario" onClose={onClose}>
+    <div className="bg-red-600/5 border border-red-500/20 p-8 rounded-2xl text-center">
+      <h3 className="text-white font-bold text-xl mb-4 text-red-500">Solicitud de Borrado Definitivo</h3>
+      <p className="text-gray-400 mb-8 max-w-lg mx-auto">
+        De acuerdo con las políticas de Meta, usted puede solicitar la eliminación de sus datos y de negocio de nuestros servidores.
+      </p>
+      <div className="inline-block bg-gray-950 px-8 py-6 rounded-2xl border border-gray-800 shadow-inner">
+        <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-2">Enviar correo con asunto "BORRAR DATOS" a:</p>
+        <p className="text-xl font-mono text-white select-all border-b border-blue-500/30 pb-1">contacto@mitiendavirtual.cl</p>
+      </div>
+      <div className="mt-8 space-y-2 text-left text-sm text-gray-500 max-w-md mx-auto italic">
+        <p>• El proceso elimina: Perfil, Catálogos, Mensajes IA e integraciones de Meta.</p>
+        <p>• Plazo de ejecución: Máximo 48 horas hábiles.</p>
+      </div>
+    </div>
+  </LegalLayout>
+);
+
+// --- VISTA: TÉRMINOS ---
+export const TermsOfService = ({ onClose }: { onClose: () => void }) => (
+  <LegalLayout title="Términos" subtitle="Contrato de Servicio" onClose={onClose}>
+    <section className="space-y-4">
+      <h3 className="text-white font-bold text-xl">Planes y Tarifas</h3>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          {n:'Free', p:'$0'}, {n:'Basic', p:'$14.990'}, {n:'Pro', p:'$39.990'}, {n:'Full', p:'$59.990'}
+        ].map(i => (
+          <div key={i.n} className="bg-white/5 p-4 rounded-xl border border-white/5 text-center">
+            <p className="text-blue-400 font-bold">{i.n}</p>
+            <p className="text-white text-lg">{i.p}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+    <p>Operado por <strong>Felipe Alonso Gomez Treufo</strong> en Los Castaños 1088, Puente Alto, Chile.</p>
+  </LegalLayout>
+);
+
+// --- VISTA: PRIVACIDAD ---
+export const PrivacyPolicy = ({ onClose }: { onClose: () => void }) => (
+  <LegalLayout title="Privacidad" subtitle="Protección de Datos" onClose={onClose}>
+    <p>Cumplimos con la <strong>Ley 19.628</strong> sobre Protección de la Vida Privada.</p>
+    <p>Titular Responsable: Felipe Gomez Treufo • contacto@mitiendavirtual.cl</p>
+  </LegalLayout>
+);
+
+// --- VISTA: SOPORTE ---
+export const SupportPage = ({ onClose }: { onClose: () => void }) => (
+  <LegalLayout title="Soporte" subtitle="Asistencia Técnica" onClose={onClose}>
+    <div className="flex flex-col md:flex-row gap-6">
+      <a href="mailto:contacto@mitiendavirtual.cl" className="flex-1 p-8 bg-blue-600/10 border border-blue-500/20 rounded-2xl text-center hover:bg-blue-600/20 transition-all">
+        <h4 className="text-white font-bold text-xl">Email</h4>
+        <p className="text-blue-400 mt-2">contacto@mitiendavirtual.cl</p>
+      </a>
+      <a href="https://wa.me/56954080571" target="_blank" className="flex-1 p-8 bg-emerald-600/10 border border-emerald-500/20 rounded-2xl text-center hover:bg-emerald-600/20 transition-all">
+        <h4 className="text-white font-bold text-xl">WhatsApp</h4>
+        <p className="text-emerald-400 mt-2">+56 9 5408 0571</p>
+      </a>
+    </div>
+  </LegalLayout>
 );

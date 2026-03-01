@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import Footer from './Footer';
+import { TermsOfService, PrivacyPolicy, DataDeletion } from './LegalPages';
 
 // Definimos la "puerta de entrada" para recibir la función onBack
 interface LoginPageProps {
@@ -10,6 +11,8 @@ interface LoginPageProps {
 }
 
 export default function LoginPage({ onBack }: LoginPageProps) {
+  // --- ESTADO LOCAL PARA LEGALES ---
+  const [legalView, setLegalView] = useState<string | null>(null);
   
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -75,9 +78,25 @@ export default function LoginPage({ onBack }: LoginPageProps) {
         />
       </div>
      {/* FOOTER DINÁMICO */}
-     <div className="w-full">
-        <Footer onNavigate={() => {}} variant="login" />
-      </div>
+     <Footer 
+      variant="index" 
+      onNavigate={(tab) => {
+        // Si estás en el index, podrías redirigir a una URL física 
+        // o simplemente hacer scroll si estuvieran ahí.
+        console.log("Navegando a:", tab);
+        setLegalView(tab);
+      }} 
+    />
+   {/* --- ESTO ES LO QUE TE FALTA PARA QUE SE VEAN Y SE CIERREN --- */}
+   {legalView === 'terms' && (
+        <TermsOfService onClose={() => setLegalView(null)} />
+      )}
+      {legalView === 'privacy' && (
+        <PrivacyPolicy onClose={() => setLegalView(null)} />
+      )}
+      {legalView === 'data-deletion' && (
+        <DataDeletion onClose={() => setLegalView(null)} />
+      )}
     </div>
   )
 }

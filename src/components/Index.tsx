@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Footer from './Footer'
+import { DataDeletion, PrivacyPolicy, SupportPage, TermsOfService } from './LegalPages';
 
 interface IndexProps {
   onLoginClick: () => void;
@@ -24,6 +25,8 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
   const smallStars = useMemo(() => generateStars(700), [])
   const mediumStars = useMemo(() => generateStars(200), [])
   const largeStars = useMemo(() => generateStars(100), [])
+  // --- NUEVO ESTADO PARA VISTAS LEGALES ---
+  const [legalView, setLegalView] = useState<string | null>(null);
 
   useEffect(() => {
     setTimeout(() => setStage('approaching'), 1500)
@@ -116,11 +119,25 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
         transition={{ duration: 2.5, ease: luxuryEase }}
         className="absolute z-20 pointer-events-none w-[600px] h-auto object-contain origin-bottom"
       />
+      
 
       {/* FOOTER DINÁMICO */}
-      <div className="w-full z-40 relative">
-         <Footer onNavigate={() => {}} variant="index" />
-      </div>
+      <Footer 
+        variant="index" 
+        onNavigate={(tab) => {
+          // Si estás en el index, podrías redirigir a una URL física 
+          // o simplemente hacer scroll si estuvieran ahí.
+          console.log("Navegando a:", tab);
+          setLegalView(tab);
+        }} 
+        
+      />
+      {/* --- RENDERIZADO DE MODALES LEGALES --- */}
+      {legalView === 'terms' && <TermsOfService onClose={() => setLegalView(null)} />}
+      {legalView === 'privacy' && <PrivacyPolicy onClose={() => setLegalView(null)} />}
+      {legalView === 'data-deletion' && <DataDeletion onClose={() => setLegalView(null)} />}
+      {legalView === 'support' && <SupportPage onClose={() => setLegalView(null)} />}
+      
 
       <div className="absolute inset-0 bg-radial-at-c from-blue-900/10 via-transparent to-transparent pointer-events-none z-0"></div>
     </div>
