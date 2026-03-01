@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
+import Footer from './Footer';
 
 // Definimos la "puerta de entrada" para recibir la función onBack
 interface LoginPageProps {
@@ -72,6 +73,10 @@ export default function LoginPage({ onBack }: LoginPageProps) {
             }
           }}
         />
+      </div>
+     {/* FOOTER DINÁMICO */}
+     <div className="w-full">
+        <Footer onNavigate={() => {}} variant="login" />
       </div>
     </div>
   )

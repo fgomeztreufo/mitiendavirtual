@@ -113,8 +113,9 @@ export default function Dashboard({ session }: { session: Session }) {
             {activeTab === 'data-deletion' && <DataDeletion onClose={() => setActiveTab('instagram')} />}
         </div>
         
-        <div className="max-w-5xl mx-auto px-6 md:px-10 w-full pb-6">
-            <Footer onNavigate={(tab) => setActiveTab(tab)} />
+       {/* FOOTER DINÁMICO AL FINAL DEL CONTENIDO */}
+      <div className="w-full">
+            <Footer onNavigate={(tab) => setActiveTab(tab)} variant="dashboard" />
         </div>
       </main>
     </div>
