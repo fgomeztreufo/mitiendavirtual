@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
+import Swal from 'sweetalert2'
 
 // --- VISTAS DE APP ---
 import InstagramView from './InstagramView'
@@ -8,22 +9,38 @@ import CatalogView from './CatalogView'
 import ProductsListView from './ProductsListView'
 import PlansView from './PlansView'
 import WhatsAppView from './WhatsAppView.tsx' 
+import FaqsView from './FaqsView' // <--- RE-INCORPORADO
 import Footer from './Footer'
 
 // --- VISTAS LEGALES ---
-import { PrivacyPolicy, TermsOfService, DataDeletion, SupportPage } from './LegalPages'
+import { PrivacyPolicy, TermsOfService } from './LegalPages'
 
 export default function Dashboard({ session }: { session: Session }) {
   const [profile, setProfile] = useState<any>(null)
-  const [instance, setInstance] = useState<any>(null) // NUEVO: Estado para la instancia de Instagram
+  const [instance, setInstance] = useState<any>(null)
   const [activeTab, setActiveTab] = useState('instagram')
   const [catalogOpen, setCatalogOpen] = useState(false)
   const [legalView, setLegalView] = useState<string | null>(null);
 
+  // Manejo de alertas por URL (Pagos o Conexiones)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('connected') === 'true') {
+      Swal.fire({ title: '¡Conexión Exitosa!', icon: 'success', confirmButtonColor: '#10B981', timer: 3000 });
+      window.history.replaceState({}, document.title, window.location.pathname);
+      getData(); setActiveTab('instagram'); 
+    }
+    if (params.get('payment') === 'success') {
+        Swal.fire({ title: '¡Pago Recibido!', icon: 'success', confirmButtonColor: '#10B981' });
+        window.history.replaceState({}, document.title, window.location.pathname);
+        getData(); setActiveTab('plans'); 
+    }
+  }, []);
+
   useEffect(() => { getData() }, [])
 
   async function getData() {
-    // 1. Obtener Perfil (Límites, Plan, Nombre)
+    // 1. Obtener Perfil (Límites, Plan, Nombre) - Mantenemos .single() como pediste
     const { data: profileData } = await supabase
       .from('profiles')
       .select('*')
@@ -31,7 +48,7 @@ export default function Dashboard({ session }: { session: Session }) {
       .single()
     if (profileData) setProfile(profileData)
 
-    // 2. Obtener Instancia (Conexión Instagram, Prompt)
+    // 2. Obtener Instancia (Conexión Instagram, Prompt) - Mantenemos .single()
     const { data: instanceData } = await supabase
       .from('instances')
       .select('*')
@@ -51,7 +68,9 @@ export default function Dashboard({ session }: { session: Session }) {
              </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          <p className="text-xs font-bold text-gray-500 uppercase px-2 mb-2 tracking-widest">Canales</p>
+          
           <SidebarBtn 
             label="Instagram" 
             active={activeTab === 'instagram'} 
@@ -62,6 +81,16 @@ export default function Dashboard({ session }: { session: Session }) {
             active={activeTab === 'whatsapp'} 
             onClick={() => {setActiveTab('whatsapp'); setLegalView(null)}} 
           />
+          
+          <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Configuración</p>
+          
+          {/* BOTÓN FAQs RECUPERADO */}
+          <SidebarBtn 
+            label="Faqs / Base Conocimiento" 
+            active={activeTab === 'faqs'} 
+            onClick={() => {setActiveTab('faqs'); setLegalView(null)}} 
+          />
+
           <SidebarBtn 
             label="Catálogo" 
             active={activeTab === 'catalog' || activeTab === 'inventory'} 
@@ -70,20 +99,24 @@ export default function Dashboard({ session }: { session: Session }) {
             isOpen={catalogOpen} 
           />
           {catalogOpen && (
-            <div className="ml-9 space-y-1">
+            <div className="ml-4 border-l border-gray-800 pl-4 space-y-1">
               <SidebarSubBtn label="Subir Producto" active={activeTab === 'catalog'} onClick={() => setActiveTab('catalog')} />
               <SidebarSubBtn label="Inventario" active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} />
             </div>
           )}
+
           <SidebarBtn 
-            label="Planes" 
+            label="Planes / Saldo" 
             active={activeTab === 'plans'} 
             onClick={() => setActiveTab('plans')} 
           />
         </nav>
 
         <div className="p-4 border-t border-gray-800">
-            <button onClick={() => supabase.auth.signOut()} className="w-full text-left text-red-500 p-2 hover:bg-red-500/10 rounded-lg">Cerrar Sesión</button>
+            <button onClick={() => supabase.auth.signOut()} className="w-full text-left text-red-500 p-2 hover:bg-red-500/10 rounded-lg flex items-center gap-2 transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+              <span>Cerrar Sesión</span>
+            </button>
         </div>
       </aside>
 
@@ -94,12 +127,23 @@ export default function Dashboard({ session }: { session: Session }) {
               <InstagramView 
                 session={session} 
                 profile={profile} 
-                instance={instance} // Pasamos la instancia real
+                instance={instance} 
                 onUpdate={getData} 
               />
             )}
             {activeTab === 'whatsapp' && <WhatsAppView />} 
-            {activeTab === 'catalog' && <CatalogView session={session} profile={profile} onProductAdded={getData} goToPlans={() => setActiveTab('plans')} />}
+            
+            {/* VISTA DE FAQs RE-INCORPORADA */}
+            {activeTab === 'faqs' && <FaqsView session={session} />}
+            
+            {activeTab === 'catalog' && (
+              <CatalogView 
+                session={session} 
+                profile={profile} 
+                onProductAdded={getData} 
+                goToPlans={() => setActiveTab('plans')} 
+              />
+            )}
             {activeTab === 'inventory' && <ProductsListView session={session} onUpdate={getData} />}
             {activeTab === 'plans' && <PlansView session={session} profile={profile} />}
         </div>
@@ -113,12 +157,18 @@ export default function Dashboard({ session }: { session: Session }) {
   )
 }
 
-// Auxiliares rápidos para el Sidebar
+// Auxiliares del Sidebar
 const SidebarBtn = ({ label, active, onClick, isParent, isOpen }: any) => (
-  <button onClick={onClick} className={`w-full flex items-center p-3 rounded-xl text-sm ${active ? 'bg-blue-600/10 text-blue-400 border border-blue-600/20' : 'text-gray-400 hover:bg-gray-800'}`}>
+  <button onClick={onClick} className={`w-full flex items-center p-3 rounded-xl text-sm transition-all ${active ? 'bg-blue-600/10 text-blue-400 border border-blue-600/20' : 'text-gray-400 hover:bg-gray-800'}`}>
     <span className="font-semibold">{label}</span>
+    {isParent && (
+      <span className="ml-auto">
+        <svg className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+      </span>
+    )}
   </button>
 )
+
 const SidebarSubBtn = ({ label, active, onClick }: any) => (
-  <button onClick={onClick} className={`w-full text-left py-2 text-xs uppercase ${active ? 'text-blue-400' : 'text-gray-500'}`}>{label}</button>
+  <button onClick={onClick} className={`w-full text-left py-2 text-xs font-medium uppercase tracking-wider transition-colors ${active ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}`}>{label}</button>
 )
