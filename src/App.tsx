@@ -10,6 +10,8 @@ import Dashboard from './components/Dashboard'
 import LoginPage from './components/LoginPage'
 import PaymentResult from './components/PaymentResult' // <--- TU NUEVA PÁGINA
 
+import KnowlowerView from './components/KnowlowerView';
+
 function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
@@ -71,11 +73,23 @@ function App() {
         path="/payment-result" 
         element={<PaymentResult />} 
       />
-
-      {/* 👇 AGREGA ESTAS 3 RUTAS NUEVAS AL FINAL (antes del 404) */}
-      <Route path="/privacy" element={<PrivacyPolicy />} />
-      <Route path="/terms" element={<TermsOfService />} />
-      <Route path="/data-deletion" element={<DataDeletion />} />
+      
+      <Route
+  path="/privacy"
+  element={<PrivacyPolicy onClose={() => navigate('/')} />}
+/>
+<Route
+  path="/terms"
+  element={<TermsOfService onClose={() => navigate('/')} />}
+/>
+<Route
+  path="/data-deletion"
+  element={<DataDeletion onClose={() => navigate('/')} />}
+/>
+<Route
+        path="/knowlower"
+        element={<KnowlowerView onClose={() => navigate('/')} userId={session?.user?.id || ''} />}
+      />
 
       {/* RUTA COMODÍN (Debe ser la última) */}
       <Route path="*" element={<Navigate to="/" />} />

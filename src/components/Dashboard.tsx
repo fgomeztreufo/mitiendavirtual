@@ -14,6 +14,9 @@ import Footer from './Footer'
 
 // --- VISTAS LEGALES ---
 import { PrivacyPolicy, TermsOfService } from './LegalPages'
+import KnowlowerView from './KnowlowerView.tsx'
+import Leads from './Leads.tsx'
+import LeadsView from './Leads.tsx'
 
 export default function Dashboard({ session }: { session: Session }) {
   const [profile, setProfile] = useState<any>(null)
@@ -21,6 +24,7 @@ export default function Dashboard({ session }: { session: Session }) {
   const [activeTab, setActiveTab] = useState('instagram')
   const [catalogOpen, setCatalogOpen] = useState(false)
   const [legalView, setLegalView] = useState<string | null>(null);
+  const [knowledgeOpen, setKnowledgeOpen] = useState(false);
 
   // Manejo de alertas por URL (Pagos o Conexiones)
   useEffect(() => {
@@ -71,11 +75,23 @@ export default function Dashboard({ session }: { session: Session }) {
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           <p className="text-xs font-bold text-gray-500 uppercase px-2 mb-2 tracking-widest">Canales</p>
           
-          <SidebarBtn 
-            label="Instagram" 
-            active={activeTab === 'instagram'} 
-            onClick={() => {setActiveTab('instagram'); setLegalView(null)}} 
-          />
+         {/* Botón Instagram con submenú */}
+        <SidebarBtn 
+          label="Instagram" 
+          active={ activeTab === 'leads'} 
+          onClick={() => setCatalogOpen(!catalogOpen)} 
+          isParent={true} 
+          isOpen={catalogOpen} 
+        />
+        {catalogOpen && (
+          <div className="ml-4 border-l border-gray-800 pl-4 space-y-1">
+            <SidebarSubBtn 
+              label="Ventas Capturadas" 
+              active={activeTab === 'leads'} 
+              onClick={() => setActiveTab('leads')} 
+            />
+          </div>
+        )}
           <SidebarBtn 
             label="WhatsApp" 
             active={activeTab === 'whatsapp'} 
@@ -83,13 +99,34 @@ export default function Dashboard({ session }: { session: Session }) {
           />
           
           <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Configuración</p>
-          
-          {/* BOTÓN FAQs RECUPERADO */}
-          <SidebarBtn 
-            label="Faqs / Base Conocimiento" 
-            active={activeTab === 'faqs'} 
-            onClick={() => {setActiveTab('faqs'); setLegalView(null)}} 
-          />
+          {/* NUEVO: Link directo que pediste */}
+        <SidebarBtn 
+          label="Configura tu Instagram" 
+          active={activeTab === 'instagram'} 
+          onClick={() => setActiveTab('instagram')} 
+        />
+         {/* Botón Conocimiento con submenú */}
+        <SidebarBtn 
+          label="Faqs / Base Conocimiento" 
+          active={activeTab === 'faqs' || activeTab === 'knowlower'} 
+          onClick={() => setKnowledgeOpen(!knowledgeOpen)} 
+          isParent={true} 
+          isOpen={knowledgeOpen} 
+        />
+        {knowledgeOpen && (
+          <div className="ml-4 border-l border-gray-800 pl-4 space-y-1">
+            <SidebarSubBtn 
+                label="Cargar" 
+                active={activeTab === 'faqs'} 
+                onClick={() => setActiveTab('faqs')} 
+              />
+            <SidebarSubBtn 
+              label="Cerebro IA" 
+              active={activeTab === 'knowlower'} 
+              onClick={() => setActiveTab('knowlower')} 
+            />
+          </div>
+        )}
 
           <SidebarBtn 
             label="Catálogo" 
@@ -135,7 +172,8 @@ export default function Dashboard({ session }: { session: Session }) {
             
             {/* VISTA DE FAQs RE-INCORPORADA */}
             {activeTab === 'faqs' && <FaqsView session={session} />}
-            
+            {activeTab === 'leads' && <LeadsView userId={session.user.id}/>}
+            {activeTab === 'knowlower' && <KnowlowerView userId={session.user.id} />}
             {activeTab === 'catalog' && (
               <CatalogView 
                 session={session} 
