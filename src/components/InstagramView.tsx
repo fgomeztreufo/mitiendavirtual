@@ -252,6 +252,14 @@ Nombre: ${ownerName}.
                 <div className="p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-[24px] text-emerald-500">
                   <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse mx-auto mb-2 shadow-[0_0_10px_rgba(16,185,129,0.8)]"></div>
                   <div className="font-black text-xs uppercase tracking-tighter">Instagram Conectado</div>
+                  {/* --- NUEVO: ID DE CUENTA LOGUEADA --- */}
+                  <div className="mt-4 pt-4 border-t border-emerald-500/10">
+                    <span className="text-[9px] font-black text-zinc-500 uppercase block mb-1">ID de Cuenta Vinculada</span>
+                    <code className="bg-black/50 px-3 py-1 rounded-full text-[11px] font-mono text-emerald-400 border border-emerald-500/20">
+                      {instance.provider_id}
+                    </code>
+                  </div>
+                  {/* ----------------------------------- */}
                 </div>
                 <button onClick={handleDisconnectInstagram} className="w-full py-2 text-[10px] font-black text-red-500/50 hover:text-red-500 uppercase transition-all">
                   Desvincular cuenta
