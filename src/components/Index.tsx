@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Footer from './Footer'
 import { DataDeletion, PrivacyPolicy, SupportPage, TermsOfService } from './LegalPages';
 
 interface IndexProps {
@@ -112,32 +111,41 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
         </AnimatePresence>
       </div>
 
-      {/* MANO ROBOT (Absolute) */}
+      {/* MANO ROBOT — centrada horizontalmente, sube desde abajo hasta tocar el botón */}
       <motion.img
         src="/robot-hand.png" 
-        initial={{ y: '100vh', x: '0%', rotate: 10, opacity: 0 }} 
+        initial={{ y: '100vh', x: '-50%', rotate: 10, opacity: 0 }} 
         animate={{ 
-            y: (stage === 'approaching' || stage === 'touching') ? 'calc(60% - 110px)' : '100vh',
-            x: (stage === 'approaching' || stage === 'touching') ? '105%' : '0%',
+            y: (stage === 'approaching' || stage === 'touching') ? '-125px' : '100vh',
+            x: '-65%',
             rotate: stage === 'touching' ? 0 : 10,
             opacity: (stage === 'buttonReady' || stage === 'redirecting') ? 0 : 1
         }}
         transition={{ duration: 2.5, ease: luxuryEase }}
-        className="absolute z-20 pointer-events-none w-[280px] sm:w-[400px] md:w-[500px] lg:w-[600px] h-auto object-contain origin-bottom"
+        className="absolute top-1/2 left-1/2 z-20 pointer-events-none w-[220px] sm:w-[350px] md:w-[450px] lg:w-[600px] h-auto object-contain origin-bottom"
       />
-      
 
-      {/* FOOTER DINÁMICO */}
-      <Footer 
-        variant="index" 
-        onNavigate={(tab) => {
-          // Si estás en el index, podrías redirigir a una URL física 
-          // o simplemente hacer scroll si estuvieran ahí.
-          console.log("Navegando a:", tab);
-          setLegalView(tab);
-        }} 
-        
-      />
+      {/* Footer compacto */}
+      <div className="relative z-30 border-t border-white/10 bg-black/40 backdrop-blur-sm px-6 py-6 text-center">
+        <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-500">
+          <button onClick={() => setLegalView('terms')} className="hover:text-white transition-colors">
+            Términos de Servicio
+          </button>
+          <span className="text-gray-700">•</span>
+          <button onClick={() => setLegalView('privacy')} className="hover:text-white transition-colors">
+            Privacidad
+          </button>
+          <span className="text-gray-700">•</span>
+          <button onClick={() => setLegalView('data-deletion')} className="hover:text-red-400 text-red-500/60 transition-colors">
+            Eliminación de Datos
+          </button>
+          <span className="text-gray-700">•</span>
+          <button onClick={() => setLegalView('support')} className="hover:text-blue-300 text-blue-400/70 transition-colors">
+            Centro de Ayuda
+          </button>
+        </div>
+        <p className="text-[10px] text-gray-600 mt-3 font-mono tracking-widest uppercase">© 2026 MiTiendaVirtual • Santiago, CL</p>
+      </div>
       {/* --- RENDERIZADO DE MODALES LEGALES --- */}
       {legalView === 'terms' && <TermsOfService onClose={() => setLegalView(null)} />}
       {legalView === 'privacy' && <PrivacyPolicy onClose={() => setLegalView(null)} />}
