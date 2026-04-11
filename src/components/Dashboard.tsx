@@ -10,10 +10,9 @@ import ProductsListView from './ProductsListView'
 import PlansView from './PlansView'
 import WhatsAppView from './WhatsAppView.tsx' 
 import FaqsView from './FaqsView' // <--- RE-INCORPORADO
-import Footer from './Footer'
 
 // --- VISTAS LEGALES ---
-import { PrivacyPolicy, TermsOfService } from './LegalPages'
+import { PrivacyPolicy, TermsOfService, DataDeletion, SupportPage } from './LegalPages'
 import KnowlowerView from './KnowlowerView.tsx'
 import Leads from './Leads.tsx'
 import LeadsView from './Leads.tsx'
@@ -226,10 +225,33 @@ export default function Dashboard({ session }: { session: Session }) {
             {activeTab === 'plans' && <PlansView session={session} profile={profile} />}
         </div>
         
-        <Footer onNavigate={(tab) => setLegalView(tab)} />
+        {/* Footer compacto */}
+        <div className="border-t border-white/10 bg-[#05050e] px-6 py-6 text-center">
+          <p className="text-xs text-gray-400 font-bold mb-3">MiTienda<span className="text-blue-500">Virtual</span></p>
+          <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-500">
+            <button onClick={() => setLegalView('terms')} className="hover:text-white transition-colors">
+              Términos de Servicio
+            </button>
+            <span className="text-gray-700">•</span>
+            <button onClick={() => setLegalView('privacy')} className="hover:text-white transition-colors">
+              Privacidad
+            </button>
+            <span className="text-gray-700">•</span>
+            <button onClick={() => setLegalView('data-deletion')} className="hover:text-red-400 text-red-500/60 transition-colors">
+              Eliminación de Datos
+            </button>
+            <span className="text-gray-700">•</span>
+            <button onClick={() => setLegalView('support')} className="hover:text-blue-300 text-blue-400/70 transition-colors">
+              Centro de Ayuda
+            </button>
+          </div>
+          <p className="text-[10px] text-gray-700 mt-4 font-mono tracking-widest uppercase">© 2026 MiTiendaVirtual • Santiago, CL</p>
+        </div>
 
         {legalView === 'terms' && <TermsOfService onClose={() => setLegalView(null)} />}
         {legalView === 'privacy' && <PrivacyPolicy onClose={() => setLegalView(null)} />}
+        {legalView === 'data-deletion' && <DataDeletion onClose={() => setLegalView(null)} />}
+        {legalView === 'support' && <SupportPage onClose={() => setLegalView(null)} />}
       </main>
     </div>
   )
