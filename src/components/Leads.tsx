@@ -107,20 +107,20 @@ export default function LeadsView({ onClose, userId }: { onClose?: () => void, u
       </div>
 
       <div className="max-w-7xl mx-auto">
-        <div className="bg-zinc-900/20 border border-zinc-800/40 rounded-[32px] overflow-hidden">
-          <table className="w-full text-left">
+        <div className="bg-zinc-900/20 border border-zinc-800/40 rounded-[32px] overflow-hidden overflow-x-auto">
+          <table className="w-full text-left min-w-[600px]">
             <thead>
               <tr className="bg-zinc-900/60 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">
-                <th className="px-8 py-5 border-b border-zinc-800/50">Cliente</th>
-                <th className="px-8 py-5 border-b border-zinc-800/50">Intención</th>
-                <th className="px-8 py-5 border-b border-zinc-800/50 text-center">Estado</th>
-                <th className="px-8 py-5 border-b border-zinc-800/50 text-right">Valor Est.</th>
+                <th className="px-4 sm:px-8 py-4 sm:py-5 border-b border-zinc-800/50">Cliente</th>
+                <th className="px-4 sm:px-8 py-4 sm:py-5 border-b border-zinc-800/50">Intención</th>
+                <th className="px-4 sm:px-8 py-4 sm:py-5 border-b border-zinc-800/50 text-center">Estado</th>
+                <th className="px-4 sm:px-8 py-4 sm:py-5 border-b border-zinc-800/50 text-right">Valor Est.</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/30">
               {leads.map((lead) => (
                 <tr key={lead.id} className="group hover:bg-white/[0.01] transition-all">
-                  <td className="px-8 py-6">
+                  <td className="px-4 sm:px-8 py-4 sm:py-6">
                     <div className="text-zinc-100 font-bold text-base flex items-center gap-2">
                       {lead.cliente_nombre || 'Prospecto sin nombre'}
                       <a 
@@ -135,7 +135,7 @@ export default function LeadsView({ onClose, userId }: { onClose?: () => void, u
                     <div className="text-zinc-600 text-[10px] font-mono mt-1 italic">{lead.whatsapp_contacto || 'Sin contacto'}</div>
                   </td>
                   
-                  <td className="px-8 py-6">
+                  <td className="px-4 sm:px-8 py-4 sm:py-6">
                     <div className="text-amber-500/90 text-sm font-semibold tracking-tight">
                       {lead.intencion_compra || 'Interés general'}
                     </div>
@@ -144,7 +144,7 @@ export default function LeadsView({ onClose, userId }: { onClose?: () => void, u
                     </div>
                   </td>
 
-                  <td className="px-8 py-6 text-center">
+                  <td className="px-4 sm:px-8 py-4 sm:py-6 text-center">
                     <select 
                       value={lead.status}
                       onChange={(e) => updateStatus(lead.id, e.target.value)}
@@ -161,7 +161,7 @@ export default function LeadsView({ onClose, userId }: { onClose?: () => void, u
                     </select>
                   </td>
 
-                  <td className="px-8 py-6 text-right font-mono text-white text-sm">
+                  <td className="px-4 sm:px-8 py-4 sm:py-6 text-right font-mono text-white text-sm">
                     ${Number(lead.valor_estimado || 0).toLocaleString('es-CL')}
                     <div className="text-[9px] text-zinc-700 font-bold mt-1">
                       {new Date(lead.created_at).toLocaleDateString()}

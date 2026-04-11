@@ -64,7 +64,7 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 items-start">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 items-start">
                 
                 {/* PLAN FREE */}
                 <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col h-full opacity-80 hover:opacity-100 transition-opacity">

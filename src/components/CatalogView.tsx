@@ -152,7 +152,7 @@ export default function CatalogView({ session, profile, onProductAdded,goToPlans
     )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-2 gap-6 text-left">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left">
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Nombre del Producto</label>
                 <input required

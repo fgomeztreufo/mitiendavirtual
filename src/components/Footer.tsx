@@ -6,13 +6,13 @@ interface FooterProps {
 export default function Footer({ onNavigate, variant = 'transparent' }: FooterProps) {
   const bgStyles = {
     index: 'bg-transparent',
-    login: 'bg-[#1a1a1a]',
+    login: 'bg-[#0d0d1a]',
     dashboard: 'bg-[#050505]',
     transparent: 'bg-transparent'
   };
 
   return (
-    <footer className={`w-full ${bgStyles[variant]} text-gray-400 py-12 px-6 border-t border-white/5 transition-colors duration-500`}>
+    <footer className={`w-full ${bgStyles[variant]} text-gray-400 py-12 px-6 border-t border-white/10 transition-colors duration-500`}>
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-left">
         
         {/* COLUMNA 1: Identidad Visual */}
@@ -20,12 +20,12 @@ export default function Footer({ onNavigate, variant = 'transparent' }: FooterPr
           <h3 className="text-white font-bold text-2xl tracking-tighter">
             MiTienda<span className="text-blue-500">Virtual</span>
           </h3>
-          <p className="text-xs text-gray-500 leading-relaxed max-w-[220px]">
+          <p className="text-xs text-gray-400 leading-relaxed max-w-[220px]">
             Infraestructura inteligente para el comercio moderno en Chile.
           </p>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            <span className="text-[9px] text-gray-600 uppercase tracking-widest font-bold">
+            <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold">
               Tech Provider Status: Pending
             </span>
           </div>
@@ -38,15 +38,15 @@ export default function Footer({ onNavigate, variant = 'transparent' }: FooterPr
           </h4>
           <ul className="space-y-3 text-[13px]">
             <li className="flex flex-col">
-              <span className="text-[10px] text-gray-600 uppercase tracking-wider">Representante</span>
-              <b className="text-gray-200">FELIPE ALONSO GOMEZ TREUFO</b>
+              <span className="text-[10px] text-gray-500 uppercase tracking-wider">Representante</span>
+              <b className="text-gray-100">FELIPE ALONSO GOMEZ TREUFO</b>
             </li>
             <li className="flex flex-col">
-              <span className="text-[10px] text-gray-600 uppercase tracking-wider">RUT</span>
+              <span className="text-[10px] text-gray-500 uppercase tracking-wider">RUT</span>
               <span className="text-gray-300">16.208.020-2</span>
             </li>
             <li className="flex flex-col">
-              <span className="text-[10px] text-gray-600 uppercase tracking-wider">Domicilio Comercial</span>
+              <span className="text-[10px] text-gray-500 uppercase tracking-wider">Domicilio Comercial</span>
               <span className="text-gray-400 text-[11px] uppercase">Los Castaños 1088, Puente Alto</span>
             </li>
           </ul>
@@ -54,17 +54,17 @@ export default function Footer({ onNavigate, variant = 'transparent' }: FooterPr
 
         {/* COLUMNA 3: Navegación y Soporte */}
         <div className="md:text-right space-y-4">
-          <h4 className="text-gray-500 font-semibold uppercase text-[10px] tracking-[0.3em]">
+          <h4 className="text-gray-400 font-semibold uppercase text-[10px] tracking-[0.3em]">
             Documentación
           </h4>
           <ul className="space-y-3 text-sm flex flex-col md:items-end">
             <li>
-              <button onClick={() => onNavigate('terms')} className="hover:text-white transition-colors">
+              <button onClick={() => onNavigate('terms')} className="text-gray-300 hover:text-white transition-colors">
                 Términos de Servicio
               </button>
             </li>
             <li>
-              <button onClick={() => onNavigate('privacy')} className="hover:text-white transition-colors">
+              <button onClick={() => onNavigate('privacy')} className="text-gray-300 hover:text-white transition-colors">
                 Privacidad
               </button>
             </li>
@@ -89,8 +89,8 @@ export default function Footer({ onNavigate, variant = 'transparent' }: FooterPr
         </div>
       </div>
 
-      <div className="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-        <p className="text-[10px] text-gray-700 tracking-[0.4em] uppercase font-mono">
+      <div className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
+        <p className="text-xs text-gray-500 tracking-[0.4em] uppercase font-mono">
           © 2026 MiTiendaVirtual • Santiago, CL
         </p>
       </div>

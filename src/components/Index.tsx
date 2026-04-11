@@ -29,19 +29,25 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
   const [legalView, setLegalView] = useState<string | null>(null);
 
   useEffect(() => {
-    setTimeout(() => setStage('approaching'), 1500)
-    setTimeout(() => setStage('touching'), 2800)
-    setTimeout(() => setStage('buttonReady'), 3800)
-    
-    setTimeout(() => {
+    const t1 = setTimeout(() => setStage('approaching'), 1500)
+    const t2 = setTimeout(() => setStage('touching'), 2800)
+    const t3 = setTimeout(() => setStage('buttonReady'), 3800)
+    const t4 = setTimeout(() => {
         setStage('redirecting');
         onLoginClick();
     }, 6000) 
+
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+      clearTimeout(t3)
+      clearTimeout(t4)
+    }
   }, [onLoginClick])
 
   return (
     // min-h-screen y flex-col aseguran que el footer se vaya al fondo
-    <div className="min-h-screen w-screen bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#1b2735] via-[#090a0f] to-[#000000] flex flex-col overflow-x-hidden relative font-sans">
+    <div className="min-h-screen w-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#1b2735] via-[#090a0f] to-[#000000] flex flex-col overflow-x-hidden relative font-sans">
       
       {/* FONDO DE ESTRELLAS */}
       <div className="absolute inset-0 z-0 animate-pulse opacity-30" style={{ width: '1px', height: '1px', boxShadow: smallStars }} />
@@ -117,7 +123,7 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
             opacity: (stage === 'buttonReady' || stage === 'redirecting') ? 0 : 1
         }}
         transition={{ duration: 2.5, ease: luxuryEase }}
-        className="absolute z-20 pointer-events-none w-[600px] h-auto object-contain origin-bottom"
+        className="absolute z-20 pointer-events-none w-[280px] sm:w-[400px] md:w-[500px] lg:w-[600px] h-auto object-contain origin-bottom"
       />
       
 
