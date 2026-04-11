@@ -8,7 +8,7 @@ const LegalLayout = ({ title, subtitle, children, onClose }: { title: string, su
       {/* Cabecera con Botón de Cierre Funcional */}
       <div className="flex items-center justify-between mb-12 border-b border-white/10 pb-8">
         <div>
-          <h1 className="text-4xl font-black text-white tracking-tight uppercase">{title}</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight uppercase">{title}</h1>
           <p className="text-blue-500 font-mono text-xs mt-2 tracking-[0.3em] uppercase">{subtitle}</p>
         </div>
         <button 
@@ -48,14 +48,14 @@ export const TermsOfService = ({ onClose }: { onClose: () => void }) => (
         El acceso a MiTiendaVirtual se rige por niveles de suscripción mensual. Los precios y capacidades vigentes para el año 2026 en Chile son:
       </p>
 
-      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-inner">
-        <table className="w-full text-left text-sm text-gray-300">
+      <div className="overflow-hidden overflow-x-auto rounded-xl border border-white/10 bg-white/5 shadow-inner">
+        <table className="w-full text-left text-sm text-gray-300 min-w-[500px]">
           <thead>
             <tr className="bg-white/10 text-[10px] uppercase tracking-widest text-blue-400">
-              <th className="px-6 py-4">Nivel de Plan</th>
-              <th className="px-6 py-4">Inversión Mensual</th>
-              <th className="px-6 py-4">Catálogo</th>
-              <th className="px-6 py-4">Mensajes AI</th>
+              <th className="px-3 sm:px-6 py-3 sm:py-4">Nivel de Plan</th>
+              <th className="px-3 sm:px-6 py-3 sm:py-4">Inversión Mensual</th>
+              <th className="px-3 sm:px-6 py-3 sm:py-4">Catálogo</th>
+              <th className="px-3 sm:px-6 py-3 sm:py-4">Mensajes AI</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">

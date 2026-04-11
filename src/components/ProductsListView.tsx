@@ -267,8 +267,8 @@ export default function ProductsListView({ session, onUpdate }: any) {
       </div>
 
       {/* TABLA */}
-      <div className="bg-[#111827] border border-gray-800 rounded-[2rem] overflow-hidden">
-        <table className="w-full">
+      <div className="bg-[#111827] border border-gray-800 rounded-[2rem] overflow-hidden overflow-x-auto">
+        <table className="w-full min-w-[400px]">
           <thead className="bg-gray-900/50 border-b border-gray-800 text-left">
             <tr>
               <th className="p-5 text-[10px] font-black text-gray-500 uppercase">Producto</th>

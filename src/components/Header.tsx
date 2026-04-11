@@ -34,9 +34,9 @@ const Header: React.FC = () => {
           <img
             src="/images/logo.png"
             alt="Logo de la tienda"
-            className="h-20 w-20 object-contain"
+            className="h-14 w-14 md:h-20 md:w-20 object-contain"
           />
-  <span className="text-2xl font-bold text-gray-900">{siteConfig.company.name}</span>
+  <span className="text-xl md:text-2xl font-bold text-gray-900">{siteConfig.company.name}</span>
 </div>
 
           {/* Desktop Navigation */}
