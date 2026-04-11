@@ -116,7 +116,7 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
         src="/robot-hand.png" 
         initial={{ y: '100vh', x: '-50%', rotate: 10, opacity: 0 }} 
         animate={{ 
-            y: (stage === 'approaching' || stage === 'touching') ? '-135px' : '100vh',
+            y: (stage === 'approaching' || stage === 'touching') ? '-125px' : '100vh',
             x: '-65%',
             rotate: stage === 'touching' ? 0 : 10,
             opacity: (stage === 'buttonReady' || stage === 'redirecting') ? 0 : 1
