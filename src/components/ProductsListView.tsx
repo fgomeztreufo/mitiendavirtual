@@ -107,8 +107,16 @@ export default function ProductsListView({ session, onUpdate }: any) {
   
       if (ragError) console.error("⚠️ No se pudo limpiar RAG (se re-indexa en cron):", ragError.message);
   
-      console.log("✅ ¡TODO SINCRONIZADO! El bot usará datos actualizados en el próximo cron (03:00 UTC)");
-      Swal.fire({ icon: 'success', title: '¡Actualizado!', background: '#111827', color: '#fff', timer: 1500, showConfirmButton: false });
+      console.log("✅ ¡TODO SINCRONIZADO! El bot usará datos actualizados en los próximos 30 minutos.");
+      Swal.fire({ 
+        icon: 'success', 
+        title: '¡Producto actualizado!', 
+        text: 'Tu bot conocerá los cambios en los próximos 30 minutos.',
+        background: '#111827', 
+        color: '#fff', 
+        timer: 3000, 
+        showConfirmButton: false 
+      });
   
       setEditingProduct(null);
       fetchProducts();
