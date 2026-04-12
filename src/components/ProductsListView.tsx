@@ -281,15 +281,23 @@ export default function ProductsListView({ session, onUpdate }: any) {
                 <td className="p-4 flex items-center gap-3">
                   <img src={product.image_url} className="w-10 h-10 rounded-lg object-cover" />
                   <div className="flex flex-col">
-                    <span className="font-bold text-xs text-white uppercase">{product.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-xs text-white uppercase">{product.name}</span>
+                      {product.activo === false && (
+                        <span className="text-[8px] font-black uppercase bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-full px-2 py-0.5">
+                          Suspendido
+                        </span>
+                      )}
+                    </div>
                     <span className="text-green-500 text-[10px] font-black">${Number(product.price).toLocaleString('es-CL')}</span>
                   </div>
                 </td>
                 <td className="p-4 text-center">
                   <div className="flex justify-center gap-2">
                     <button 
-                      onClick={() => startEdit(product)} 
-                      className="p-2 bg-blue-600/10 hover:bg-blue-600 text-blue-500 hover:text-white rounded-xl transition-all font-black text-[10px] uppercase px-4"
+                      onClick={() => startEdit(product)}
+                      disabled={product.activo === false}
+                      className="p-2 bg-blue-600/10 hover:bg-blue-600 text-blue-500 hover:text-white rounded-xl transition-all font-black text-[10px] uppercase px-4 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-blue-600/10 disabled:hover:text-blue-500"
                     >
                       Edit
                     </button>
