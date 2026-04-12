@@ -12,6 +12,7 @@ export default function ProductsListView({ session, onUpdate }: any) {
   // ESTADOS PARA EDICIÓN
   const [editingProduct, setEditingProduct] = useState<any>(null)
   const [editData, setEditData] = useState({ name: '', price: '', description: '' })
+  const [editPreviewUrl, setEditPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // PAGINACIÓN
@@ -54,6 +55,7 @@ export default function ProductsListView({ session, onUpdate }: any) {
       price: product.price.toString(),
       description: product.description || ''
     });
+    setEditPreviewUrl(null);
   };
 
   const getFilePathFromUrl = (url: string) => {
@@ -70,11 +72,17 @@ export default function ProductsListView({ session, onUpdate }: any) {
   
       // 1. GESTIÓN DE STORAGE
       if (file) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+          throw new Error(`Tipo de imagen no permitido: ${file.type}. Solo JPEG, PNG o WEBP.`);
+        }
         console.log("📸 Nueva imagen. Borrando anterior...");
         await deleteStorageFile(editingProduct.image_url);
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${session.user.id}/${Math.random()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage.from('catalog').upload(fileName, file);
+        const fileExt = file.type === 'image/jpeg' ? 'jpg' : file.type === 'image/png' ? 'png' : 'webp';
+        const fileName = `${session.user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('catalog')
+          .upload(fileName, file, { contentType: file.type, upsert: false });
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from('catalog').getPublicUrl(fileName);
         finalImageUrl = urlData.publicUrl;
@@ -119,6 +127,7 @@ export default function ProductsListView({ session, onUpdate }: any) {
       });
   
       setEditingProduct(null);
+      setEditPreviewUrl(null);
       fetchProducts();
       if (onUpdate) onUpdate();
   
@@ -247,8 +256,23 @@ export default function ProductsListView({ session, onUpdate }: any) {
             <h2 className="text-xl font-black italic uppercase text-white mb-6">Editar Producto</h2>
             <form onSubmit={handleUpdate} className="space-y-4">
                <div className="flex flex-col items-center gap-4 bg-black/40 p-4 rounded-3xl border border-gray-800 text-center">
-                 <img src={editingProduct.image_url} className="w-24 h-24 object-cover rounded-xl border border-gray-700" />
-                 <input type="file" ref={fileInputRef} accept="image/*" className="text-[10px] text-gray-400" />
+                 <img
+                   src={editPreviewUrl ?? editingProduct.image_url}
+                   className="w-24 h-24 object-cover rounded-xl border border-gray-700"
+                 />
+                 {editPreviewUrl && (
+                   <span className="text-[9px] text-green-400 font-bold uppercase">Nueva imagen seleccionada</span>
+                 )}
+                 <input
+                   type="file"
+                   ref={fileInputRef}
+                   accept="image/jpeg,image/png,image/webp"
+                   className="text-[10px] text-gray-400"
+                   onChange={e => {
+                     const f = e.target.files?.[0];
+                     if (f) setEditPreviewUrl(URL.createObjectURL(f));
+                   }}
+                 />
                </div>
                <input className="w-full bg-black border border-gray-800 p-4 rounded-2xl text-white text-sm" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} required />
                <input type="number" className="w-full bg-black border border-gray-800 p-4 rounded-2xl text-white text-sm" value={editData.price} onChange={e => setEditData({...editData, price: e.target.value})} required />
