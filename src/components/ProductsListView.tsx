@@ -80,7 +80,7 @@ export default function ProductsListView({ session, onUpdate }: any) {
         finalImageUrl = urlData.publicUrl;
       }
   
-      // 2. ACTUALIZAR PRODUCTO
+      // 2. ACTUALIZAR PRODUCTO (con filtro user_id para seguridad multi-tenant)
       const { error: prodError } = await supabase
         .from('products')
         .update({
@@ -89,33 +89,25 @@ export default function ProductsListView({ session, onUpdate }: any) {
           description: editData.description,
           image_url: finalImageUrl
         })
-        .eq('id', editingProduct.id);
+        .eq('id', editingProduct.id)
+        .eq('user_id', session.user.id);
   
       if (prodError) throw prodError;
   
-      // 3. SINCRONIZAR RAG (UPSERT)
-      const nuevoContenidoIA = `Original_id: ${editingProduct.id} - Name: ${editData.name} - Descripcion: ${editData.description} - Precio: $${editData.price}`;
-      
-      console.log("🚀 Ejecutando Upsert Final para ID:", editingProduct.id);
+      // 3. SINCRONIZAR RAG: eliminar documento viejo para que el cron
+      // (03:00 UTC) re-indexe con embedding fresco. Esto evita que el
+      // vector de similitud quede obsoleto respecto al nuevo contenido.
+      console.log("🗑️ Eliminando documento RAG para re-indexación:", editingProduct.id);
   
       const { error: ragError } = await supabase
         .from('documents')
-        .upsert({
-          original_id_saas: editingProduct.id.toString(),
-          content: nuevoContenidoIA,
-          user_id: session.user.id,
-          type: 'product',
-          metadata: { 
-            price: editData.price, 
-            image_url: finalImageUrl 
-          }
-        }, { 
-          onConflict: 'original_id_saas' 
-        });
+        .delete()
+        .eq('original_id_saas', editingProduct.id.toString())
+        .eq('user_id', session.user.id);
   
-      if (ragError) throw ragError;
+      if (ragError) console.error("⚠️ No se pudo limpiar RAG (se re-indexa en cron):", ragError.message);
   
-      console.log("✅ ¡TODO SINCRONIZADO!");
+      console.log("✅ ¡TODO SINCRONIZADO! El bot usará datos actualizados en el próximo cron (03:00 UTC)");
       Swal.fire({ icon: 'success', title: '¡Actualizado!', background: '#111827', color: '#fff', timer: 1500, showConfirmButton: false });
   
       setEditingProduct(null);
@@ -190,13 +182,15 @@ export default function ProductsListView({ session, onUpdate }: any) {
         await supabase
           .from('documents')
           .delete()
-          .eq('original_id_saas', product.id.toString());
+          .eq('original_id_saas', product.id.toString())
+          .eq('user_id', session.user.id);
   
         // 3. ELIMINAR DE LA TABLA PRODUCTS
         const { error: dbError } = await supabase
           .from('products')
           .delete()
-          .eq('id', product.id);
+          .eq('id', product.id)
+          .eq('user_id', session.user.id);
   
         if (dbError) throw dbError;
   
