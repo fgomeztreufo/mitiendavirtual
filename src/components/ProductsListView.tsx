@@ -12,6 +12,7 @@ export default function ProductsListView({ session, onUpdate }: any) {
   // ESTADOS PARA EDICIÓN
   const [editingProduct, setEditingProduct] = useState<any>(null)
   const [editData, setEditData] = useState({ name: '', price: '', description: '' })
+  const [editPreviewUrl, setEditPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // PAGINACIÓN
@@ -54,6 +55,7 @@ export default function ProductsListView({ session, onUpdate }: any) {
       price: product.price.toString(),
       description: product.description || ''
     });
+    setEditPreviewUrl(null);
   };
 
   const getFilePathFromUrl = (url: string) => {
@@ -70,17 +72,23 @@ export default function ProductsListView({ session, onUpdate }: any) {
   
       // 1. GESTIÓN DE STORAGE
       if (file) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+          throw new Error(`Tipo de imagen no permitido: ${file.type}. Solo JPEG, PNG o WEBP.`);
+        }
         console.log("📸 Nueva imagen. Borrando anterior...");
         await deleteStorageFile(editingProduct.image_url);
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${session.user.id}/${Math.random()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage.from('catalog').upload(fileName, file);
+        const fileExt = file.type === 'image/jpeg' ? 'jpg' : file.type === 'image/png' ? 'png' : 'webp';
+        const fileName = `${session.user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('catalog')
+          .upload(fileName, file, { contentType: file.type, upsert: false });
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from('catalog').getPublicUrl(fileName);
         finalImageUrl = urlData.publicUrl;
       }
   
-      // 2. ACTUALIZAR PRODUCTO
+      // 2. ACTUALIZAR PRODUCTO (con filtro user_id para seguridad multi-tenant)
       const { error: prodError } = await supabase
         .from('products')
         .update({
@@ -89,36 +97,37 @@ export default function ProductsListView({ session, onUpdate }: any) {
           description: editData.description,
           image_url: finalImageUrl
         })
-        .eq('id', editingProduct.id);
+        .eq('id', editingProduct.id)
+        .eq('user_id', session.user.id);
   
       if (prodError) throw prodError;
   
-      // 3. SINCRONIZAR RAG (UPSERT)
-      const nuevoContenidoIA = `Original_id: ${editingProduct.id} - Name: ${editData.name} - Descripcion: ${editData.description} - Precio: $${editData.price}`;
-      
-      console.log("🚀 Ejecutando Upsert Final para ID:", editingProduct.id);
+      // 3. SINCRONIZAR RAG: eliminar documento viejo para que el cron
+      // (03:00 UTC) re-indexe con embedding fresco. Esto evita que el
+      // vector de similitud quede obsoleto respecto al nuevo contenido.
+      console.log("🗑️ Eliminando documento RAG para re-indexación:", editingProduct.id);
   
       const { error: ragError } = await supabase
         .from('documents')
-        .upsert({
-          original_id_saas: editingProduct.id.toString(),
-          content: nuevoContenidoIA,
-          user_id: session.user.id,
-          type: 'product',
-          metadata: { 
-            price: editData.price, 
-            image_url: finalImageUrl 
-          }
-        }, { 
-          onConflict: 'original_id_saas' 
-        });
+        .delete()
+        .eq('original_id_saas', editingProduct.id.toString())
+        .eq('user_id', session.user.id);
   
-      if (ragError) throw ragError;
+      if (ragError) console.error("⚠️ No se pudo limpiar RAG (se re-indexa en cron):", ragError.message);
   
-      console.log("✅ ¡TODO SINCRONIZADO!");
-      Swal.fire({ icon: 'success', title: '¡Actualizado!', background: '#111827', color: '#fff', timer: 1500, showConfirmButton: false });
+      console.log("✅ ¡TODO SINCRONIZADO! El bot usará datos actualizados en los próximos 30 minutos.");
+      Swal.fire({ 
+        icon: 'success', 
+        title: '¡Producto actualizado!', 
+        text: 'Tu bot conocerá los cambios en los próximos 30 minutos.',
+        background: '#111827', 
+        color: '#fff', 
+        timer: 3000, 
+        showConfirmButton: false 
+      });
   
       setEditingProduct(null);
+      setEditPreviewUrl(null);
       fetchProducts();
       if (onUpdate) onUpdate();
   
@@ -190,13 +199,15 @@ export default function ProductsListView({ session, onUpdate }: any) {
         await supabase
           .from('documents')
           .delete()
-          .eq('original_id_saas', product.id.toString());
+          .eq('original_id_saas', product.id.toString())
+          .eq('user_id', session.user.id);
   
         // 3. ELIMINAR DE LA TABLA PRODUCTS
         const { error: dbError } = await supabase
           .from('products')
           .delete()
-          .eq('id', product.id);
+          .eq('id', product.id)
+          .eq('user_id', session.user.id);
   
         if (dbError) throw dbError;
   
@@ -245,8 +256,23 @@ export default function ProductsListView({ session, onUpdate }: any) {
             <h2 className="text-xl font-black italic uppercase text-white mb-6">Editar Producto</h2>
             <form onSubmit={handleUpdate} className="space-y-4">
                <div className="flex flex-col items-center gap-4 bg-black/40 p-4 rounded-3xl border border-gray-800 text-center">
-                 <img src={editingProduct.image_url} className="w-24 h-24 object-cover rounded-xl border border-gray-700" />
-                 <input type="file" ref={fileInputRef} accept="image/*" className="text-[10px] text-gray-400" />
+                 <img
+                   src={editPreviewUrl ?? editingProduct.image_url}
+                   className="w-24 h-24 object-cover rounded-xl border border-gray-700"
+                 />
+                 {editPreviewUrl && (
+                   <span className="text-[9px] text-green-400 font-bold uppercase">Nueva imagen seleccionada</span>
+                 )}
+                 <input
+                   type="file"
+                   ref={fileInputRef}
+                   accept="image/jpeg,image/png,image/webp"
+                   className="text-[10px] text-gray-400"
+                   onChange={e => {
+                     const f = e.target.files?.[0];
+                     if (f) setEditPreviewUrl(URL.createObjectURL(f));
+                   }}
+                 />
                </div>
                <input className="w-full bg-black border border-gray-800 p-4 rounded-2xl text-white text-sm" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} required />
                <input type="number" className="w-full bg-black border border-gray-800 p-4 rounded-2xl text-white text-sm" value={editData.price} onChange={e => setEditData({...editData, price: e.target.value})} required />
@@ -281,15 +307,23 @@ export default function ProductsListView({ session, onUpdate }: any) {
                 <td className="p-4 flex items-center gap-3">
                   <img src={product.image_url} className="w-10 h-10 rounded-lg object-cover" />
                   <div className="flex flex-col">
-                    <span className="font-bold text-xs text-white uppercase">{product.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-xs text-white uppercase">{product.name}</span>
+                      {product.activo === false && (
+                        <span className="text-[8px] font-black uppercase bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-full px-2 py-0.5">
+                          Suspendido
+                        </span>
+                      )}
+                    </div>
                     <span className="text-green-500 text-[10px] font-black">${Number(product.price).toLocaleString('es-CL')}</span>
                   </div>
                 </td>
                 <td className="p-4 text-center">
                   <div className="flex justify-center gap-2">
                     <button 
-                      onClick={() => startEdit(product)} 
-                      className="p-2 bg-blue-600/10 hover:bg-blue-600 text-blue-500 hover:text-white rounded-xl transition-all font-black text-[10px] uppercase px-4"
+                      onClick={() => startEdit(product)}
+                      disabled={product.activo === false}
+                      className="p-2 bg-blue-600/10 hover:bg-blue-600 text-blue-500 hover:text-white rounded-xl transition-all font-black text-[10px] uppercase px-4 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-blue-600/10 disabled:hover:text-blue-500"
                     >
                       Edit
                     </button>

@@ -34,6 +34,16 @@ export default function Dashboard({ session }: { session: Session }) {
       window.history.replaceState({}, document.title, window.location.pathname);
       getData(); setActiveTab('instagram'); 
     }
+    if (params.get('ig_error') === 'already_used') {
+      Swal.fire({
+        icon: 'error',
+        title: 'Instagram ya vinculado',
+        text: 'Esta cuenta de Instagram ya está conectada a otra tienda en Mi Tienda Virtual.',
+        confirmButtonColor: '#D4AF37'
+      });
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setActiveTab('instagram');
+    }
     if (params.get('payment') === 'success') {
         Swal.fire({ title: '¡Pago Recibido!', icon: 'success', confirmButtonColor: '#10B981' });
         window.history.replaceState({}, document.title, window.location.pathname);
