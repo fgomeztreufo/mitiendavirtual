@@ -99,7 +99,22 @@ Nombre: ${ownerName}.
     Swal.fire({ title: '¡ADN RAG Generado!', icon: 'success', timer: 1500, showConfirmButton: false });
   }
 
-  const handleInstagramLogin = () => {
+  const handleInstagramLogin = async () => {
+    // Si ya hay cuenta conectada, pedir confirmación antes de reemplazarla
+    if (instance?.provider_id) {
+      const result = await Swal.fire({
+        title: '¿Cambiar cuenta de Instagram?',
+        html: `Ya tienes una cuenta conectada.<br>Si continúas, la cuenta actual será reemplazada.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#D4AF37',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Sí, cambiar cuenta',
+        cancelButtonText: 'Cancelar',
+        backdrop: 'rgba(0,0,0,0.8)'
+      });
+      if (!result.isConfirmed) return;
+    }
     const clientId = '1397698478805069'; 
     const redirectUri = 'https://webhook.mitiendavirtual.cl/webhook/instagram-auth'; 
     const scopes = 'instagram_basic,instagram_manage_messages,pages_manage_metadata,pages_read_engagement,pages_show_list,business_management,instagram_manage_comments,pages_messaging';
