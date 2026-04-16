@@ -79,20 +79,21 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
     }
 
     const template = `
-ROL: Eres el asistente virtual oficial de "${wizName}" (${wizType}).
-TONO DE VOZ: ${wizTone}.
+  NOMBRE DEL AGENTE: ${wizAiName || 'Asistente Virtual'}
+  ROL: Eres el asistente virtual oficial de "${wizName}" (${wizType}).
+  TONO DE VOZ: ${wizTone}.
 
-=== CONECTIVIDAD RAG (CATÁLOGO VIVO) ===
-1. DEBES usar SIEMPRE la herramienta 'Call_Tool_-_Buscador_Inteligente_' para responder sobre productos, stock o servicios.
-2. NO inventes datos. Si la herramienta no devuelve resultados, informa que no hay disponibilidad por ahora.
-3. Tus respuestas deben ser breves (menos de 1000 caracteres).
+  === CONECTIVIDAD RAG (CATÁLOGO VIVO) ===
+  1. DEBES usar SIEMPRE la herramienta 'Call_Tool_-_Buscador_Inteligente_' para responder sobre productos, stock o servicios.
+  2. NO inventes datos. Si la herramienta no devuelve resultados, informa que no hay disponibilidad por ahora.
+  3. Tus respuestas deben ser breves (menos de 1000 caracteres).
 
-=== DATOS DEL DUEÑO ===
-Nombre: ${ownerName}.
+  === DATOS DEL DUEÑO ===
+  Nombre: ${ownerName}.
 
-=== REGLAS DE NEGOCIO ===
-- Si detectas intención de compra o reclamo, transfiere a un humano inmediatamente.
-- Eres un empleado real de ${wizName}, no una IA genérica.
+  === REGLAS DE NEGOCIO ===
+  - Si detectas intención de compra o reclamo, transfiere a un humano inmediatamente.
+  - Eres un empleado real de ${wizName}, no una IA genérica.
     `.trim();
 
     setBotPrompt(template);
@@ -202,7 +203,24 @@ Nombre: ${ownerName}.
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-zinc-500 uppercase ml-2">Rubro</label>
-                <input value={wizType} onChange={(e) => setWizType(e.target.value)} className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none transition-all" placeholder="Ej: Tienda de Calzado" />
+                <input value={wizType} onChange={(e) => setWizType(e.target.value)} className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none transition-all" placeholder="Ej: Retail de Calzado" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-serif font-extrabold ml-2 tracking-wide text-customGold drop-shadow-sm uppercase flex items-center gap-2">
+                  Nombre de tu Agente
+                </label>
+                <div className="relative group">
+                  <input
+                    value={wizAiName}
+                    onChange={(e) => setWizAiName(e.target.value)}
+                    className="w-full bg-[#121212] border-2 border-customGold/60 focus:border-customGold transition-all rounded-2xl p-4 text-white font-serif text-lg shadow-[0_2px_16px_rgba(212,175,55,0.10)] outline-none placeholder:text-customGold/40 placeholder:italic placeholder:font-light"
+                    placeholder="Ej: Sofía, Luna, Max..."
+                    maxLength={32}
+                  />
+                  <div className="absolute left-0 top-full mt-2 z-20 hidden group-hover:block w-max min-w-[220px] bg-[#181818] border border-customGold/80 text-customGold text-xs font-medium rounded-xl px-4 py-2 shadow-lg transition-all duration-200">
+                    Este nombre será visible para tus clientes en los mensajes automáticos del bot.
+                  </div>
+                </div>
               </div>
               <div className="md:col-span-2 space-y-2">
                 <label className="text-[10px] font-black text-zinc-500 uppercase ml-2">Tono de Voz</label>
