@@ -97,6 +97,8 @@ export default function LoginPage({ onBack }: LoginPageProps) {
                   social_provider_text: 'Iniciar sesión con',
                   loading_button_label: 'Cargando...',
                   forgot_password_text: '¿Olvidaste tu contraseña?',
+                  email_input: 'Correo electrónico',
+                  password_input: 'Contraseña',
                 },
                 sign_up: {
                   email_label: 'Correo electrónico',
@@ -107,14 +109,18 @@ export default function LoginPage({ onBack }: LoginPageProps) {
                   link_text: '¿No tienes cuenta? Regístrate',
                   loading_button_label: 'Cargando...',
                   social_provider_text: 'Registrarse con',
+                  email_input: 'Correo electrónico',
+                  password_input: 'Contraseña',
+                  confirmation_text: 'Revisa tu correo para el enlace de confirmación',
                 },
                 forgotten_password: {
                   email_label: 'Correo electrónico',
-                  password_label: 'Contraseña',
-                  link_text: '¿Olvidaste tu contraseña?',
                   button_label: 'Enviar enlace',
                   loading_button_label: 'Enviando...',
                   confirmation_text: 'Revisa tu correo para el enlace de recuperación',
+                  email_input_placeholder: 'tu@correo.cl',
+                  link_text: '¿Olvidaste tu contraseña?',
+                  email_input: 'Correo electrónico',
                 },
                 magic_link: {
                   email_input_label: 'Correo electrónico',
@@ -123,12 +129,15 @@ export default function LoginPage({ onBack }: LoginPageProps) {
                   link_text: 'Iniciar sesión con enlace mágico',
                   loading_button_label: 'Enviando...',
                   confirmation_text: 'Revisa tu correo para el enlace de acceso',
+                  email_input: 'Correo electrónico',
                 },
                 update_password: {
                   password_label: 'Nueva contraseña',
                   button_label: 'Actualizar contraseña',
                   loading_button_label: 'Actualizando...',
                   confirmation_text: 'Tu contraseña ha sido actualizada',
+                  password_input_placeholder: 'Nueva contraseña',
+                  password_input: 'Nueva contraseña',
                 },
                 email_verification: {
                   confirmation_text: 'Revisa tu correo para el enlace de confirmación',
@@ -145,6 +154,13 @@ export default function LoginPage({ onBack }: LoginPageProps) {
                   password_reset_email_sent: 'Revisa tu correo para el enlace de recuperación',
                   email_verified: '¡Correo verificado exitosamente!',
                   password_updated: 'Contraseña actualizada correctamente',
+                },
+                social_provider: {
+                  google: 'Google',
+                },
+                default: {
+                  email_input: 'Correo electrónico',
+                  password_input: 'Contraseña',
                 }
               }
             }}
