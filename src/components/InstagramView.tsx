@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
@@ -43,11 +43,42 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
   const [activationKeyword, setActivationKeyword] = useState('')
   const [antispamEnabled, setAntispamEnabled] = useState(true)
 
+  // Referencia para evitar múltiples suscripciones
+  const subscriptionRef = useRef<any>(null);
+
   useEffect(() => {
     if (instance) fetchConfig();
     if (profile) {
       setOwnerName(profile.full_name || '');
     }
+
+    // SUSCRIPCIÓN REALTIME: actualiza automáticamente si cambia la personalidad
+    if (instance && instance.id && !subscriptionRef.current) {
+      const channel = supabase
+        .channel('realtime-personality-' + instance.id)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'instance_personalities',
+            filter: `instance_id=eq.${instance.id}`
+          },
+          (payload) => {
+            fetchConfig();
+          }
+        )
+        .subscribe();
+      subscriptionRef.current = channel;
+    }
+
+    // Cleanup: desuscribir al desmontar o cambiar instancia
+    return () => {
+      if (subscriptionRef.current) {
+        supabase.removeChannel(subscriptionRef.current);
+        subscriptionRef.current = null;
+      }
+    };
   }, [instance, profile]);
 
   async function fetchConfig() {
@@ -311,12 +342,12 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
             <div className="space-y-3">
               <div className="flex justify-between text-[10px] font-black text-zinc-400 px-1">
                 <span className="uppercase">Uso</span>
-                <span>{profile.messages_used || 0} / {profile.monthly_limit || 50}</span>
+                <span className={`${((profile.messages_used || 0) > (profile.monthly_limit || 50)) ? 'text-red-400' : 'text-zinc-300'}`}>{profile.messages_used || 0} / {profile.monthly_limit || 50}</span>
               </div>
               <div className="w-full bg-zinc-800 h-3 rounded-full overflow-hidden border border-zinc-700">
-                <div 
-                  className="bg-blue-600 h-full transition-all duration-1000 shadow-[0_0_10px_rgba(37,99,235,0.5)]" 
-                  style={{ width: `${((profile.messages_used || 0) / (profile.monthly_limit || 50)) * 100}%` }}
+                <div
+                  className={`${((profile.messages_used || 0) > (profile.monthly_limit || 50)) ? 'bg-red-600 shadow-[0_0_10px_rgba(239,68,68,0.45)]' : 'bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.5)]'} h-full transition-all duration-1000`}
+                  style={{ width: `${Math.min(((profile.messages_used || 0) / (profile.monthly_limit || 50)) * 100, 100)}%` }}
                 />
               </div>
             </div>
