@@ -16,6 +16,7 @@ import { PrivacyPolicy, TermsOfService, DataDeletion, SupportPage } from './Lega
 import KnowlowerView from './KnowlowerView.tsx'
 import Leads from './Leads.tsx'
 import LeadsView from './Leads.tsx'
+import FloatingWhatsAppButton from './FloatingWhatsAppButton'
 
 export default function Dashboard({ session }: { session: Session }) {
   const [profile, setProfile] = useState<any>(null)
@@ -257,6 +258,11 @@ export default function Dashboard({ session }: { session: Session }) {
           </div>
           <p className="text-[10px] text-gray-700 mt-4 font-mono tracking-widest uppercase">© 2026 MiTiendaVirtual • Santiago, CL</p>
         </div>
+
+          {/* Botón flotante WhatsApp: solo visible para planes Pro / Full (case-insensitive) */}
+          <FloatingWhatsAppButton
+            visible={!!profile && ['pro', 'full'].includes(String(profile.plan_type).toLowerCase())}
+          />
 
         {legalView === 'terms' && <TermsOfService onClose={() => setLegalView(null)} />}
         {legalView === 'privacy' && <PrivacyPolicy onClose={() => setLegalView(null)} />}
