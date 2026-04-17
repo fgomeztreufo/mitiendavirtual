@@ -18,7 +18,6 @@ import KnowlowerView from './KnowlowerView.tsx'
 import Leads from './Leads.tsx'
 import LeadsView from './Leads.tsx'
 import FloatingWhatsAppButton from './FloatingWhatsAppButton'
-import NotificationsView from './NotificationsView.tsx'
 
 export default function Dashboard({ session }: { session: Session }) {
   const [profile, setProfile] = useState<any>(null)
@@ -281,7 +280,7 @@ export default function Dashboard({ session }: { session: Session }) {
 
           {/* Botón flotante WhatsApp: solo visible para planes Pro / Full (case-insensitive) */}
           <FloatingWhatsAppButton
-            visible={!!profile && ['pro', 'full'].includes(normalizePlanType(profile?.plan_type))}
+            visible={!!profile && ['pro', 'full'].includes(String(profile.plan_type).toLowerCase())}
           />
 
         {legalView === 'terms' && <TermsOfService onClose={() => setLegalView(null)} />}
