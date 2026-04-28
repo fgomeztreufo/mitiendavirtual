@@ -63,7 +63,7 @@ export const siteConfig: SiteConfig = {
     name: "Mi Tienda Virtual",
     tagline: "Transformamos tu Negocio con Tiendas Virtuales y automatizaciones de Alto Rendimiento",
     phone: "+56954080571",
-    whatsappMessage: "Hola! Me interesa conocer más sobre sus servicios de e-commerce"
+    whatsappMessage: "Hola! Necesito ayuda con mi tienda virtual y automatización de redes sociales. ¿Podrían contactarme? ¡Gracias!"
   },
   features: {
     showOffers: true,

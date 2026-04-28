@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
+import { normalizePlanType } from '../utils/planUtils'
 
 // --- VISTAS DE APP ---
 import InstagramView from './InstagramView'
@@ -261,7 +262,7 @@ export default function Dashboard({ session }: { session: Session }) {
 
           {/* Botón flotante WhatsApp: solo visible para planes Pro / Full (case-insensitive) */}
           <FloatingWhatsAppButton
-            visible={!!profile && ['pro', 'full'].includes(String(profile.plan_type).toLowerCase())}
+            visible={!!profile && ['pro', 'full'].includes(normalizePlanType(profile?.plan_type))}
           />
 
         {legalView === 'terms' && <TermsOfService onClose={() => setLegalView(null)} />}

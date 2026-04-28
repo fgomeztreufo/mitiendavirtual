@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Swal from 'sweetalert2'
+import { normalizePlanType, planCodeToDisplay } from '../utils/planUtils'
+import { supabase } from '../supabaseClient'
 
 export default function CatalogView({ session, profile, onProductAdded,goToPlans }: any) {
   const [loading, setLoading] = useState(false)
@@ -8,19 +10,40 @@ export default function CatalogView({ session, profile, onProductAdded,goToPlans
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   // --- LÓGICA DE RESTRICCIÓN ---
-  // Nota: Asegúrate que en n8n el plan se llame 'Básico' igual que aquí
-  const planType = profile?.plan_type || 'Free';
+  const planCode = normalizePlanType(profile?.plan_type);
   const currentCount = Number(profile?.current_products) || 0;
-  
+
+  const [planLimit, setPlanLimit] = useState<number | null>(null)
+
   const capacityMap: Record<string, number> = {
-    'Free': 10, 
-    'Básico': 50, 
-    'Pro': 500, 
-    'Full': 2000
+    free: 10,
+    basic: 50,
+    pro: 500,
+    full: 2000
   };
 
-  const limit = capacityMap[planType] || 10;
-  const isFull = currentCount >= limit && planType !== 'Full';
+  useEffect(() => {
+    let mounted = true
+    async function loadPlan() {
+      try {
+        const { data, error } = await supabase
+          .from('plans')
+          .select('products_limit')
+          .eq('code', planCode)
+          .single()
+        if (!error && data && mounted) {
+          setPlanLimit(Number(data.products_limit) || null)
+        }
+      } catch (e) {
+        // fallback silently
+      }
+    }
+    if (planCode) loadPlan()
+    return () => { mounted = false }
+  }, [planCode])
+
+  const limit = planLimit ?? capacityMap[planCode] ?? 10;
+  const isFull = currentCount >= limit && planCode !== 'full';
   const percentage = Math.min((currentCount / limit) * 100, 100);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,7 +65,7 @@ export default function CatalogView({ session, profile, onProductAdded,goToPlans
         Swal.fire({
             icon: 'error',
             title: 'Límite alcanzado',
-            text: `Tu plan ${planType} ha llegado al límite de productos (${limit}).`,
+            text: `Tu plan ${planCodeToDisplay(planCode)} ha llegado al límite de productos (${limit}).`,
             confirmButtonColor: '#2563eb'
         });
         return;
@@ -110,7 +133,7 @@ export default function CatalogView({ session, profile, onProductAdded,goToPlans
       <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-black text-white italic tracking-tighter uppercase">Mi Catálogo</h1>
-          {planType === 'Full' && (
+          {planCode === 'full' && (
             <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/50 px-3 py-1 rounded-full text-[10px] font-black flex items-center gap-1 animate-pulse">
               👑 VIP FULL
             </span>
@@ -118,15 +141,15 @@ export default function CatalogView({ session, profile, onProductAdded,goToPlans
         </div>
         
         {/* BARRA DE CAPACIDAD */}
-        <div className={`p-4 rounded-2xl w-full md:w-64 border transition-all ${planType === 'Full' ? 'bg-yellow-500/5 border-yellow-500/30' : 'bg-gray-900 border-gray-800'}`}>
+        <div className={`p-4 rounded-2xl w-full md:w-64 border transition-all ${planCode === 'full' ? 'bg-yellow-500/5 border-yellow-500/30' : 'bg-gray-900 border-gray-800'}`}>
           <div className="flex justify-between text-[10px] font-black mb-2 tracking-widest uppercase">
             <span className="text-gray-500">Capacidad</span>
-            <span className="text-white">{planType === 'Full' ? '∞ ILIMITADO' : `${currentCount} / ${limit}`}</span>
+            <span className="text-white">{planCode === 'full' ? '∞ ILIMITADO' : `${currentCount} / ${limit}`}</span>
           </div>
           <div className="h-1.5 w-full bg-black rounded-full overflow-hidden">
             <div 
-                className={`h-full transition-all duration-1000 ${planType === 'Full' ? 'bg-gradient-to-r from-yellow-600 to-orange-400' : isFull ? 'bg-red-500' : 'bg-blue-600'}`}
-                style={{ width: `${planType === 'Full' ? 100 : percentage}%` }}
+                className={`h-full transition-all duration-1000 ${planCode === 'full' ? 'bg-gradient-to-r from-yellow-600 to-orange-400' : isFull ? 'bg-red-500' : 'bg-blue-600'}`}
+                style={{ width: `${planCode === 'full' ? 100 : percentage}%` }}
             />
           </div>
         </div>
@@ -137,7 +160,7 @@ export default function CatalogView({ session, profile, onProductAdded,goToPlans
         {isFull && (
        <div className="absolute inset-0 bg-black/90 backdrop-blur-md z-20 flex flex-col items-center justify-center p-6 text-center">
           <span className="text-4xl mb-4">🔒</span>
-          <h3 className="text-xl font-bold text-white mb-2 uppercase">Plan {planType} al máximo</h3>
+          <h3 className="text-xl font-bold text-white mb-2 uppercase">Plan {planCodeToDisplay(planCode)} al máximo</h3>
           <p className="text-gray-400 text-xs mb-8">Has alcanzado el límite de {limit} productos.</p>
           
           {/* CAMBIA EL ONCLICK AQUÍ */}
