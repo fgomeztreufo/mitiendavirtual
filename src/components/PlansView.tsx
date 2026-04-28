@@ -1,5 +1,8 @@
 import Swal from 'sweetalert2'
+import { planDisplayToCode, normalizePlanType } from '../utils/planUtils'
 import { Session } from '@supabase/supabase-js'
+import { useEffect, useState } from 'react'
+import { supabase } from '../supabaseClient'
 
 interface Profile {
     plan_type?: string;
@@ -12,6 +15,31 @@ interface PlansViewProps {
 }
 
 export default function PlansView({ session, profile }: PlansViewProps) {
+
+    const [plans, setPlans] = useState<any[]>([])
+    const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        fetchPlans()
+    }, [])
+
+    async function fetchPlans() {
+        try {
+            setLoading(true)
+            const { data, error } = await supabase
+                .from('plans')
+                .select('*')
+                .order('monthly_price_clp', { ascending: true })
+
+            if (error) {
+                console.error('fetchPlans error', error)
+                return
+            }
+            setPlans(data || [])
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const handleBuyPlan = async (planName: string, amount: number) => {
         try {
@@ -27,11 +55,12 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    plan_name: planName, 
-                    amount: amount,      
-                    user_id: user.id,    
-                    email: user.email
-                })
+                        plan_name: planName,
+                        plan_code: planDisplayToCode(planName),
+                        amount: amount,
+                        user_id: user.id,
+                        email: user.email
+                    })
             });
     
             const data = await response.json();
@@ -65,116 +94,54 @@ export default function PlansView({ session, profile }: PlansViewProps) {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 items-start">
-                
-                {/* PLAN FREE */}
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col h-full opacity-80 hover:opacity-100 transition-opacity">
-                    <h3 className="text-lg font-bold text-white mb-2">Semilla 🌱</h3>
-                    <div className="text-3xl font-bold text-white mb-4">$0 <span className="text-sm text-gray-500 font-normal">/mes</span></div>
-                    <p className="text-[11px] text-gray-500 mb-6 italic">Para dar tus primeros pasos</p>
-                    
-                    <ul className="space-y-4 mb-8 flex-1">
-                        <li className="flex items-start gap-2 text-xs text-gray-300">
-                            <span className="text-green-500 font-bold">✓</span> 10 Productos en catálogo
-                        </li>
-                        <li className="flex items-start gap-2 text-xs text-gray-300">
-                            <span className="text-green-500 font-bold">✓</span> 50 Mensajes IA / mes
-                        </li>
-                    </ul>
-                    <button disabled className="w-full py-2 bg-gray-800 text-gray-500 text-sm font-bold rounded-xl cursor-not-allowed">
-                        {(!profile?.plan_type || profile?.plan_type === 'Free') ? 'Tu Plan Actual' : 'Plan Base'}
-                    </button>
-                </div>
+              {loading && <div className="col-span-full text-center text-gray-400">Cargando planes...</div>}
+              {!loading && plans.length === 0 && (
+                <div className="col-span-full text-center text-gray-400">No hay planes configurados en la base de datos.</div>
+              )}
 
-                {/* PLAN BÁSICO */}
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col h-full hover:border-blue-500 transition-colors">
-                    <h3 className="text-lg font-bold text-blue-400 mb-2">Básico 🚀</h3>
-                    <div className="text-3xl font-bold text-white mb-4">$14.990 <span className="text-sm text-gray-500 font-normal">/mes</span></div>
-                    <p className="text-[11px] text-blue-300/60 mb-6 italic">Perfecto para emprendedores</p>
-                    
-                    <ul className="space-y-4 mb-8 flex-1">
-                        <li className="flex items-start gap-2 text-xs text-white text-left">
-                            <span className="text-blue-500 font-bold">✓</span> <strong>50 Productos:</strong> Tu inventario completo.
-                        </li>
-                        <li className="flex items-start gap-2 text-xs text-white text-left">
-                            <span className="text-blue-500 font-bold">✓</span> <strong>500 Mensajes:</strong> Ventas en automático.
-                        </li>
-                    </ul>
-                    <button 
-                        onClick={() => handleBuyPlan('Básico', 14990)}
-                        className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-all shadow-md"
-                    >
-                        {profile?.plan_type === 'Básico' ? 'Renovar Plan' : 'Elegir Básico'}
-                    </button>
-                </div>
+                            {!loading && plans.map((plan: any) => {
+                                const code = plan.code
+                                const isCurrent = normalizePlanType(profile?.plan_type) === code
+                                const price = Number(plan.monthly_price_clp || 0)
 
-                {/* PLAN PRO - EL MÁS POPULAR */}
-                <div className="bg-gray-900 border-2 border-purple-600 rounded-2xl p-6 flex flex-col relative transform lg:scale-110 z-10 shadow-2xl shadow-purple-900/30 h-full">
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-purple-600 text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg">
-                        Más Popular
-                    </div>
-                    <h3 className="text-xl font-bold text-purple-400 mb-2">Pro 💎</h3>
-                    <div className="text-3xl font-bold text-white mb-1">$39.990 <span className="text-sm text-gray-500 font-normal">/mes</span></div>
-                    <p className="text-[11px] text-purple-300 mb-6 font-semibold italic">Gestión profesional sin límites</p>
-                    
-                    <ul className="space-y-4 mb-8 flex-1">
-                        <li className="flex items-start gap-2 text-xs text-white">
-                            <span className="text-purple-500 font-bold">✓</span> 
-                            <span><strong>500 Productos:</strong> Catálogo extendido.</span>
-                        </li>
-                        <li className="flex items-start gap-2 text-xs text-white">
-                            <span className="text-purple-500 font-bold">✓</span> 
-                            <span><strong>2.000 Mensajes IA:</strong> Escala tu atención.</span>
-                        </li>
-                        <li className="flex items-start gap-2 text-xs text-white">
-                            <span className="text-purple-500 font-bold">✓</span> 
-                            <span><strong>WhatsApp Soon:</strong> Prioridad en activación.</span>
-                        </li>
-                        <li className="flex items-start gap-2 text-xs text-white">
-                            <span className="text-purple-500 font-bold">✓</span> 
-                            <span><strong>Soporte Directo:</strong> Canal preferente con técnicos.</span>
-                        </li>
-                    </ul>
-                    
-                    <button 
-                        onClick={() => handleBuyPlan('Pro', 39990)}
-                        className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-purple-500/40"
-                    >
-                        {profile?.plan_type === 'Pro' ? 'Renovar Pro' : 'Potenciar mi Tienda'}
-                    </button>
-                </div>
+                                const baseClasses = `rounded-2xl p-6 flex flex-col h-full relative`
+                                const borderClass = code === 'pro' ? 'border-2 border-purple-500/60 shadow-[0_10px_30px_rgba(124,58,237,0.16)]' : code === 'full' ? 'border-orange-500' : isCurrent ? 'border-blue-500' : 'border-gray-800'
+                                const bgClass = code === 'pro' ? 'bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800' : 'bg-gray-900'
 
-                {/* PLAN FULL */}
-                <div className="bg-gray-900 border border-orange-900/30 rounded-2xl p-6 flex flex-col h-full">
-                    <h3 className="text-lg font-bold text-orange-400 mb-2">Full 🔥</h3>
-                    <div className="text-3xl font-bold text-white mb-4">$59.990 <span className="text-sm text-gray-500 font-normal">/mes</span></div>
-                    <p className="text-[11px] text-orange-300/60 mb-6 italic">El socio tecnológico de tu marca</p>
-                    
-                    <ul className="space-y-4 mb-8 flex-1 text-left">
-                        <li className="flex items-start gap-2 text-xs text-white">
-                            <span className="text-orange-500 font-bold">✓</span> 
-                            <span><strong>2.000 Productos:</strong> Capacidad masiva.</span>
-                        </li>
-                        <li className="flex items-start gap-2 text-xs text-white">
-                            <span className="text-orange-500 font-bold">✓</span> 
-                            <span><strong>Mensajes Ilimitados*:</strong> Sin techo de venta.</span>
-                        </li>
-                        <li className="flex items-start gap-2 text-xs text-white">
-                            <span className="text-orange-500 font-bold">✓</span> 
-                            <span><strong>IA Personalizada:</strong> Entrenamos tu propio tono.</span>
-                        </li>
-                        <li className="flex items-start gap-2 text-xs text-white">
-                            <span className="text-orange-500 font-bold">✓</span> 
-                            <span><strong>Soporte VIP:</strong> Atención prioritaria 1-a-1.</span>
-                        </li>
-                    </ul>
-                    
-                    <button 
-                        onClick={() => handleBuyPlan('Full', 59990)}
-                        className="w-full py-2 bg-transparent border border-orange-600 text-orange-400 hover:bg-orange-600 hover:text-white text-sm font-bold rounded-xl transition-all"
-                    >
-                        {profile?.plan_type === 'Full' ? 'Renovar Full' : 'Dominar el Mercado'}
-                    </button>
-                </div>
+                                const buttonDefault = 'w-full py-2 text-sm font-bold rounded-xl transition-all'
+                                const buttonDisabled = 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                                const buttonPrimary = code === 'pro' ? 'bg-purple-500 hover:bg-purple-400 text-white shadow-lg' : code === 'full' ? 'border border-orange-500 text-orange-500 bg-transparent hover:bg-orange-50' : 'bg-blue-600 hover:bg-blue-500 text-white'
+
+                                const label = isCurrent ? 'Tu Plan Actual' : (code === 'free' ? 'Plan Base' : code === 'pro' ? 'Potenciar mi Tienda' : code === 'full' ? 'Dominar el Mercado' : ('Elegir ' + plan.display_name))
+
+                                return (
+                                    <div key={code} className={`${bgClass} ${borderClass} ${baseClasses}`}> 
+                                        {code === 'pro' && (
+                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-purple-500 text-white text-xs font-bold">MÁS POPULAR</div>
+                                        )}
+                                        <h3 className="text-lg font-bold text-white mb-2">{plan.display_name} {code === 'free' ? '🌱' : code === 'pro' ? '💎' : code === 'full' ? '🔥' : ''}</h3>
+                                        <div className="text-3xl font-bold text-white mb-4">${price.toLocaleString('es-CL')} <span className="text-sm text-gray-500 font-normal">/mes</span></div>
+                                        {plan.description && <p className="text-[11px] text-gray-400 mb-6 italic">{plan.description}</p>}
+
+                                        <ul className="space-y-4 mb-8 flex-1">
+                                            <li className="flex items-start gap-2 text-xs text-gray-300">
+                                                <span className="text-green-500 font-bold">✓</span> {plan.products_limit || 0} Productos en catálogo
+                                            </li>
+                                            <li className="flex items-start gap-2 text-xs text-gray-300">
+                                                <span className="text-green-500 font-bold">✓</span> {plan.messages_limit ? `${plan.messages_limit} Mensajes IA / mes` : 'Mensajes Ilimitados'}
+                                            </li>
+                                        </ul>
+
+                                        <button
+                                            onClick={() => handleBuyPlan(plan.display_name, price)}
+                                            className={`${buttonDefault} ${isCurrent ? buttonDisabled : buttonPrimary}`}
+                                            disabled={isCurrent}
+                                        >
+                                            {label}
+                                        </button>
+                                    </div>
+                                )
+                            })}
 
             </div>
             

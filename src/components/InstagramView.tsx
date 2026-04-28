@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
 import { FiSave, FiSettings, FiMessageSquare, FiShield, FiCpu } from 'react-icons/fi'
+import { normalizePlanType, planCodeToDisplay } from '../utils/planUtils'
 
 interface InstagramViewProps {
   session: Session
@@ -42,6 +43,30 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
   const [publicReply, setPublicReply] = useState('')
   const [activationKeyword, setActivationKeyword] = useState('')
   const [antispamEnabled, setAntispamEnabled] = useState(true)
+
+  // Límite de mensajes por plan (se lee desde la tabla `plans`)
+  const planCode = normalizePlanType(profile?.plan_type);
+  const [planMessagesLimit, setPlanMessagesLimit] = useState<number | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadPlanLimit() {
+      try {
+        const { data, error } = await supabase
+          .from('plans')
+          .select('messages_limit')
+          .eq('code', planCode)
+          .single();
+        if (!error && mounted) {
+          setPlanMessagesLimit(data?.messages_limit ?? null);
+        }
+      } catch (e) {
+        // silent fallback
+      }
+    }
+    if (planCode) loadPlanLimit();
+    return () => { mounted = false };
+  }, [planCode]);
 
   // Referencia para evitar múltiples suscripciones
   const subscriptionRef = useRef<any>(null);
@@ -114,16 +139,11 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
   ROL: Eres el asistente virtual oficial de "${wizName}" (${wizType}).
   TONO DE VOZ: ${wizTone}.
 
-  === CONECTIVIDAD RAG (CATÁLOGO VIVO) ===
-  1. DEBES usar SIEMPRE la herramienta 'Call_Tool_-_Buscador_Inteligente_' para responder sobre productos, stock o servicios.
-  2. NO inventes datos. Si la herramienta no devuelve resultados, informa que no hay disponibilidad por ahora.
-  3. Tus respuestas deben ser breves (menos de 1000 caracteres).
-
   === DATOS DEL DUEÑO ===
   Nombre: ${ownerName}.
 
   === REGLAS DE NEGOCIO ===
-  - Si detectas intención de compra o reclamo, transfiere a un humano inmediatamente.
+
   - Eres un empleado real de ${wizName}, no una IA genérica.
     `.trim();
 
@@ -211,6 +231,16 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
   }
 
   if (!profile || !instance) return <div className="p-10 text-center text-gray-500 animate-pulse uppercase font-black">Cargando...</div>;
+
+  // Cálculos seguros para la barra de uso (resolver límite a partir del plan cargado)
+  const messagesUsed = Number(profile?.messages_used ?? 0);
+  const messagesCapacityMap: Record<string, number | null> = { free: 50, basic: 500, pro: 2000, full: null };
+  const resolvedLimit = planMessagesLimit !== null && planMessagesLimit !== undefined ? planMessagesLimit : (messagesCapacityMap[planCode] ?? 50);
+  const isUnlimited = resolvedLimit === null;
+  const monthlyLimit = isUnlimited ? Infinity : Number(resolvedLimit || 50);
+  const usagePercent = isUnlimited ? 0 : Math.min((messagesUsed / monthlyLimit) * 100, 100);
+  const overLimit = !isUnlimited && messagesUsed > monthlyLimit;
+  const percentLabel = isUnlimited ? 'Ilimitado' : (Number.isFinite(usagePercent) ? `${Math.round(usagePercent)}%` : '0%');
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-20 animate-fade-in">
@@ -338,16 +368,22 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
 
           <div className="bg-zinc-900/40 border border-zinc-800 rounded-[32px] p-8 shadow-2xl">
             <h3 className="text-[10px] font-black text-zinc-500 uppercase mb-4 text-center tracking-widest">Créditos Mensuales</h3>
-            <div className="text-3xl font-black text-white mb-2 text-center italic tracking-tighter uppercase">{profile.plan_type || 'Gratis'}</div>
+            <div className="text-3xl font-black text-white mb-2 text-center italic tracking-tighter uppercase">{planCodeToDisplay(normalizePlanType(profile?.plan_type))}</div>
             <div className="space-y-3">
               <div className="flex justify-between text-[10px] font-black text-zinc-400 px-1">
                 <span className="uppercase">Uso</span>
-                <span className={`${((profile.messages_used || 0) > (profile.monthly_limit || 50)) ? 'text-red-400' : 'text-zinc-300'}`}>{profile.messages_used || 0} / {profile.monthly_limit || 50}</span>
+                <span className={`${overLimit ? 'text-red-400' : 'text-zinc-300'}`}>{messagesUsed} / {isUnlimited ? '∞' : monthlyLimit}</span>
               </div>
               <div className="w-full bg-zinc-800 h-3 rounded-full overflow-hidden border border-zinc-700">
                 <div
-                  className={`${((profile.messages_used || 0) > (profile.monthly_limit || 50)) ? 'bg-red-600 shadow-[0_0_10px_rgba(239,68,68,0.45)]' : 'bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.5)]'} h-full transition-all duration-1000`}
-                  style={{ width: `${Math.min(((profile.messages_used || 0) / (profile.monthly_limit || 50)) * 100, 100)}%` }}
+                  role="progressbar"
+                  aria-label="Porcentaje de uso de créditos mensuales"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(usagePercent)}
+                  title={`${percentLabel} usados`}
+                  className={`${overLimit ? 'bg-red-600 shadow-[0_0_10px_rgba(239,68,68,0.45)]' : 'bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.5)]'} h-full transition-all duration-1000`}
+                  style={{ width: `${usagePercent}%` }}
                 />
               </div>
             </div>
