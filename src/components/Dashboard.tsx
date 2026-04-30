@@ -46,6 +46,16 @@ export default function Dashboard({ session }: { session: Session }) {
       window.history.replaceState({}, document.title, window.location.pathname);
       setActiveTab('instagram');
     }
+      if (params.get('ig_error') === 'cancelled') {
+      Swal.fire({
+        icon: 'error',
+        title: 'Instagram ya no vinculado',
+        text: 'Esta cuenta de Instagram no se pudo vincular a Mi Tienda Virtual. Por favor, intenta nuevamente, con otra cuenta.',
+        confirmButtonColor: '#D4AF37'
+      });
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setActiveTab('instagram');
+    }
     if (params.get('payment') === 'success') {
         Swal.fire({ title: '¡Pago Recibido!', icon: 'success', confirmButtonColor: '#10B981' });
         window.history.replaceState({}, document.title, window.location.pathname);
