@@ -45,13 +45,11 @@ export function normalizePlanType(input?: string | null): string {
   return 'free'; 
 }
 
-// PERMISOS UNIFICADOS (Usando los códigos de arriba: free, basic, pro, full)
-export const PLAN_PERMISSIONS: Record<string, string[]> = {
-  free: ['email'],
-  basic: ['email', 'telegram'], // El plan básico ya puede usar Telegram
-  pro: ['email', 'telegram', 'whatsapp'],
-  full: ['email', 'telegram', 'whatsapp']
-};
+// --- FUNCIONES QUE FALTABAN Y CAUSABAN EL ERROR EN PLANSVIEW ---
+
+export function planDisplayToCode(display?: string) {
+  return normalizePlanType(display);
+}
 
 export function planCodeToDisplay(code: string) {
   switch (code) {
@@ -60,4 +58,21 @@ export function planCodeToDisplay(code: string) {
     case 'full': return 'Full';
     default: return 'Semilla';
   }
+}
+
+// PERMISOS UNIFICADOS
+export const PLAN_PERMISSIONS: Record<string, string[]> = {
+  free: ['email'],
+  basic: ['email', 'telegram'],
+  pro: ['email', 'telegram', 'whatsapp'],
+  full: ['email', 'telegram', 'whatsapp']
+};
+
+/**
+ * Verifica si un plan tiene acceso a un canal específico
+ */
+export function hasChannelAccess(planType: string | null | undefined, channel: string): boolean {
+  const code = normalizePlanType(planType);
+  const allowed = PLAN_PERMISSIONS[code] || PLAN_PERMISSIONS.free;
+  return allowed.includes(channel.toLowerCase());
 }
