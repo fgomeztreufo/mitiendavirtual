@@ -1,0 +1,34 @@
+{
+  "name": "planes_saldos",
+  "start": "2026-04-25T00:28:23.623Z",
+  "target": "http://localhost:5173/",
+  "steps": [
+    {
+      "step": "open",
+      "ok": true,
+      "note": "loaded target URL"
+    },
+    {
+      "step": "login",
+      "ok": true,
+      "note": "attempted login"
+    },
+    {
+      "step": "navigate_plans",
+      "ok": true,
+      "note": "arrived to plans page"
+    },
+    {
+      "step": "find_plans",
+      "ok": false,
+      "note": "no purchase buttons found"
+    },
+    {
+      "step": "debug_snapshot",
+      "ok": true,
+      "note": "snapshot:/Users/fgomezt/mitiendavirtual/results/planes_saldos_1777076906507_page.html"
+    }
+  ],
+  "end": "2026-04-25T00:28:26.508Z",
+  "results": []
+}
