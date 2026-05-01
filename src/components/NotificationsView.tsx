@@ -94,12 +94,15 @@ export default function NotificationsView({ session, profile }: any) {
             }
           };
 
-          const script = document.createElement('script');
-          script.src = "https://telegram.org/js/telegram-widget.js?22";
-          script.setAttribute('data-telegram-login', 'Mitiendavirtualclbot'); 
-          script.setAttribute('data-onauth', 'onTelegramAuth(user)');
-          script.async = true;
-          document.getElementById('telegram-login-container')?.appendChild(script);
+        // Asegúrate de que se vea exactamente así:
+const script = document.createElement('script');
+script.src = "https://telegram.org/js/telegram-widget.js?22";
+script.setAttribute('data-telegram-login', 'Mitiendavirtualclbot');
+script.setAttribute('data-size', 'large');
+script.setAttribute('data-onauth', 'onTelegramAuth(user)'); // IMPORTANTE
+script.setAttribute('data-request-access', 'write');
+script.async = true;
+document.getElementById('telegram-login-container')?.appendChild(script);
         },
         willClose: () => { delete (window as any).onTelegramAuth; }
       });
