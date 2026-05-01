@@ -18,6 +18,7 @@ import KnowlowerView from './KnowlowerView.tsx'
 import Leads from './Leads.tsx'
 import LeadsView from './Leads.tsx'
 import FloatingWhatsAppButton from './FloatingWhatsAppButton'
+import NotificationsView from './NotificationsView.tsx'
 
 export default function Dashboard({ session }: { session: Session }) {
   const [profile, setProfile] = useState<any>(null)
@@ -151,6 +152,12 @@ export default function Dashboard({ session }: { session: Session }) {
               active={activeTab === 'leads'} 
               onClick={() => setActiveTab('leads')} 
             />
+            {/* NUEVO LINK REQUERIDO */}
+            <SidebarSubBtn 
+              label="Notificaciones" 
+              active={activeTab === 'notifications'} 
+              onClick={() => setActiveTab('notifications')} 
+            />
           </div>
         )}
           <SidebarBtn 
@@ -235,6 +242,8 @@ export default function Dashboard({ session }: { session: Session }) {
             {activeTab === 'faqs' && <FaqsView session={session} />}
             {activeTab === 'leads' && <LeadsView userId={session.user.id}/>}
             {activeTab === 'knowlower' && <KnowlowerView userId={session.user.id} />}
+            {/* RENDER DE LA NUEVA VISTA */}
+            {activeTab === 'notifications' && <NotificationsView session={session} profile={profile} />}
             {activeTab === 'catalog' && (
               <CatalogView 
                 session={session} 
