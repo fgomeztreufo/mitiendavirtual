@@ -57,3 +57,20 @@ export function planCodeToDisplay(code: string) {
 export function planDisplayToCode(display?: string) {
   return normalizePlanType(display);
 }
+// --- NUEVO: CONFIGURACIÓN DE PERMISOS POR PLAN ---
+
+export const PLAN_PERMISSIONS: Record<string, string[]> = {
+  free: ['email'],
+  basic: ['email', 'telegram'],
+  pro: ['email', 'telegram', 'whatsapp'],
+  full: ['email', 'telegram', 'whatsapp']
+};
+
+/**
+ * Verifica si un plan tiene acceso a un canal específico
+ */
+export function hasChannelAccess(planType: string | null | undefined, channel: string): boolean {
+  const code = normalizePlanType(planType);
+  const allowed = PLAN_PERMISSIONS[code] || PLAN_PERMISSIONS.free;
+  return allowed.includes(channel.toLowerCase());
+}

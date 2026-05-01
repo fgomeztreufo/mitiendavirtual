@@ -18,6 +18,7 @@ import KnowlowerView from './KnowlowerView.tsx'
 import Leads from './Leads.tsx'
 import LeadsView from './Leads.tsx'
 import FloatingWhatsAppButton from './FloatingWhatsAppButton'
+import NotificationsView from './NotificationsView.tsx'
 
 export default function Dashboard({ session }: { session: Session }) {
   const [profile, setProfile] = useState<any>(null)
