@@ -103,7 +103,7 @@ script.setAttribute('data-request-access', 'write');
 
 // IMPORTANTE: Cloudflare/Vercel a veces ocultan el origin real. 
 // Esta línea le dice a Telegram exactamente quién eres.
-script.setAttribute('data-origin', '[https://www.mitiendavirtual.cl](https://www.mitiendavirtual.cl)')
+script.setAttribute('data-origin', '[https://mitiendavirtual.cl](https://mitiendavirtual.cl)');
 
 script.async = true;
 const container = document.getElementById('telegram-login-container');
