@@ -94,19 +94,23 @@ export default function NotificationsView({ session, profile }: any) {
             }
           };
 
-        // Asegúrate de que se vea exactamente así:
-const script = document.createElement('script');
+          const script = document.createElement('script');
 script.src = "https://telegram.org/js/telegram-widget.js?22";
 script.setAttribute('data-telegram-login', 'Mitiendavirtualclbot');
 script.setAttribute('data-size', 'large');
 script.setAttribute('data-onauth', 'onTelegramAuth(user)');
 script.setAttribute('data-request-access', 'write');
 
-// Agrega esta línea para forzar que el widget use el dominio con www
+// IMPORTANTE: Cloudflare/Vercel a veces ocultan el origin real. 
+// Esta línea le dice a Telegram exactamente quién eres.
 script.setAttribute('data-origin', 'https://www.mitiendavirtual.cl'); 
 
 script.async = true;
-document.getElementById('telegram-login-container')?.appendChild(script);
+const container = document.getElementById('telegram-login-container');
+if (container) {
+  container.innerHTML = ''; // Limpiamos intentos fallidos anteriores
+  container.appendChild(script);
+}
         },
         willClose: () => { delete (window as any).onTelegramAuth; }
       });
