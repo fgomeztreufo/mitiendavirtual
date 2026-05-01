@@ -5,12 +5,7 @@ export const PLAN_CODE_MAP: Record<string, string> = {
   semilla: 'free',
   básico: 'basic',
   basico: 'basic',
-  basico_esp: 'basic',
-  básico_esp: 'basic',
-  básico_rocket: 'basic',
   emprendedor: 'basic',
-  empresar: 'pro',
-  empresario: 'pro',
   pro: 'pro',
   crecimiento: 'pro',
   full: 'full',
@@ -32,20 +27,22 @@ export function normalizePlanType(input?: string | null): string {
   const s = sanitize(input ?? '');
   if (!s) return 'free';
 
-  // Lógica de coincidencias directas
   if (s.includes('free') || s.includes('semilla')) return 'free';
   if (s.includes('basi') || s.includes('emprend')) return 'basic';
   if (s.includes('empres') || s === 'pro' || s.includes('crecimiento')) return 'pro';
   if (s.includes('full') || s.includes('complet')) return 'full';
 
-  // Fallback: búsqueda en el mapa
   const key = Object.keys(PLAN_CODE_MAP).find(k => s === k || s.includes(k));
-  if (key) return PLAN_CODE_MAP[key];
-
-  return 'free'; 
+  return key ? PLAN_CODE_MAP[key] : 'free';
 }
 
-// --- FUNCIONES QUE FALTABAN Y CAUSABAN EL ERROR EN PLANSVIEW ---
+// ESTA ES LA CLAVE: Asegúrate de que diga EXPORT
+export const PLAN_PERMISSIONS: Record<string, string[]> = {
+  free: ['email'],
+  basic: ['email', 'telegram'],
+  pro: ['email', 'telegram', 'whatsapp'],
+  full: ['email', 'telegram', 'whatsapp']
+};
 
 export function planDisplayToCode(display?: string) {
   return normalizePlanType(display);
@@ -58,21 +55,4 @@ export function planCodeToDisplay(code: string) {
     case 'full': return 'Full';
     default: return 'Semilla';
   }
-}
-
-// PERMISOS UNIFICADOS
-export const PLAN_PERMISSIONS: Record<string, string[]> = {
-  free: ['email'],
-  basic: ['email', 'telegram'],
-  pro: ['email', 'telegram', 'whatsapp'],
-  full: ['email', 'telegram', 'whatsapp']
-};
-
-/**
- * Verifica si un plan tiene acceso a un canal específico
- */
-export function hasChannelAccess(planType: string | null | undefined, channel: string): boolean {
-  const code = normalizePlanType(planType);
-  const allowed = PLAN_PERMISSIONS[code] || PLAN_PERMISSIONS.free;
-  return allowed.includes(channel.toLowerCase());
 }
