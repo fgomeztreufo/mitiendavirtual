@@ -52,37 +52,66 @@ export default function NotificationsView({ session, profile }: any) {
       return;
     }
 
-    // NUEVA LÓGICA PARA TELEGRAM USANDO /START
+    // REGRESO AL WIDGET DE LOGIN OFICIAL
     if (channel === 'telegram' && !currentStatus) {
       Swal.fire({
         title: 'Vincular Telegram',
         html: `
-          <div class="p-4 text-center">
-            <p class="text-sm text-gray-400 mb-4">Haz clic en el botón para abrir nuestro Bot y presiona <b>"Iniciar"</b>.</p>
-            <a 
-              href="https://t.me/Mitiendavirtualclbot?start=${session.user.id}" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              style="background-color: #0088cc; color: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; display: inline-block; font-weight: bold;"
-            >
-              🚀 Abrir Telegram Bot
-            </a>
-            <p class="text-xs text-gray-500 mt-4 italic">Al hacer clic, vincularemos automáticamente tu cuenta.</p>
+          <div class="p-2">
+            <p class="text-sm text-gray-400 mb-6">Conéctate con nuestro Bot oficial para recibir alertas.</p>
+            <div id="telegram-login-container" class="flex justify-center min-h-[40px]"></div>
           </div>
         `,
-        showConfirmButton: true,
-        confirmButtonText: 'Ya lo vinculé',
+        showConfirmButton: false,
         showCancelButton: true,
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          fetchConfigs(); // Refrescamos para ver si el backend ya recibió el webhook de Telegram
+        cancelButtonText: 'Cancelar',
+        didOpen: () => {
+          // Definimos la función global que Telegram llamará al autenticar
+          (window as any).onTelegramAuth = async (user: any) => {
+            if (user && user.id) {
+              Swal.showLoading();
+              const { error } = await supabase.from('user_notification_configs').upsert({
+                user_id: session.user.id,
+                channel_type: 'telegram',
+                is_active: true,
+                config: { 
+                  telegram_chat_id: user.id.toString(),
+                  telegram_username: user.username || user.first_name 
+                }
+              }, { onConflict: 'user_id, channel_type' });
+              
+              if (!error) {
+                fetchConfigs();
+                Swal.fire('¡Éxito!', 'Telegram vinculado correctamente.', 'success');
+              } else {
+                Swal.fire('Error', 'No se pudo guardar la configuración.', 'error');
+              }
+            }
+          };
+
+          // Inyectamos el script del Widget
+          const script = document.createElement('script');
+          script.src = 'https://telegram.org/js/telegram-widget.js?22';
+          script.setAttribute('data-telegram-login', 'Mitiendavirtualclbot');
+          script.setAttribute('data-size', 'large');
+          script.setAttribute('data-onauth', 'onTelegramAuth(user)'); // Usamos callback
+          script.setAttribute('data-request-access', 'write');
+          script.async = true;
+
+          const container = document.getElementById('telegram-login-container');
+          if (container) {
+            container.innerHTML = '';
+            container.appendChild(script);
+          }
+        },
+        willClose: () => { 
+          delete (window as any).onTelegramAuth; 
         }
       });
       return;
     }
 
-    // Lógica para toggle normal (desactivar)
+    // Lógica para toggle normal (activar/desactivar otros canales)
     const { error } = await supabase
       .from('user_notification_configs')
       .upsert({ 
