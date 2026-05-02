@@ -108,9 +108,9 @@ export default function Dashboard({ session }: { session: Session }) {
           <div className="absolute top-14 left-0 right-0 bg-gray-900 border-b border-gray-800 p-4 space-y-1 max-h-[70vh] overflow-y-auto">
             <p className="text-xs font-bold text-gray-500 uppercase px-2 mb-2 tracking-widest">Canales</p>
             <MobileNavBtn label="Ventas Capturadas" active={activeTab === 'leads'} onClick={() => { setActiveTab('leads'); setMobileMenuOpen(false); }} />
-              <MobileNavBtn label="Notificaciones Telegram" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} onClick={() => { setActiveTab('whatsapp'); setMobileMenuOpen(false); }} />
             <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-4 mb-2 tracking-widest">Configuración</p>
+            <MobileNavBtn label="Notificaciones" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Configura tu Instagram" active={activeTab === 'instagram'} onClick={() => { setActiveTab('instagram'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Cargar FAQs" active={activeTab === 'faqs'} onClick={() => { setActiveTab('faqs'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Cerebro IA" active={activeTab === 'knowlower'} onClick={() => { setActiveTab('knowlower'); setMobileMenuOpen(false); }} />
@@ -153,12 +153,6 @@ export default function Dashboard({ session }: { session: Session }) {
               active={activeTab === 'leads'} 
               onClick={() => setActiveTab('leads')} 
             />
-            {/* NUEVO LINK REQUERIDO */}
-            <SidebarSubBtn 
-              label="Notificaciones" 
-              active={activeTab === 'notifications'} 
-              onClick={() => setActiveTab('notifications')} 
-            />
           </div>
         )}
           <SidebarBtn 
@@ -168,7 +162,11 @@ export default function Dashboard({ session }: { session: Session }) {
           />
           
           <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Configuración</p>
-          {/* NUEVO: Link directo que pediste */}
+          <SidebarBtn
+            label="Notificaciones"
+            active={activeTab === 'notifications'}
+            onClick={() => { setActiveTab('notifications'); setLegalView(null) }}
+          />
         <SidebarBtn 
           label="Configura tu Instagram" 
           active={activeTab === 'instagram'} 
