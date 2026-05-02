@@ -9,6 +9,7 @@ export default function NotificationsView({ session, profile }: any) {
   
   const planCode = normalizePlanType(profile?.plan_type);
   const allowedChannels = PLAN_PERMISSIONS[planCode] || ['email'];
+  const botUsername = ((import.meta as any).env?.VITE_TELEGRAM_BOT_USERNAME) || 'Mitiendavirtualclbot';
 
   useEffect(() => {
     fetchConfigs();
@@ -54,6 +55,13 @@ export default function NotificationsView({ session, profile }: any) {
 
     // REGRESO AL WIDGET DE LOGIN OFICIAL
     if (channel === 'telegram' && !currentStatus) {
+      // Comprobación rápida: el widget necesita HTTPS (salvo localhost en dev)
+      const hostname = window.location.hostname;
+      if (window.location.protocol !== 'https:' && hostname !== 'localhost') {
+        Swal.fire('HTTPS requerido', 'El widget de Telegram requiere HTTPS. Usa ngrok o despliega en Vercel para probar.', 'error');
+        return;
+      }
+
       Swal.fire({
         title: 'Vincular Telegram',
         html: `
@@ -67,24 +75,28 @@ export default function NotificationsView({ session, profile }: any) {
         cancelButtonText: 'Cancelar',
         didOpen: () => {
           // Definimos la función global que Telegram llamará al autenticar
+          // Ahora enviamos el payload al endpoint server-side para verificar la firma
           (window as any).onTelegramAuth = async (user: any) => {
             if (user && user.id) {
-              Swal.showLoading();
-              const { error } = await supabase.from('user_notification_configs').upsert({
-                user_id: session.user.id,
-                channel_type: 'telegram',
-                is_active: true,
-                config: { 
-                  telegram_chat_id: user.id.toString(),
-                  telegram_username: user.username || user.first_name 
+              try {
+                Swal.showLoading();
+                const payload = { ...user, app_user_id: session.user.id };
+                const res = await fetch('/api/telegram-auth', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload)
+                });
+                const json = await res.json().catch(() => ({}));
+                if (res.ok) {
+                  fetchConfigs();
+                  Swal.fire('¡Éxito!', 'Telegram vinculado correctamente.', 'success');
+                } else {
+                  console.error('Telegram auth error', json);
+                  Swal.fire('Error', json.message || 'No se pudo validar la autenticidad del login.', 'error');
                 }
-              }, { onConflict: 'user_id, channel_type' });
-              
-              if (!error) {
-                fetchConfigs();
-                Swal.fire('¡Éxito!', 'Telegram vinculado correctamente.', 'success');
-              } else {
-                Swal.fire('Error', 'No se pudo guardar la configuración.', 'error');
+              } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'Ocurrió un error al conectar con el servidor.', 'error');
               }
             }
           };
@@ -92,7 +104,7 @@ export default function NotificationsView({ session, profile }: any) {
           // Inyectamos el script del Widget
           const script = document.createElement('script');
           script.src = 'https://telegram.org/js/telegram-widget.js?22';
-          script.setAttribute('data-telegram-login', 'Mitiendavirtualclbot');
+          script.setAttribute('data-telegram-login', botUsername);
           script.setAttribute('data-size', 'large');
           script.setAttribute('data-onauth', 'onTelegramAuth(user)'); // Usamos callback
           script.setAttribute('data-request-access', 'write');
