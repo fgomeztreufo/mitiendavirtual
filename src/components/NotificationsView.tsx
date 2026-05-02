@@ -156,6 +156,10 @@ export default function NotificationsView({ session, profile }: any) {
       }, { onConflict: 'user_id, channel_type' });
 
     if (!error) fetchConfigs();
+    if (!error) fetchConfigs();
+  };
+
+  return (
     <div className="max-w-4xl mx-auto space-y-6 p-4">
       <h2 className="text-2xl font-bold text-white">Notificaciones</h2>
       <p className="text-gray-400 text-sm">Gestiona cómo recibes las alertas de ventas e inventario.</p>
