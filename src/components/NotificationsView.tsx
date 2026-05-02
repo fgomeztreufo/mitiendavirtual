@@ -109,10 +109,11 @@ export default function NotificationsView({ session, profile }: any) {
             }
           };
 
-          // Creamos un iframe para el embed de Telegram, forzando un origen correcto
-          // Normalizamos origin sin barra final para evitar mismatches con BotFather
-          const origin = window.location.origin.replace(/\/+$/, '');
-          const iframeSrc = `https://oauth.telegram.org/embed/${botUsername}?origin=${encodeURIComponent(origin)}&size=large&request_access=write`;
+          // Creamos un iframe para el embed de Telegram usando solo el hostname
+          // Algunos checks de Telegram esperan el dominio sin esquema, por eso usamos hostname
+          const hostnameOnly = window.location.hostname || window.location.origin.replace(/\/+$/, '');
+          const iframeSrc = `https://oauth.telegram.org/embed/${botUsername}?origin=${encodeURIComponent(hostnameOnly)}&size=large&request_access=write`;
+          console.log('[Telegram] using hostname-only origin for embed', hostnameOnly);
           console.log('[Telegram] injecting iframe', { iframeSrc });
 
           const container = document.getElementById('telegram-login-container');
