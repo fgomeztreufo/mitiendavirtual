@@ -86,11 +86,20 @@ export default function NotificationsView({ session, profile }: any) {
             if (user && user.id) {
               try {
                 Swal.showLoading();
-                const payload = { ...user, app_user_id: session.user.id };
+                const accessToken = session?.access_token || session?.accessToken || '';
+                if (!accessToken) {
+                  Swal.fire('Error', 'Sesión no válida. Vuelve a iniciar sesión.', 'error');
+                  return;
+                }
+
+                const payload = { ...user };
                 console.log('[Telegram] sending payload to /api/telegram-auth', payload);
                 const res = await fetch('/api/telegram-auth', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                  },
                   body: JSON.stringify(payload)
                 });
                 const json = await res.json().catch(() => ({}));

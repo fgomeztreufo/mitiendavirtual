@@ -62,15 +62,31 @@ export default async function handler(req, res) {
   const valid = isValidTelegramAuth(body, TELEGRAM_BOT_TOKEN)
   if (!valid) return res.status(403).json({ message: 'Invalid Telegram auth signature' })
 
-  // Upsert into Supabase using service role key
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
-  const appUserId = body.app_user_id
-  if (!appUserId) return res.status(400).json({ message: 'Missing app_user_id' })
+  // Validate session token sent by frontend
+  const authHeader = req.headers.authorization || req.headers.Authorization || ''
+  const token = (typeof authHeader === 'string') ? (authHeader.split(' ')[1] || '') : ''
+  if (!token) return res.status(401).json({ message: 'Missing Authorization token' })
 
-  const chatId = body.id ? String(body.id) : null
-  const username = body.username || body.first_name || ''
-
+  // Fetch user from Supabase Auth using the access token
+  const base = (SUPABASE_URL || '').replace(/\/$/, '')
   try {
+    const userRes = await fetch(`${base}/auth/v1/user`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (!userRes.ok) {
+      console.error('Invalid supabase session', await userRes.text())
+      return res.status(401).json({ message: 'Invalid session' })
+    }
+    const appUser = await userRes.json()
+    const appUserId = appUser?.id
+    if (!appUserId) return res.status(401).json({ message: 'Invalid session user' })
+
+    // Upsert into Supabase using service role key
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
+    const chatId = body.id ? String(body.id) : null
+    const username = body.username || body.first_name || ''
+
     const { error } = await supabase.from('user_notification_configs').upsert({
       user_id: appUserId,
       channel_type: 'telegram',
