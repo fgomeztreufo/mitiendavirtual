@@ -109,30 +109,25 @@ export default function NotificationsView({ session, profile }: any) {
             }
           };
 
-          // Inyectamos el script del Widget
-          const script = document.createElement('script');
-          script.src = 'https://telegram.org/js/telegram-widget.js?22';
-          script.setAttribute('data-telegram-login', botUsername);
-          script.setAttribute('data-size', 'large');
-          script.setAttribute('data-onauth', 'onTelegramAuth(user)'); // Usamos callback
-          script.setAttribute('data-request-access', 'write');
-          script.async = true;
-
-          console.log('[Telegram] injecting widget script', { src: script.src, login: botUsername });
+          // Creamos un iframe para el embed de Telegram, forzando un origen correcto
+          const origin = window.location.origin;
+          const iframeSrc = `https://oauth.telegram.org/embed/${botUsername}?origin=${encodeURIComponent(origin)}&size=large&request_access=write`;
+          console.log('[Telegram] injecting iframe', { iframeSrc });
 
           const container = document.getElementById('telegram-login-container');
           if (container) {
             container.innerHTML = '';
-            container.appendChild(script);
-            console.log('[Telegram] script appended to container', container);
-            setTimeout(() => {
-              const s = container.querySelector('script');
-              console.log('[Telegram] container script attributes', {
-                src: s?.getAttribute('src'),
-                login: s?.getAttribute('data-telegram-login'),
-                onauth: s?.getAttribute('data-onauth')
-              });
-            }, 50);
+            const iframe = document.createElement('iframe');
+            iframe.id = `telegram-login-${botUsername}`;
+            iframe.src = iframeSrc;
+            iframe.width = '100%';
+            iframe.height = '70';
+            iframe.setAttribute('frameborder', '0');
+            iframe.setAttribute('scrolling', 'no');
+            iframe.style.border = 'none';
+            iframe.style.overflow = 'hidden';
+            container.appendChild(iframe);
+            console.log('[Telegram] iframe appended to container', container);
           } else {
             console.warn('[Telegram] telegram-login-container not found');
           }
