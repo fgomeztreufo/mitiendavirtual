@@ -19,11 +19,12 @@ import Leads from './Leads.tsx'
 import LeadsView from './Leads.tsx'
 import FloatingWhatsAppButton from './FloatingWhatsAppButton'
 import NotificationsView from './NotificationsView.tsx'
+import AgentsDashboard from './AgentsDashboard'
 
 export default function Dashboard({ session }: { session: Session }) {
   const [profile, setProfile] = useState<any>(null)
   const [instance, setInstance] = useState<any>(null)
-  const [activeTab, setActiveTab] = useState('instagram')
+  const [activeTab, setActiveTab] = useState('home')
   const [catalogOpen, setCatalogOpen] = useState(false)
   const [legalView, setLegalView] = useState<string | null>(null);
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
@@ -106,6 +107,7 @@ export default function Dashboard({ session }: { session: Session }) {
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
           <div className="absolute top-14 left-0 right-0 bg-gray-900 border-b border-gray-800 p-4 space-y-1 max-h-[70vh] overflow-y-auto">
+            <MobileNavBtn label="Panel de Agentes" active={activeTab === 'home'} onClick={() => { setActiveTab('home'); setMobileMenuOpen(false); }} />
             <p className="text-xs font-bold text-gray-500 uppercase px-2 mb-2 tracking-widest">Canales</p>
             <MobileNavBtn label="Ventas Capturadas" active={activeTab === 'leads'} onClick={() => { setActiveTab('leads'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} onClick={() => { setActiveTab('whatsapp'); setMobileMenuOpen(false); }} />
@@ -136,7 +138,13 @@ export default function Dashboard({ session }: { session: Session }) {
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          <p className="text-xs font-bold text-gray-500 uppercase px-2 mb-2 tracking-widest">Canales</p>
+          <SidebarBtn
+            label="Panel de Agentes"
+            active={activeTab === 'home'}
+            onClick={() => { setActiveTab('home'); setLegalView(null) }}
+          />
+
+          <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Canales</p>
           
          {/* Botón Instagram con submenú */}
         <SidebarBtn 
@@ -227,6 +235,14 @@ export default function Dashboard({ session }: { session: Session }) {
       {/* ÁREA DE CONTENIDO */}
       <main className="flex-1 overflow-y-auto flex flex-col bg-[#050505] pt-14 md:pt-0">
         <div className="max-w-5xl mx-auto p-4 sm:p-6 md:p-10 w-full flex-grow">
+            {activeTab === 'home' && (
+              <AgentsDashboard
+                session={session}
+                profile={profile}
+                instance={instance}
+                onNavigate={(tab: string) => setActiveTab(tab)}
+              />
+            )}
             {activeTab === 'instagram' && (
               <InstagramView 
                 session={session} 
