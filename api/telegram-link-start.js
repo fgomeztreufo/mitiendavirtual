@@ -28,23 +28,20 @@ export default async function handler(req, res) {
     return res.status(500).json({ message: 'Server misconfiguration' })
   }
 
-  // Verificar sesión
+  // Verificar sesión con cliente Supabase (incluye apikey automáticamente)
   const authHeader = req.headers.authorization || ''
   const token = (typeof authHeader === 'string') ? (authHeader.split(' ')[1] || '') : ''
   if (!token) return res.status(401).json({ message: 'Missing Authorization token' })
 
-  const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    method: 'GET',
-    headers: { Authorization: `Bearer ${token}` }
-  }).catch(() => null)
+  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
+  const { data: { user: appUser }, error: sessionError } = await supabaseAdmin.auth.getUser(token)
 
-  if (!userRes || !userRes.ok) {
+  if (sessionError || !appUser?.id) {
+    console.error('Invalid session', sessionError?.message)
     return res.status(401).json({ message: 'Invalid session' })
   }
 
-  const appUser = await userRes.json()
-  const appUserId = appUser?.id
-  if (!appUserId) return res.status(401).json({ message: 'Invalid session user' })
+  const appUserId = appUser.id
 
   // Generar token one-time único
   const linkToken = crypto.randomBytes(24).toString('hex')
