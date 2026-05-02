@@ -110,7 +110,8 @@ export default function NotificationsView({ session, profile }: any) {
           };
 
           // Creamos un iframe para el embed de Telegram, forzando un origen correcto
-          const origin = window.location.origin;
+          // Normalizamos origin sin barra final para evitar mismatches con BotFather
+          const origin = window.location.origin.replace(/\/+$/, '');
           const iframeSrc = `https://oauth.telegram.org/embed/${botUsername}?origin=${encodeURIComponent(origin)}&size=large&request_access=write`;
           console.log('[Telegram] injecting iframe', { iframeSrc });
 
