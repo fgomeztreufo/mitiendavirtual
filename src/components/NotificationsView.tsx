@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import Swal from 'sweetalert2';
-// Estas importaciones son esenciales para resolver el error de Rollup
 import { normalizePlanType, PLAN_PERMISSIONS } from '../utils/planUtils';
 
 export default function NotificationsView({ session, profile }: any) {
   const [configs, setConfigs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Estas variables ahora estarán definidas gracias al import superior
   const planCode = normalizePlanType(profile?.plan_type);
   const allowedChannels = PLAN_PERMISSIONS[planCode] || ['email'];
 
@@ -24,18 +22,7 @@ export default function NotificationsView({ session, profile }: any) {
         .eq('user_id', session.user.id);
 
       if (error) throw error;
-
-      const emailConfig = data?.find(c => c.channel_type === 'email');
-      if (!emailConfig) {
-        await supabase.from('user_notification_configs').insert({
-          user_id: session.user.id,
-          channel_type: 'email',
-          is_active: true
-        });
-        fetchConfigs();
-      } else {
-        setConfigs(data || []);
-      }
+      setConfigs(data || []);
     } catch (err) {
       console.error("Error:", err);
     } finally {
@@ -65,53 +52,37 @@ export default function NotificationsView({ session, profile }: any) {
       return;
     }
 
+    // NUEVA LÓGICA PARA TELEGRAM USANDO /START
     if (channel === 'telegram' && !currentStatus) {
       Swal.fire({
         title: 'Vincular Telegram',
         html: `
-          <div class="p-2">
-            <p class="text-sm text-gray-600 mb-6">Conéctate con nuestro Bot oficial.</p>
-            <div id="telegram-login-container" class="flex justify-center min-h-[40px]"></div>
+          <div class="p-4 text-center">
+            <p class="text-sm text-gray-400 mb-4">Haz clic en el botón para abrir nuestro Bot y presiona <b>"Iniciar"</b>.</p>
+            <a 
+              href="https://t.me/Mitiendavirtualclbot?start=${session.user.id}" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style="background-color: #0088cc; color: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; display: inline-block; font-weight: bold;"
+            >
+              🚀 Abrir Telegram Bot
+            </a>
+            <p class="text-xs text-gray-500 mt-4 italic">Al hacer clic, vincularemos automáticamente tu cuenta.</p>
           </div>
         `,
-        showConfirmButton: false,
+        showConfirmButton: true,
+        confirmButtonText: 'Ya lo vinculé',
         showCancelButton: true,
-        didOpen: () => {
-          (window as any).onTelegramAuth = async (user: any) => {
-            if (user && user.id) {
-              Swal.showLoading();
-              await supabase.from('user_notification_configs').upsert({
-                user_id: session.user.id,
-                channel_type: 'telegram',
-                is_active: true,
-                config: { 
-                  telegram_chat_id: user.id.toString(),
-                  telegram_username: user.username || user.first_name 
-                }
-              }, { onConflict: 'user_id, channel_type' });
-              fetchConfigs();
-              Swal.fire('¡Éxito!', 'Telegram vinculado.', 'success');
-            }
-          };
-
-const script = document.createElement('script');
-script.src = 'https://telegram.org/js/telegram-widget.js?22';
-script.setAttribute('data-telegram-login', 'Mitiendavirtualclbot');
-script.setAttribute('data-size', 'large');
-script.setAttribute('data-request-access', 'write');
-script.setAttribute('data-auth-url', 'https://www.mitiendavirtual.cl/dashboard'); 
-script.async = true;
-const container = document.getElementById('telegram-login-container');
-if (container) {
-  container.innerHTML = ''; // Limpiamos intentos fallidos anteriores
-  container.appendChild(script);
-}
-        },
-        willClose: () => { delete (window as any).onTelegramAuth; }
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetchConfigs(); // Refrescamos para ver si el backend ya recibió el webhook de Telegram
+        }
       });
       return;
     }
 
+    // Lógica para toggle normal (desactivar)
     const { error } = await supabase
       .from('user_notification_configs')
       .upsert({ 
@@ -124,25 +95,37 @@ if (container) {
     if (!error) fetchConfigs();
   };
 
-  if (loading) return <div className="p-10 text-center">Cargando...</div>;
+  if (loading) return <div className="p-10 text-center text-white">Cargando...</div>;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 p-4">
       <h2 className="text-2xl font-bold text-white">Notificaciones</h2>
+      <p className="text-gray-400 text-sm">Gestiona cómo recibes las alertas de ventas e inventario.</p>
+      
       <div className="grid gap-4">
         {['email', 'telegram', 'whatsapp'].map((channel) => {
           const isLocked = !allowedChannels.includes(channel);
-          const active = configs.find(c => c.channel_type === channel)?.is_active;
+          const config = configs.find(c => c.channel_type === channel);
+          const active = config?.is_active;
 
           return (
             <div 
               key={channel} 
               onClick={() => toggleChannel(channel, !!active, isLocked)}
-              className={`p-5 rounded-2xl border bg-gray-900 border-gray-800 ${isLocked ? 'opacity-50' : 'cursor-pointer'}`}
+              className={`p-5 rounded-2xl border bg-gray-900 transition-all ${
+                isLocked ? 'opacity-40 border-gray-800' : 'cursor-pointer border-gray-800 hover:border-gray-600'
+              }`}
             >
               <div className="flex justify-between items-center">
-                <span className="text-white capitalize">{channel}</span>
-                <div className={`h-6 w-11 rounded-full relative ${active ? 'bg-blue-600' : 'bg-gray-700'}`}>
+                <div className="flex items-center gap-3">
+                  <span className="text-white capitalize font-medium">{channel}</span>
+                  {active && channel === 'telegram' && (
+                    <span className="text-[10px] bg-green-900/30 text-green-400 px-2 py-0.5 rounded-full border border-green-800">
+                      Vinculado
+                    </span>
+                  )}
+                </div>
+                <div className={`h-6 w-11 rounded-full relative transition-colors ${active ? 'bg-blue-600' : 'bg-gray-700'}`}>
                   <span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${active ? 'left-6' : 'left-1'}`} />
                 </div>
               </div>
