@@ -74,78 +74,88 @@ export default function NotificationsView({ session, profile }: any) {
         showCancelButton: true,
         cancelButtonText: 'Cancelar',
         didOpen: () => {
+          console.log('[Telegram] modal opened', {
+            hostname: window.location.hostname,
+            origin: window.location.origin,
+            protocol: window.location.protocol,
+            botUsername
+          });
+
           // Definimos la función global que Telegram llamará al autenticar
-          // Ahora enviamos el payload al endpoint server-side para verificar la firma
           (window as any).onTelegramAuth = async (user: any) => {
             if (user && user.id) {
               try {
-                didOpen: () => {
-                  console.log('[Telegram] modal opened', {
-                    hostname: window.location.hostname,
-                    origin: window.location.origin,
-                    protocol: window.location.protocol,
-                    botUsername
-                  });
+                Swal.showLoading();
+                const payload = { ...user, app_user_id: session.user.id };
+                console.log('[Telegram] sending payload to /api/telegram-auth', payload);
+                const res = await fetch('/api/telegram-auth', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload)
+                });
+                const json = await res.json().catch(() => ({}));
+                console.log('[Telegram] /api/telegram-auth response', res.status, json);
+                if (res.ok) {
+                  fetchConfigs();
+                  Swal.fire('¡Éxito!', 'Telegram vinculado correctamente.', 'success');
+                } else {
+                  console.error('Telegram auth error', json);
+                  Swal.fire('Error', json.message || 'No se pudo validar la autenticidad del login.', 'error');
+                }
+              } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'Ocurrió un error al conectar con el servidor.', 'error');
+              }
+            }
+          };
 
-                  // Definimos la función global que Telegram llamará al autenticar
-                  // Ahora enviamos el payload al endpoint server-side para verificar la firma
-                  (window as any).onTelegramAuth = async (user: any) => {
-                    if (user && user.id) {
-                      try {
-                        Swal.showLoading();
-                        const payload = { ...user, app_user_id: session.user.id };
-                        console.log('[Telegram] sending payload to /api/telegram-auth', payload);
-                        const res = await fetch('/api/telegram-auth', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify(payload)
-                        });
-                        const json = await res.json().catch(() => ({}));
-                        console.log('[Telegram] /api/telegram-auth response', res.status, json);
-                        if (res.ok) {
-                          fetchConfigs();
-                          Swal.fire('¡Éxito!', 'Telegram vinculado correctamente.', 'success');
-                        } else {
-                          console.error('Telegram auth error', json);
-                          Swal.fire('Error', json.message || 'No se pudo validar la autenticidad del login.', 'error');
-                        }
-                      } catch (err) {
-                        console.error(err);
-                        Swal.fire('Error', 'Ocurrió un error al conectar con el servidor.', 'error');
-                      }
-                    }
-                  };
+          // Inyectamos el script del Widget
+          const script = document.createElement('script');
+          script.src = 'https://telegram.org/js/telegram-widget.js?22';
+          script.setAttribute('data-telegram-login', botUsername);
+          script.setAttribute('data-size', 'large');
+          script.setAttribute('data-onauth', 'onTelegramAuth(user)'); // Usamos callback
+          script.setAttribute('data-request-access', 'write');
+          script.async = true;
 
-                  // Inyectamos el script del Widget
-                  const script = document.createElement('script');
-                  script.src = 'https://telegram.org/js/telegram-widget.js?22';
-                  script.setAttribute('data-telegram-login', botUsername);
-                  script.setAttribute('data-size', 'large');
-                  script.setAttribute('data-onauth', 'onTelegramAuth(user)'); // Usamos callback
-                  script.setAttribute('data-request-access', 'write');
-                  script.async = true;
+          console.log('[Telegram] injecting widget script', { src: script.src, login: botUsername });
 
-                  console.log('[Telegram] injecting widget script', { src: script.src, login: botUsername });
+          const container = document.getElementById('telegram-login-container');
+          if (container) {
+            container.innerHTML = '';
+            container.appendChild(script);
+            console.log('[Telegram] script appended to container', container);
+            setTimeout(() => {
+              const s = container.querySelector('script');
+              console.log('[Telegram] container script attributes', {
+                src: s?.getAttribute('src'),
+                login: s?.getAttribute('data-telegram-login'),
+                onauth: s?.getAttribute('data-onauth')
+              });
+            }, 50);
+          } else {
+            console.warn('[Telegram] telegram-login-container not found');
+          }
+        },
+        willClose: () => {
+          delete (window as any).onTelegramAuth;
+        }
+      });
 
-                  const container = document.getElementById('telegram-login-container');
-                  if (container) {
-                    container.innerHTML = '';
-                    container.appendChild(script);
-                    console.log('[Telegram] script appended to container', container);
-                    setTimeout(() => {
-                      const s = container.querySelector('script');
-                      console.log('[Telegram] container script attributes', {
-                        src: s?.getAttribute('src'),
-                        login: s?.getAttribute('data-telegram-login'),
-                        onauth: s?.getAttribute('data-onauth')
-                      });
-                    }, 50);
-                  } else {
-                    console.warn('[Telegram] telegram-login-container not found');
-                  }
-                },
+      return;
+    }
 
-  return (
+    // Lógica para toggle normal (activar/desactivar otros canales)
+    const { error } = await supabase
+      .from('user_notification_configs')
+      .upsert({ 
+        user_id: session.user.id, 
+        channel_type: channel, 
+        is_active: !currentStatus,
+        config: configs.find(c => c.channel_type === channel)?.config || {}
+      }, { onConflict: 'user_id, channel_type' });
+
+    if (!error) fetchConfigs();
     <div className="max-w-4xl mx-auto space-y-6 p-4">
       <h2 className="text-2xl font-bold text-white">Notificaciones</h2>
       <p className="text-gray-400 text-sm">Gestiona cómo recibes las alertas de ventas e inventario.</p>
