@@ -53,100 +53,91 @@ export default function NotificationsView({ session, profile }: any) {
       return;
     }
 
-    // REGRESO AL WIDGET DE LOGIN OFICIAL
+    // Vincular Telegram via deep link (no requiere widget)
     if (channel === 'telegram' && !currentStatus) {
-      // Comprobación rápida: el widget necesita HTTPS (salvo localhost en dev)
-      const hostname = window.location.hostname;
-      if (window.location.protocol !== 'https:' && hostname !== 'localhost') {
-        Swal.fire('HTTPS requerido', 'El widget de Telegram requiere HTTPS. Usa ngrok o despliega en Vercel para probar.', 'error');
+      const accessToken = session?.access_token || session?.accessToken || '';
+      if (!accessToken) {
+        Swal.fire('Error', 'Sesión no válida. Vuelve a iniciar sesión.', 'error');
         return;
       }
 
-      Swal.fire({
-        title: 'Vincular Telegram',
-        html: `
-          <div class="p-2">
-            <p class="text-sm text-gray-400 mb-6">Conéctate con nuestro Bot oficial para recibir alertas.</p>
-            <div id="telegram-login-container" class="flex justify-center min-h-[40px]"></div>
-          </div>
-        `,
-        showConfirmButton: false,
-        showCancelButton: true,
-        cancelButtonText: 'Cancelar',
-        didOpen: () => {
-          console.log('[Telegram] modal opened', {
-            hostname: window.location.hostname,
-            origin: window.location.origin,
-            protocol: window.location.protocol,
-            botUsername
-          });
-
-          // Definimos la función global que Telegram llamará al autenticar
-          (window as any).onTelegramAuth = async (user: any) => {
-            if (user && user.id) {
-              try {
-                Swal.showLoading();
-                const accessToken = session?.access_token || session?.accessToken || '';
-                if (!accessToken) {
-                  Swal.fire('Error', 'Sesión no válida. Vuelve a iniciar sesión.', 'error');
-                  return;
-                }
-
-                const payload = { ...user };
-                console.log('[Telegram] sending payload to /api/telegram-auth', payload);
-                const res = await fetch('/api/telegram-auth', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                  },
-                  body: JSON.stringify(payload)
-                });
-                const json = await res.json().catch(() => ({}));
-                console.log('[Telegram] /api/telegram-auth response', res.status, json);
-                if (res.ok) {
-                  fetchConfigs();
-                  Swal.fire('¡Éxito!', 'Telegram vinculado correctamente.', 'success');
-                } else {
-                  console.error('Telegram auth error', json);
-                  Swal.fire('Error', json.message || 'No se pudo validar la autenticidad del login.', 'error');
-                }
-              } catch (err) {
-                console.error(err);
-                Swal.fire('Error', 'Ocurrió un error al conectar con el servidor.', 'error');
-              }
-            }
-          };
-
-          // Creamos un iframe para el embed de Telegram usando solo el hostname
-          // Algunos checks de Telegram esperan el dominio sin esquema, por eso usamos hostname
-          const hostnameOnly = window.location.hostname || window.location.origin.replace(/\/+$/, '');
-          const iframeSrc = `https://oauth.telegram.org/embed/${botUsername}?origin=${encodeURIComponent(hostnameOnly)}&size=large&request_access=write`;
-          console.log('[Telegram] using hostname-only origin for embed', hostnameOnly);
-          console.log('[Telegram] injecting iframe', { iframeSrc });
-
-          const container = document.getElementById('telegram-login-container');
-          if (container) {
-            container.innerHTML = '';
-            const iframe = document.createElement('iframe');
-            iframe.id = `telegram-login-${botUsername}`;
-            iframe.src = iframeSrc;
-            iframe.width = '100%';
-            iframe.height = '70';
-            iframe.setAttribute('frameborder', '0');
-            iframe.setAttribute('scrolling', 'no');
-            iframe.style.border = 'none';
-            iframe.style.overflow = 'hidden';
-            container.appendChild(iframe);
-            console.log('[Telegram] iframe appended to container', container);
-          } else {
-            console.warn('[Telegram] telegram-login-container not found');
+      try {
+        // 1) Obtener deep link del servidor
+        const res = await fetch('/api/telegram-link-start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
           }
-        },
-        willClose: () => {
-          delete (window as any).onTelegramAuth;
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || !json.url) {
+          Swal.fire('Error', json.message || 'No se pudo generar el enlace.', 'error');
+          return;
         }
-      });
+
+        const deepLink = json.url;
+        const linkToken = json.token;
+
+        // 2) Mostrar modal con botón para abrir Telegram
+        Swal.fire({
+          title: 'Vincular Telegram',
+          html: `
+            <div class="p-2 text-center">
+              <p class="text-sm text-gray-400 mb-4">Toca el botón para abrir Telegram y vincula tu cuenta con nuestro bot.</p>
+              <a href="${deepLink}" target="_blank" rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-medium px-6 py-3 rounded-xl transition-colors"
+                style="text-decoration:none;color:white;background:#2AABEE;border-radius:12px;padding:12px 24px;display:inline-block;">
+                📱 Abrir en Telegram
+              </a>
+              <p class="text-xs text-gray-500 mt-4" id="tg-status">Esperando confirmación...</p>
+            </div>
+          `,
+          showConfirmButton: false,
+          showCancelButton: true,
+          cancelButtonText: 'Cancelar',
+          didOpen: () => {
+            // Polling: espera hasta 5 minutos (cada 3s) verificando si el bot recibió el /start
+            let attempts = 0;
+            const maxAttempts = 100;
+            const interval = setInterval(async () => {
+              attempts++;
+              try {
+                const { data } = await supabase
+                  .from('telegram_link_tokens')
+                  .select('used, chat_id')
+                  .eq('token', linkToken)
+                  .single();
+
+                if (data?.used && data?.chat_id) {
+                  clearInterval(interval);
+                  fetchConfigs();
+                  Swal.fire('¡Éxito!', '✅ Telegram vinculado correctamente.', 'success');
+                } else {
+                  const el = document.getElementById('tg-status');
+                  if (el) el.textContent = `Esperando confirmación... (${attempts * 3}s)`;
+                }
+              } catch { /* continuar */ }
+
+              if (attempts >= maxAttempts) {
+                clearInterval(interval);
+                const el = document.getElementById('tg-status');
+                if (el) el.textContent = '⏱ Tiempo agotado. Intenta de nuevo.';
+              }
+            }, 3000);
+
+            // Guardar ref del interval para limpiar al cerrar
+            (window as any)._tgPollInterval = interval;
+          },
+          willClose: () => {
+            clearInterval((window as any)._tgPollInterval);
+            delete (window as any)._tgPollInterval;
+          }
+        });
+      } catch (err) {
+        console.error(err);
+        Swal.fire('Error', 'Ocurrió un error al generar el enlace.', 'error');
+      }
 
       return;
     }
@@ -161,7 +152,6 @@ export default function NotificationsView({ session, profile }: any) {
         config: configs.find(c => c.channel_type === channel)?.config || {}
       }, { onConflict: 'user_id, channel_type' });
 
-    if (!error) fetchConfigs();
     if (!error) fetchConfigs();
   };
 
