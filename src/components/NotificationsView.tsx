@@ -10,6 +10,7 @@ export default function NotificationsView({ session, profile }: any) {
   const planCode = normalizePlanType(profile?.plan_type);
   const allowedChannels = PLAN_PERMISSIONS[planCode] || ['email'];
   const botUsername = ((import.meta as any).env?.VITE_TELEGRAM_BOT_USERNAME) || 'Mitiendavirtualclbot';
+  const WEBHOOK_BASE = ((import.meta as any).env?.VITE_WEBHOOK_BASE as string) || 'https://webhook.mitiendavirtual.cl/webhook';
 
   useEffect(() => {
     fetchConfigs();
@@ -63,7 +64,7 @@ export default function NotificationsView({ session, profile }: any) {
 
       try {
         // 1) Obtener deep link del servidor
-        const res = await fetch('/api/telegram-link-start', {
+        const res = await fetch(`${WEBHOOK_BASE}/telegram-link-start`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

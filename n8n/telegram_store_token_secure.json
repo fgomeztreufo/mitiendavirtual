@@ -1,0 +1,184 @@
+{
+  "name": "TLG Store Token Secure",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "telegram-store-token",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1a2b3c4d-0000-4000-8000-000000000001",
+      "name": "Recibir Token de App",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        200
+      ],
+      "webhookId": "11111111-2222-3333-4444-555555555555"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Validate Authorization: Bearer <token> with Supabase and expose user_id\nconst headers = items[0].json.headers || {};\nconst authHeader = headers.authorization || headers.Authorization || '';\nconst token = (typeof authHeader === 'string') ? (authHeader.split(' ')[1] || '') : '';\nif (!token) throw new Error('Missing Authorization token');\nconst supabaseUrl = process.env.SUPABASE_URL;\nif (!supabaseUrl) throw new Error('Missing SUPABASE_URL in env');\nconst userResp = await this.helpers.request({\n  method: 'GET',\n  uri: supabaseUrl.replace(/\/$/, '') + '/auth/v1/user',\n  headers: { Authorization: 'Bearer ' + token },\n  json: true\n});\nconst userId = userResp && (userResp.id || (userResp.user && userResp.user.id));\nif (!userId) throw new Error('Invalid session or user not found');\nitems[0].json.user_id = userId;\nitems[0].json.user_token = token;\nreturn items;"
+      },
+      "id": "2b3c4d5e-0000-4000-8000-000000000002",
+      "name": "Validar sesión (Bearer)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "= {{$env.SUPABASE_URL}}/rest/v1/rpc/store_integration_credential",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_user_id\": \"{{$json.user_id || $json.body.user_id}}\",\n  \"p_instance_id\": \"{{$json.body.instance_id}}\",\n  \"p_provider\": \"telegram\",\n  \"p_credential_type\": \"bot_token\",\n  \"p_credential_value_text\": \"{{$json.body.bot_token}}\",\n  \"p_encrypt_key\": \"{{$env.SUPABASE_ENCRYPT_KEY}}\"\n}",
+        "options": {
+          "headers": {
+            "apikey": "{{$env.SUPABASE_SERVICE_ROLE_KEY}}",
+            "Authorization": "Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}",
+            "Content-Type": "application/json"
+          }
+        }
+      },
+      "id": "3c4d5e6f-0000-4000-8000-000000000003",
+      "name": "Store Credential (Supabase RPC)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        560,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "= {{$env.SUPABASE_URL}}/rest/v1/rpc/upsert_instance_channel",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_instance_id\": \"{{$json.body.instance_id}}\",\n  \"p_provider\": \"telegram\",\n  \"p_provider_metadata\": {\n    \"status\": \"connected\",\n    \"webhook_url\": \"https://webhook.mitiendavirtual.cl/webhook/telegram-central?tienda_id={{$json.body.tienda_id}}\"\n  }\n}",
+        "options": {
+          "headers": {
+            "apikey": "{{$env.SUPABASE_SERVICE_ROLE_KEY}}",
+            "Authorization": "Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}",
+            "Content-Type": "application/json"
+          }
+        }
+      },
+      "id": "4d5e6f7a-0000-4000-8000-000000000004",
+      "name": "Upsert Channel (Supabase RPC)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        920,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $json.body.bot_token }}/setWebhook",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"https://webhook.mitiendavirtual.cl/webhook/telegram-central?tienda_id={{ $json.body.tienda_id }}\"\n}",
+        "options": {}
+      },
+      "id": "d065bd1a-1906-4921-b29d-c629cc8c42f3",
+      "name": "Registrar Webhook en Telegram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1280,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"status\": \"success\",\n  \"message\": \"Bot vinculado y webhook configurado correctamente.\"\n}",
+        "options": {}
+      },
+      "id": "7e3fa3ba-c2df-4857-b6ee-108924a18113",
+      "name": "Responder a la App",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1640,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "Recibir Token de App": {
+      "main": [
+        [
+          {
+            "node": "Validar Shared Secret",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Shared Secret": {
+      "main": [
+        [
+          {
+            "node": "Store Credential (Supabase RPC)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Credential (Supabase RPC)": {
+      "main": [
+        [
+          {
+            "node": "Upsert Channel (Supabase RPC)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Channel (Supabase RPC)": {
+      "main": [
+        [
+          {
+            "node": "Registrar Webhook en Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar Webhook en Telegram": {
+      "main": [
+        [
+          {
+            "node": "Responder a la App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "generated-telegram-secure-workflow-20260505",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "generated-telegram-secure-workflow-20260505",
+  "tags": []
+}

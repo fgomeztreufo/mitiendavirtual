@@ -13,6 +13,7 @@ interface TelegramViewProps {
 }
 
 export default function TelegramView({ session, profile, instance, onUpdate, goToPlans }: TelegramViewProps) {
+  const WEBHOOK_BASE = ((import.meta as any).env?.VITE_WEBHOOK_BASE as string) || 'https://webhook.mitiendavirtual.cl/webhook-test';
   const [configs, setConfigs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [linking, setLinking] = useState(false)
@@ -20,6 +21,8 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   const [botToken, setBotToken] = useState('')
 
   const planCode = normalizePlanType(profile?.plan_type)
+
+  const [botChoice, setBotChoice] = useState<'platform' | 'own'>('platform')
 
   useEffect(() => {
     if (session?.user?.id) fetchConfigs()
@@ -47,7 +50,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
 
     try {
       setLinking(true)
-      const res = await fetch('/api/telegram-link-start', {
+      const res = await fetch(`${WEBHOOK_BASE}/telegram-link-start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` }
       })
@@ -127,10 +130,10 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
 
     try {
       setSavingToken(true)
-      const res = await fetch('/api/telegram-store-token', {
+      const res = await fetch(`${WEBHOOK_BASE}/telegram-store-token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-        body: JSON.stringify({ instanceId: instance?.id, token: botToken })
+        body: JSON.stringify({ bot_token: botToken, instance_id: instance?.id, tienda_id: instance?.id })
       })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
@@ -183,16 +186,30 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
             </div>
           </div>
 
-          {planCode === 'pro' && (
+          {['pro', 'full'].includes(planCode) && (
             <div className="p-5 rounded-2xl border bg-gray-900 transition-all border-gray-800">
               <div className="mb-3">
                 <div className="text-white font-medium">Conectar Bot propio (Ventas con IA)</div>
-                <div className="text-xs text-gray-400">Pega el token de tu bot de Telegram. El token será enviado al servidor y almacenado de forma segura.</div>
+                <div className="text-xs text-gray-400">Puedes usar el bot de MiTiendaVirtual o conectar tu propio bot pegando su token. El token se almacenará de forma segura.</div>
               </div>
-              <div className="flex gap-3">
-                <input value={botToken} onChange={(e) => setBotToken(e.target.value)} placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" className="flex-1 bg-black border border-gray-800 rounded-xl p-3 text-white outline-none" />
-                <button onClick={() => saveBotToken()} disabled={savingToken} className="py-2 px-4 bg-emerald-600 text-white rounded-xl">{savingToken ? 'Guardando...' : 'Guardar token'}</button>
+
+              <div className="mb-4 flex gap-2">
+                <button type="button" onClick={() => setBotChoice('platform')} className={`py-2 px-4 rounded-xl ${botChoice === 'platform' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300'}`}>
+                  Usar bot de MiTiendaVirtual
+                </button>
+                <button type="button" onClick={() => setBotChoice('own')} className={`py-2 px-4 rounded-xl ${botChoice === 'own' ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-300'}`}>
+                  Usar mi bot
+                </button>
               </div>
+
+              {botChoice === 'own' ? (
+                <div className="flex gap-3">
+                  <input value={botToken} onChange={(e) => setBotToken(e.target.value)} placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" className="flex-1 bg-black border border-gray-800 rounded-xl p-3 text-white outline-none" />
+                  <button onClick={() => saveBotToken()} disabled={savingToken} className="py-2 px-4 bg-emerald-600 text-white rounded-xl">{savingToken ? 'Guardando...' : 'Guardar token'}</button>
+                </div>
+              ) : (
+                <div className="text-sm text-gray-400">Se usará el bot oficial de MiTiendaVirtual para enviar notificaciones.</div>
+              )}
             </div>
           )}
         </div>

@@ -1,0 +1,175 @@
+{
+  "name": "TLG Link Start",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "telegram-link-start",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "wb-linkstart-0001",
+      "name": "Recibir Link de App",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        220
+      ],
+      "webhookId": "wb-linkstart-0001-id"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extrae Authorization Bearer token pasado por el frontend y lo expone en el item\nconst body = items[0].json.body || {};\nconst headers = items[0].json.headers || {};\nconst authHeader = headers.authorization || headers.Authorization || '';\nconst userToken = (typeof authHeader === 'string') ? (authHeader.split(' ')[1] || '') : '';\nif (!userToken) throw new Error('Missing Authorization token');\nitems[0].json.user_token = userToken;\nreturn items;"
+      },
+      "id": "fn-validate-session-0001",
+      "name": "Validar sesión (token)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        200,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "= {{$env.SUPABASE_URL}}/auth/v1/user",
+        "options": {},
+        "options": {
+          "headers": {
+            "Authorization": "Bearer {{$json.user_token}}"
+          }
+        }
+      },
+      "id": "http-get-user-0001",
+      "name": "Get Supabase User",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        520,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Genera token único y prepara payload para INSERT en Supabase\nconst crypto = require('crypto');\nconst userResp = items[0].json;\nconst userBody = userResp && (userResp.body || userResp) || {};\nconst userId = userBody.id || (userBody.user && userBody.user.id) || null;\nif (!userId) throw new Error('Invalid session or user not found');\nconst linkToken = crypto.randomBytes(24).toString('hex');\nconst expiresAt = new Date(Date.now() + 10*60*1000).toISOString();\nitems[0].json = { user_id: userId, linkToken, expiresAt };\nreturn items;"
+      },
+      "id": "fn-generate-token-0001",
+      "name": "Generar token",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        860,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "= {{$env.SUPABASE_URL}}/rest/v1/telegram_link_tokens",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"user_id\": \"{{$json.user_id}}\",\n  \"token\": \"{{$json.linkToken}}\",\n  \"expires_at\": \"{{$json.expiresAt}}\"\n}",
+        "options": {
+          "headers": {
+            "apikey": "{{$env.SUPABASE_SERVICE_ROLE_KEY}}",
+            "Authorization": "Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}",
+            "Content-Type": "application/json"
+          }
+        }
+      },
+      "id": "http-insert-token-0001",
+      "name": "Insert Token (Supabase)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1180,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"url\": \"https://t.me/{{$env.TELEGRAM_BOT_USERNAME}}?start={{$json.linkToken}}\",\n  \"token\": \"{{$json.linkToken}}\"\n}",
+        "options": {}
+      },
+      "id": "resp-webhook-0001",
+      "name": "Responder a la App",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        220
+      ]
+    }
+  ],
+  "connections": {
+    "Recibir Link de App": {
+      "main": [
+        [
+          {
+            "node": "Validar sesión (token)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar sesión (token)": {
+      "main": [
+        [
+          {
+            "node": "Get Supabase User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Supabase User": {
+      "main": [
+        [
+          {
+            "node": "Generar token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generar token": {
+      "main": [
+        [
+          {
+            "node": "Insert Token (Supabase)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Token (Supabase)": {
+      "main": [
+        [
+          {
+            "node": "Responder a la App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "tlg-linkstart-20260505",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "tlg-linkstart-20260505",
+  "tags": []
+}
