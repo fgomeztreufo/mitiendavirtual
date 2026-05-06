@@ -150,7 +150,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"url\": \"https://t.me/{{$env.TELEGRAM_BOT_USERNAME}}?start={{$json.linkToken}}\",\n  \"token\": \"{{$json.linkToken}}\"\n}",
+        "responseBody": "={\n  \"url\": \"https://t.me/{{$env.TELEGRAM_BOT_USERNAME}}?start={{$('Generar token').item.json.linkToken}}\",\n  \"token\": \"{{$('Generar token').item.json.linkToken}}\"\n}",
         "options": {}
       },
       "id": "resp-webhook-0001",
