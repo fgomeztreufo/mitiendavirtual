@@ -159,36 +159,29 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   return (
     <div className="max-w-4xl mx-auto space-y-6 p-4">
       <h2 className="text-2xl font-bold text-white">Telegram</h2>
-      <p className="text-gray-400 text-sm">Configura tu canal de Telegram (notificaciones y bots).</p>
+      <p className="text-gray-400 text-sm">Configura el bot de ventas IA para tu tienda en Telegram.</p>
+
+      {/* Info: notificaciones están en pestaña separada */}
+      <div className="p-4 rounded-xl bg-blue-900/20 border border-blue-800/40 text-sm text-blue-300">
+        💬 Para recibir alertas de ventas e inventario en tu Telegram personal, ve a <button onClick={() => window.dispatchEvent(new CustomEvent('changeTab', { detail: 'notifications' }))} className="underline font-medium">Notificaciones</button>.
+      </div>
 
       {planCode === 'free' ? (
         <div className="p-6 rounded-2xl bg-gray-900 border border-gray-800">
-          <p className="text-sm text-gray-300 mb-4">Telegram no está disponible en el plan Semilla.</p>
+          <p className="text-sm text-gray-300 mb-4">El bot de ventas IA no está disponible en el plan Semilla.</p>
           <div className="flex gap-3">
             <button onClick={() => (goToPlans ? goToPlans() : window.dispatchEvent(new CustomEvent('changeTab', { detail: 'plans' })))} className="py-2 px-4 bg-blue-600 text-white rounded-xl">Ver planes</button>
           </div>
         </div>
       ) : (
         <div className="grid gap-4">
-          <div className="p-5 rounded-2xl border bg-gray-900 transition-all border-gray-800">
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="text-white font-medium">Notificaciones (Telegram)</div>
-                <div className="text-xs text-gray-400">Recibe alertas de ventas e inventario en tu chat.</div>
-              </div>
-              <div>
-                {telegramConfig?.is_active ? (
-                  <button onClick={async () => {
-                    const { error } = await supabase.from('user_notification_configs').upsert({ user_id: session.user.id, channel_type: 'telegram', is_active: false, config: telegramConfig?.config || {} }, { onConflict: 'user_id, channel_type' })
-                    if (!error) fetchConfigs()
-                  }} className="py-2 px-4 bg-red-600 text-white rounded-xl">Desvincular</button>
-                ) : (
-                  <button onClick={() => startTelegramLink()} disabled={linking} className="py-2 px-4 bg-blue-600 text-white rounded-xl">{linking ? 'Generando...' : 'Vincular (Notificaciones)'}</button>
-                )}
-              </div>
+          {planCode === 'basic' && (
+            <div className="p-5 rounded-2xl border bg-gray-900 border-gray-800">
+              <p className="text-sm text-gray-300 mb-1 font-medium">Bot de ventas IA</p>
+              <p className="text-xs text-gray-500 mb-4">El bot de ventas IA con bot propio está disponible desde el plan Pro. Con el plan Basic usas el bot de MiTiendaVirtual.</p>
+              <button onClick={() => (goToPlans ? goToPlans() : window.dispatchEvent(new CustomEvent('changeTab', { detail: 'plans' })))} className="py-2 px-4 bg-blue-600 text-white rounded-xl text-sm">Actualizar a Pro</button>
             </div>
-          </div>
-
+          )}
           {['pro', 'full'].includes(planCode) && (
             <div className="p-5 rounded-2xl border bg-gray-900 transition-all border-gray-800">
               <div className="mb-3">

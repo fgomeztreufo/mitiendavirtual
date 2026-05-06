@@ -166,9 +166,9 @@ export default function NotificationsView({ session, profile }: any) {
           const isLocked = !allowedChannels.includes(channel);
           const config = configs.find(c => c.channel_type === channel);
           const active = config?.is_active;
-          // "conectado" = tiene chat_id real guardado por el bot
+          // "conectado" = tiene chat_id real O al menos connected_at (registros del handler anterior)
           const connected = channel === 'telegram'
-            ? !!(config?.config?.telegram_chat_id)
+            ? !!(config?.config?.telegram_chat_id || config?.config?.connected_at)
             : !!active;
 
           return (
