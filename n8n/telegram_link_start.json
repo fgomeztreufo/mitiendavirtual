@@ -34,13 +34,15 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "= {{$env.SUPABASE_URL}}/auth/v1/user",
-        "options": {},
-        "options": {
-          "headers": {
-            "Authorization": "Bearer {{$json.user_token}}"
-          }
-        }
+        "url": "={{$env.SUPABASE_URL}}/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{$json.user_token}}" },
+            { "name": "apikey", "value": "={{$env.SUPABASE_ANON_KEY}}" }
+          ]
+        },
+        "options": {}
       },
       "id": "http-get-user-0001",
       "name": "Get Supabase User",
@@ -67,17 +69,20 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "= {{$env.SUPABASE_URL}}/rest/v1/telegram_link_tokens",
+        "url": "={{$env.SUPABASE_URL}}/rest/v1/telegram_link_tokens",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"user_id\": \"{{$json.user_id}}\",\n  \"token\": \"{{$json.linkToken}}\",\n  \"expires_at\": \"{{$json.expiresAt}}\"\n}",
-        "options": {
-          "headers": {
-            "apikey": "{{$env.SUPABASE_SERVICE_ROLE_KEY}}",
-            "Authorization": "Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}",
-            "Content-Type": "application/json"
-          }
-        }
+        "jsonBody": "={\"user_id\": \"{{$json.user_id}}\", \"token\": \"{{$json.linkToken}}\", \"expires_at\": \"{{$json.expiresAt}}\"}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}" },
+            { "name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "options": {}
       },
       "id": "http-insert-token-0001",
       "name": "Insert Token (Supabase)",
