@@ -13,7 +13,8 @@ interface TelegramViewProps {
 }
 
 export default function TelegramView({ session, profile, instance, onUpdate, goToPlans }: TelegramViewProps) {
-  const WEBHOOK_BASE = ((import.meta as any).env?.VITE_WEBHOOK_BASE as string) || 'https://webhook.mitiendavirtual.cl/webhook-test';
+  // Endpoints Vercel serverless — no requieren configuración extra
+  const API_BASE = '/api';
   const [configs, setConfigs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [linking, setLinking] = useState(false)
@@ -50,7 +51,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
 
     try {
       setLinking(true)
-      const res = await fetch(`${WEBHOOK_BASE}/telegram-link-start`, {
+      const res = await fetch(`${API_BASE}/telegram-link-start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` }
       })
@@ -130,6 +131,8 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
 
     try {
       setSavingToken(true)
+      // Para Pro/Full con bot propio se sigue usando n8n para almacenamiento seguro
+      const WEBHOOK_BASE = ((import.meta as any).env?.VITE_WEBHOOK_BASE as string) || 'https://webhook.mitiendavirtual.cl/webhook';
       const res = await fetch(`${WEBHOOK_BASE}/telegram-store-token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },

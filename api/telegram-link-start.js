@@ -3,19 +3,11 @@ import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '').replace(/\/$/, '')
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-const BOT_USERNAME = process.env.VITE_TELEGRAM_BOT_USERNAME || 'Mitiendavirtualclbot'
-
-function parseJsonBody(req) {
-  return new Promise((resolve, reject) => {
-    if (req.body) return resolve(req.body)
-    let data = ''
-    req.on('data', chunk => { data += chunk })
-    req.on('end', () => {
-      try { resolve(JSON.parse(data || '{}')) } catch (err) { reject(err) }
-    })
-    req.on('error', reject)
-  })
-}
+const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || 'Mitiendavirtualclbot'
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
+// Secret compartido con Telegram para validar que los updates vienen de Telegram
+// Se registra al hacer setWebhook. Guardar en Vercel como TELEGRAM_WEBHOOK_SECRET.
+const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET || ''
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -28,7 +20,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ message: 'Server misconfiguration' })
   }
 
-  // Verificar sesión con cliente Supabase (incluye apikey automáticamente)
+  // Verificar sesión del usuario autenticado
   const authHeader = req.headers.authorization || ''
   const token = (typeof authHeader === 'string') ? (authHeader.split(' ')[1] || '') : ''
   if (!token) return res.status(401).json({ message: 'Missing Authorization token' })
@@ -46,17 +38,15 @@ export default async function handler(req, res) {
   // Generar token one-time único
   const linkToken = crypto.randomBytes(24).toString('hex')
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
-
   // Invalidar tokens anteriores no usados de este usuario
-  await supabase
+  await supabaseAdmin
     .from('telegram_link_tokens')
     .update({ used: true })
     .eq('user_id', appUserId)
     .eq('used', false)
 
   // Insertar nuevo token (expira en 10 minutos)
-  const { error } = await supabase.from('telegram_link_tokens').insert({
+  const { error } = await supabaseAdmin.from('telegram_link_tokens').insert({
     user_id: appUserId,
     token: linkToken
   })
@@ -64,6 +54,26 @@ export default async function handler(req, res) {
   if (error) {
     console.error('Error inserting token', error)
     return res.status(500).json({ message: 'DB error' })
+  }
+
+  // Registrar webhook en Telegram si aún no está apuntando a esta URL (idempotente)
+  if (TELEGRAM_BOT_TOKEN) {
+    try {
+      const webhookUrl = 'https://mitiendavirtual.cl/api/telegram-webhook'
+      const infoRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getWebhookInfo`)
+      const infoJson = await infoRes.json()
+      if (infoJson?.result?.url !== webhookUrl) {
+        const body = { url: webhookUrl }
+        if (WEBHOOK_SECRET) body.secret_token = WEBHOOK_SECRET
+        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        })
+      }
+    } catch (err) {
+      console.error('setWebhook error (non-fatal)', err)
+    }
   }
 
   const deepLink = `https://t.me/${BOT_USERNAME}?start=${linkToken}`
