@@ -19,6 +19,7 @@ import Leads from './Leads.tsx'
 import LeadsView from './Leads.tsx'
 import FloatingWhatsAppButton from './FloatingWhatsAppButton'
 import NotificationsView from './NotificationsView.tsx'
+import TelegramView from './TelegramView'
 import AgentsDashboard from './AgentsDashboard'
 
 export default function Dashboard({ session }: { session: Session }) {
@@ -111,6 +112,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <p className="text-xs font-bold text-gray-500 uppercase px-2 mb-2 tracking-widest">Canales</p>
             <MobileNavBtn label="Ventas Capturadas" active={activeTab === 'leads'} onClick={() => { setActiveTab('leads'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} onClick={() => { setActiveTab('whatsapp'); setMobileMenuOpen(false); }} />
+            <MobileNavBtn label="Telegram" active={activeTab === 'telegram'} onClick={() => { setActiveTab('telegram'); setMobileMenuOpen(false); }} />
             <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-4 mb-2 tracking-widest">Configuración</p>
             <MobileNavBtn label="Notificaciones" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Configura tu Instagram" active={activeTab === 'instagram'} onClick={() => { setActiveTab('instagram'); setMobileMenuOpen(false); }} />
@@ -167,6 +169,11 @@ export default function Dashboard({ session }: { session: Session }) {
             label="WhatsApp" 
             active={activeTab === 'whatsapp'} 
             onClick={() => {setActiveTab('whatsapp'); setLegalView(null)}} 
+          />
+          <SidebarBtn 
+            label="Telegram" 
+            active={activeTab === 'telegram'} 
+            onClick={() => {setActiveTab('telegram'); setLegalView(null)}} 
           />
           
           <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Configuración</p>
@@ -252,6 +259,15 @@ export default function Dashboard({ session }: { session: Session }) {
               />
             )}
             {activeTab === 'whatsapp' && <WhatsAppView />} 
+            {activeTab === 'telegram' && (
+              <TelegramView
+                session={session}
+                profile={profile}
+                instance={instance}
+                onUpdate={getData}
+                goToPlans={() => setActiveTab('plans')}
+              />
+            )}
             
             {/* VISTA DE FAQs RE-INCORPORADA */}
             {activeTab === 'faqs' && <FaqsView session={session} />}
