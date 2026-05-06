@@ -166,6 +166,10 @@ export default function NotificationsView({ session, profile }: any) {
           const isLocked = !allowedChannels.includes(channel);
           const config = configs.find(c => c.channel_type === channel);
           const active = config?.is_active;
+          // "conectado" = tiene chat_id real guardado por el bot
+          const connected = channel === 'telegram'
+            ? !!(config?.config?.telegram_chat_id)
+            : !!active;
 
           return (
             <div 
@@ -178,16 +182,29 @@ export default function NotificationsView({ session, profile }: any) {
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <span className="text-white capitalize font-medium">{channel}</span>
-                  {active && channel === 'telegram' && (
-                    <span className="text-[10px] bg-green-900/30 text-green-400 px-2 py-0.5 rounded-full border border-green-800">
-                      Vinculado
-                    </span>
+                  {channel === 'telegram' && (
+                    connected ? (
+                      <span className="text-[10px] bg-green-900/30 text-green-400 px-2 py-0.5 rounded-full border border-green-800">
+                        ✓ Conectado
+                      </span>
+                    ) : active ? (
+                      <span className="text-[10px] bg-yellow-900/30 text-yellow-400 px-2 py-0.5 rounded-full border border-yellow-800">
+                        Pendiente
+                      </span>
+                    ) : (
+                      <span className="text-[10px] bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full border border-gray-700">
+                        No conectado
+                      </span>
+                    )
                   )}
                 </div>
-                <div className={`h-6 w-11 rounded-full relative transition-colors ${active ? 'bg-blue-600' : 'bg-gray-700'}`}>
-                  <span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${active ? 'left-6' : 'left-1'}`} />
+                <div className={`h-6 w-11 rounded-full relative transition-colors ${connected ? 'bg-green-600' : active ? 'bg-yellow-600' : 'bg-gray-700'}`}>
+                  <span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${(connected || active) ? 'left-6' : 'left-1'}`} />
                 </div>
               </div>
+              {channel === 'telegram' && connected && config?.config?.telegram_username && (
+                <p className="text-xs text-gray-500 mt-2">@{config.config.telegram_username}</p>
+              )}
             </div>
           );
         })}
