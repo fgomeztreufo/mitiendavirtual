@@ -95,6 +95,60 @@
     },
     {
       "parameters": {
+        "method": "GET",
+        "url": "=https://api.telegram.org/bot{{$env.TELEGRAM_BOT_TOKEN}}/getWebhookInfo",
+        "options": {}
+      },
+      "id": "http-get-webhook-info-0001",
+      "name": "Consultar Webhook Actual",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1500,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.result.url}}",
+              "operation": "notEqual",
+              "value2": "https://webhook.mitiendavirtual.cl/webhook/telegram-central"
+            }
+          ]
+        }
+      },
+      "id": "if-webhook-differs-0001",
+      "name": "¿Webhook ya registrado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1720,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{$env.TELEGRAM_BOT_TOKEN}}/setWebhook",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"url\": \"https://webhook.mitiendavirtual.cl/webhook/telegram-central\"}",
+        "options": {}
+      },
+      "id": "http-set-webhook-platform-0001",
+      "name": "Registrar Webhook Bot Plataforma",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1940,
+        120
+      ]
+    },
+    {
+      "parameters": {
         "respondWith": "json",
         "responseBody": "={\n  \"url\": \"https://t.me/{{$env.TELEGRAM_BOT_USERNAME}}?start={{$json.linkToken}}\",\n  \"token\": \"{{$json.linkToken}}\"\n}",
         "options": {}
@@ -104,7 +158,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        1500,
+        2160,
         220
       ]
     }
@@ -155,6 +209,46 @@
       ]
     },
     "Insert Token (Supabase)": {
+      "main": [
+        [
+          {
+            "node": "Consultar Webhook Actual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar Webhook Actual": {
+      "main": [
+        [
+          {
+            "node": "¿Webhook ya registrado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Webhook ya registrado?": {
+      "main": [
+        [
+          {
+            "node": "Registrar Webhook Bot Plataforma",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder a la App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar Webhook Bot Plataforma": {
       "main": [
         [
           {
