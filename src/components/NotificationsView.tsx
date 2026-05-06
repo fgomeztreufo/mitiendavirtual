@@ -54,8 +54,26 @@ export default function NotificationsView({ session, profile }: any) {
       return;
     }
 
-    // Vincular Telegram via deep link (no requiere widget)
-    if (channel === 'telegram' && !currentStatus) {
+    // Vincular Telegram via deep link solo si NO está conectado aún
+    if (channel === 'telegram') {
+      const config = configs.find(c => c.channel_type === channel);
+      const isConnected = !!(config?.config?.telegram_chat_id || config?.config?.connected_at);
+
+      // Si ya está conectado, solo hacer toggle de is_active
+      if (isConnected) {
+        const { error } = await supabase
+          .from('user_notification_configs')
+          .upsert({
+            user_id: session.user.id,
+            channel_type: 'telegram',
+            is_active: !currentStatus,
+            config: config?.config || {}
+          }, { onConflict: 'user_id, channel_type' });
+        if (!error) fetchConfigs();
+        return;
+      }
+
+      // Si no está conectado, iniciar flujo de vinculación
       const accessToken = session?.access_token || session?.accessToken || '';
       if (!accessToken) {
         Swal.fire('Error', 'Sesión no válida. Vuelve a iniciar sesión.', 'error');
