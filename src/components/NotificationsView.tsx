@@ -54,13 +54,13 @@ export default function NotificationsView({ session, profile }: any) {
       return;
     }
 
-    // Vincular Telegram via deep link solo si NO está conectado aún
+    // Lógica Telegram: separar toggle de is_active vs flujo de vinculación
     if (channel === 'telegram') {
       const config = configs.find(c => c.channel_type === channel);
       const isConnected = !!(config?.config?.telegram_chat_id || config?.config?.connected_at);
 
-      // Si ya está conectado, solo hacer toggle de is_active con UPDATE directo
       if (isConnected) {
+        // Ya conectado: solo activar/desactivar notificaciones
         const { error: updateError } = await supabase
           .from('user_notification_configs')
           .update({ is_active: !currentStatus })
@@ -75,7 +75,7 @@ export default function NotificationsView({ session, profile }: any) {
         return;
       }
 
-      // Si no está conectado, iniciar flujo de vinculación
+      // No conectado: mostrar modal de vinculación (independiente del estado del toggle)
       const accessToken = session?.access_token || session?.accessToken || '';
       if (!accessToken) {
         Swal.fire('Error', 'Sesión no válida. Vuelve a iniciar sesión.', 'error');
@@ -185,18 +185,18 @@ export default function NotificationsView({ session, profile }: any) {
         {['email', 'telegram', 'whatsapp'].map((channel) => {
           const isLocked = !allowedChannels.includes(channel);
           const config = configs.find(c => c.channel_type === channel);
-          const active = config?.is_active;
-          // "conectado" = tiene chat_id real O al menos connected_at (registros del handler anterior)
+          const active = !!config?.is_active;
           const connected = channel === 'telegram'
             ? !!(config?.config?.telegram_chat_id || config?.config?.connected_at)
-            : !!active;
+            : active;
+          // Toggle color: verde si activo+conectado, gris si no
+          const toggleOn = channel === 'telegram' ? (connected && active) : active;
 
           return (
-            <div 
-              key={channel} 
-              onClick={() => toggleChannel(channel, !!active, isLocked)}
+            <div
+              key={channel}
               className={`p-5 rounded-2xl border bg-gray-900 transition-all ${
-                isLocked ? 'opacity-40 border-gray-800' : 'cursor-pointer border-gray-800 hover:border-gray-600'
+                isLocked ? 'opacity-40 border-gray-800' : 'border-gray-800'
               }`}
             >
               <div className="flex justify-between items-center">
@@ -207,23 +207,34 @@ export default function NotificationsView({ session, profile }: any) {
                       <span className="text-[10px] bg-green-900/30 text-green-400 px-2 py-0.5 rounded-full border border-green-800">
                         ✓ Conectado
                       </span>
-                    ) : active ? (
-                      <span className="text-[10px] bg-yellow-900/30 text-yellow-400 px-2 py-0.5 rounded-full border border-yellow-800">
-                        Pendiente
-                      </span>
                     ) : (
-                      <span className="text-[10px] bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full border border-gray-700">
-                        No conectado
+                      <span className="text-[10px] bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full border border-gray-700 cursor-pointer"
+                        onClick={() => !isLocked && toggleChannel(channel, active, isLocked)}>
+                        Vincular
                       </span>
                     )
                   )}
                 </div>
-                <div className={`h-6 w-11 rounded-full relative transition-colors ${connected ? 'bg-green-600' : active ? 'bg-yellow-600' : 'bg-gray-700'}`}>
-                  <span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${(connected || active) ? 'left-6' : 'left-1'}`} />
+                <div
+                  onClick={() => !isLocked && toggleChannel(channel, active, isLocked)}
+                  className={`h-6 w-11 rounded-full relative transition-colors cursor-pointer ${
+                    toggleOn ? 'bg-green-600' : 'bg-gray-700'
+                  }`}
+                >
+                  <span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${
+                    toggleOn ? 'left-6' : 'left-1'
+                  }`} />
                 </div>
               </div>
-              {channel === 'telegram' && connected && config?.config?.telegram_username && (
-                <p className="text-xs text-gray-500 mt-2">@{config.config.telegram_username}</p>
+              {channel === 'telegram' && connected && (
+                <div className="mt-2 flex items-center justify-between">
+                  {config?.config?.telegram_username && (
+                    <p className="text-xs text-gray-500">@{config.config.telegram_username}</p>
+                  )}
+                  {!active && (
+                    <span className="text-xs text-gray-500">Notificaciones desactivadas</span>
+                  )}
+                </div>
               )}
             </div>
           );
