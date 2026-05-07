@@ -59,17 +59,19 @@ export default function NotificationsView({ session, profile }: any) {
       const config = configs.find(c => c.channel_type === channel);
       const isConnected = !!(config?.config?.telegram_chat_id || config?.config?.connected_at);
 
-      // Si ya está conectado, solo hacer toggle de is_active
+      // Si ya está conectado, solo hacer toggle de is_active con UPDATE directo
       if (isConnected) {
-        const { error } = await supabase
+        const { error: updateError } = await supabase
           .from('user_notification_configs')
-          .upsert({
-            user_id: session.user.id,
-            channel_type: 'telegram',
-            is_active: !currentStatus,
-            config: config?.config || {}
-          }, { onConflict: 'user_id, channel_type' });
-        if (!error) fetchConfigs();
+          .update({ is_active: !currentStatus })
+          .eq('user_id', session.user.id)
+          .eq('channel_type', 'telegram');
+        if (updateError) {
+          console.error('Toggle error:', updateError);
+          Swal.fire('Error', 'No se pudo actualizar el estado.', 'error');
+        } else {
+          fetchConfigs();
+        }
         return;
       }
 
