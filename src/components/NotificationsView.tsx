@@ -60,18 +60,52 @@ export default function NotificationsView({ session, profile }: any) {
       const isConnected = !!(config?.config?.telegram_chat_id || config?.config?.connected_at);
 
       if (isConnected) {
-        // Ya conectado: solo activar/desactivar notificaciones
-        const { error: updateError } = await supabase
-          .from('user_notification_configs')
-          .update({ is_active: !currentStatus })
-          .eq('user_id', session.user.id)
-          .eq('channel_type', 'telegram');
-        if (updateError) {
-          console.error('Toggle error:', updateError);
-          Swal.fire('Error', 'No se pudo actualizar el estado.', 'error');
-        } else {
-          fetchConfigs();
+        // Ya conectado: permitir activar/desactivar o desconectar completamente
+        const newActive = !currentStatus;
+        try {
+          const updatePayload: any = { is_active: newActive };
+          // Si el usuario DESACTIVA (newActive === false), limpiar la config
+          // para eliminar el usuario/nombre y forzar que vuelva a aparecer
+          // el flujo de vinculación (popup) al reconectar.
+          if (!newActive) updatePayload.config = {};
+
+          const { error: updateError } = await supabase
+            .from('user_notification_configs')
+            .update(updatePayload)
+            .eq('user_id', session.user.id)
+            .eq('channel_type', 'telegram');
+
+          if (updateError) {
+            console.error('Toggle error:', updateError);
+            Swal.fire('Error', 'No se pudo actualizar el estado.', 'error');
+          } else {
+            fetchConfigs();
+            if (!newActive) {
+              // Intentar limpiar tokens y credenciales asociadas (no bloquear si falla)
+              try {
+                const chatId = config?.config?.telegram_chat_id;
+                if (chatId) {
+                  const { error: delTokensErr } = await supabase.from('telegram_link_tokens').delete().eq('chat_id', String(chatId));
+                  if (delTokensErr) console.warn('No se pudo eliminar telegram_link_tokens por chat_id', delTokensErr);
+                } else {
+                  const { error: delTokensErr } = await supabase.from('telegram_link_tokens').delete().eq('user_id', session.user.id);
+                  if (delTokensErr) console.warn('No se pudo eliminar telegram_link_tokens por user_id', delTokensErr);
+                }
+
+                const { error: delCredsErr } = await supabase.from('integration_credentials').delete().eq('user_id', session.user.id).eq('provider', 'telegram');
+                if (delCredsErr) console.warn('No se pudo eliminar integration_credentials (telegram)', delCredsErr);
+              } catch (e) {
+                console.warn('Cleanup warning', e);
+              }
+
+              Swal.fire('Desconectado', 'Telegram ha sido desconectado y los datos de vinculación se eliminaron.', 'success');
+            }
+          }
+        } catch (err) {
+          console.error(err);
+          Swal.fire('Error', 'Ocurrió un error al actualizar la configuración.', 'error');
         }
+
         return;
       }
 
