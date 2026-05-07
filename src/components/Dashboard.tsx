@@ -172,8 +172,8 @@ export default function Dashboard({ session }: { session: Session }) {
           />
           <SidebarBtn 
             label="Telegram" 
-            active={activeTab === 'telegram'} 
-            onClick={() => {setActiveTab('telegram'); setLegalView(null)}} 
+            active={activeTab === 'whatsapp'} 
+            onClick={() => {setActiveTab('whatsapp'); setLegalView(null)}} 
           />
           
           <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Configuración</p>
@@ -181,6 +181,11 @@ export default function Dashboard({ session }: { session: Session }) {
             label="Notificaciones"
             active={activeTab === 'notifications'}
             onClick={() => { setActiveTab('notifications'); setLegalView(null) }}
+          />
+          <SidebarBtn 
+            label="Configura tuTelegram" 
+            active={activeTab === 'telegram'} 
+            onClick={() => {setActiveTab('telegram'); setLegalView(null)}} 
           />
         <SidebarBtn 
           label="Configura tu Instagram" 
