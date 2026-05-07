@@ -177,20 +177,25 @@ export default function Dashboard({ session }: { session: Session }) {
           />
           
           <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Configuración</p>
-          <SidebarBtn
-            label="Notificaciones"
-            active={activeTab === 'notifications'}
-            onClick={() => { setActiveTab('notifications'); setLegalView(null) }}
-          />
-          <SidebarBtn 
-            label="Configura tuTelegram" 
-            active={activeTab === 'telegram'} 
-            onClick={() => {setActiveTab('telegram'); setLegalView(null)}} 
+        <SidebarBtn
+          label="Notificaciones"
+          active={activeTab === 'notifications'}
+          onClick={() => { setActiveTab('notifications'); setLegalView(null) }}
           />
         <SidebarBtn 
           label="Configura tu Instagram" 
           active={activeTab === 'instagram'} 
           onClick={() => setActiveTab('instagram')} 
+        />
+        <SidebarBtn 
+          label="Configura tu WhatsApp" 
+          active={activeTab === 'telegram'} 
+          onClick={() => {setActiveTab('telegram'); setLegalView(null)}} 
+        />
+        <SidebarBtn 
+          label="Configura tu Telegram" 
+          active={activeTab === 'telegram'} 
+          onClick={() => {setActiveTab('telegram'); setLegalView(null)}} 
         />
          {/* Botón Conocimiento con submenú */}
         <SidebarBtn 
