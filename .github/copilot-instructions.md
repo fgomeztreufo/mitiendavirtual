@@ -96,6 +96,19 @@ npm run preview      # Preview local del build
 ```
 VITE_SUPABASE_URL=...
 VITE_SUPABASE_ANON_KEY=...
+N8N_WEBHOOK_URL=... # proxy Vercel -> n8n (sample / forwarder)
+TELEGRAM_WEBHOOK_SECRET=... # opcional, solo si registras secret_token en Telegram
+TELEGRAM_BOT_TOKEN=... # solo para el bot de plataforma en Vercel, si aplica
+```
+
+### Variables de entorno en n8n / OCI
+
+```
+SUPABASE_URL=...
+SUPABASE_SERVICE_ROLE_KEY=...
+SUPABASE_ENCRYPT_KEY=...
+TLG_SHARED_SECRET=... # opcional, para llamadas server-to-server
+TELEGRAM_CENTRAL_WEBHOOK_URL=... # URL central que se registra en setWebhook
 ```
 
 ## Design System
@@ -108,6 +121,7 @@ VITE_SUPABASE_ANON_KEY=...
 ## Conventions
 
 - Los webhooks de n8n usan el dominio `webhook.mitiendavirtual.cl`
+- El workflow de Telegram para guardar tokens acepta `Authorization: Bearer <access_token>` desde la UI o `TLG_SHARED_SECRET` desde un runner confiable
 - Subida de productos usa `FormData` al webhook, no API directa
 - La autenticación es 100% Supabase Auth con listeners `onAuthStateChange`
 - Los componentes del Dashboard se renderizan condicionalmente por tab activo

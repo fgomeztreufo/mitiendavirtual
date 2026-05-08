@@ -1,11 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
-
-const SUPABASE_URL = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '').replace(/\/$/, '')
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
-// Debe coincidir con el secret_token usado al registrar el webhook en setWebhook.
-// Guardar en Vercel como TELEGRAM_WEBHOOK_SECRET.
-const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET || ''
+// Thin Vercel proxy: forward Telegram updates to an n8n webhook.
+// Keep logic in n8n workflows (TLG Webhook Central, TLG Link Start, etc.).
+// Configure `N8N_WEBHOOK_URL` in Vercel to point to your n8n HTTP trigger.
+const TELEGRAM_WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET || ''
+const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || ''
 
 function parseJsonBody(req) {
   return new Promise((resolve, reject) => {
@@ -25,15 +22,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' })
   }
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !TELEGRAM_BOT_TOKEN) {
-    console.error('Missing envs')
-    return res.status(500).json({ message: 'Server misconfiguration' })
-  }
-
-  // Verificar que el POST viene de Telegram usando el secret_token
-  if (WEBHOOK_SECRET) {
+  // Verify secret token from Telegram (if configured)
+  if (TELEGRAM_WEBHOOK_SECRET) {
     const incoming = req.headers['x-telegram-bot-api-secret-token'] || ''
-    if (incoming !== WEBHOOK_SECRET) {
+    if (incoming !== TELEGRAM_WEBHOOK_SECRET) {
       console.warn('Invalid Telegram secret token')
       return res.status(401).json({ message: 'Unauthorized' })
     }
@@ -46,78 +38,34 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: 'Invalid JSON' })
   }
 
-  const message = body?.message
-  if (!message) return res.status(200).json({ ok: true })
-
-  const chatId = String(message.chat?.id || '')
-  const text = message.text || ''
-  const from = message.from || {}
-  const username = from.username || from.first_name || ''
-
-  if (!text.startsWith('/start')) {
+  // If no n8n target configured, log and return OK (Vercel = example only).
+  if (!N8N_WEBHOOK_URL) {
+    console.warn('N8N_WEBHOOK_URL not set — acting as sample webhook (no forwarding).')
+    console.log('Telegram update (sample):', JSON.stringify(body).slice(0, 2000))
     return res.status(200).json({ ok: true })
   }
 
-  const linkToken = text.replace('/start', '').trim()
-
-  if (!linkToken) {
-    await sendTelegramMessage(chatId, '👋 Bienvenido a MiTiendaVirtual. Vincula tu cuenta desde la app.')
-    return res.status(200).json({ ok: true })
-  }
-
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
-
-  const { data: tokenRow, error: tokenError } = await supabase
-    .from('telegram_link_tokens')
-    .select('*')
-    .eq('token', linkToken)
-    .eq('used', false)
-    .gt('expires_at', new Date().toISOString())
-    .single()
-
-  if (tokenError || !tokenRow) {
-    await sendTelegramMessage(chatId, '⚠️ El enlace de vinculación no es válido o ya expiró. Genera uno nuevo desde la app.')
-    return res.status(200).json({ ok: true })
-  }
-
-  const appUserId = tokenRow.user_id
-
-  await supabase
-    .from('telegram_link_tokens')
-    .update({ used: true, chat_id: chatId, telegram_username: username })
-    .eq('id', tokenRow.id)
-
-  const { error: upsertError } = await supabase
-    .from('user_notification_configs')
-    .upsert({
-      user_id: appUserId,
-      channel_type: 'telegram',
-      is_active: true,
-      config: {
-        telegram_chat_id: chatId,
-        telegram_username: username,
-        connected_at: new Date().toISOString()
-      }
-    }, { onConflict: 'user_id, channel_type' })
-
-  if (upsertError) {
-    console.error('Upsert error', upsertError)
-    await sendTelegramMessage(chatId, '❌ Ocurrió un error al vincular. Intenta de nuevo.')
-    return res.status(200).json({ ok: true })
-  }
-
-  await sendTelegramMessage(chatId, '✅ ¡Tu cuenta de MiTiendaVirtual fue vinculada exitosamente! Recibirás notificaciones aquí.')
-  return res.status(200).json({ ok: true })
-}
-
-async function sendTelegramMessage(chatId, text) {
+  // Forward the original update to n8n. n8n workflows should handle linking and messages.
   try {
-    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    const payload = {
+      forwarded_by: 'vercel-telegram-proxy',
+      forwarded_at: new Date().toISOString(),
+      update: body
+    }
+
+    const forwardRes = await fetch(N8N_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text })
+      body: JSON.stringify(payload)
     })
+
+    if (!forwardRes.ok) {
+      const txt = await forwardRes.text().catch(() => '')
+      console.error('n8n forward error', forwardRes.status, txt)
+    }
   } catch (err) {
-    console.error('sendMessage error', err)
+    console.error('Error forwarding to n8n', err)
   }
+
+  return res.status(200).json({ ok: true })
 }
