@@ -115,7 +115,7 @@
             {
               "value1": "={{$json.result.url}}",
               "operation": "notEqual",
-              "value2": "https://webhook.mitiendavirtual.cl/webhook/telegram-central"
+              "value2": "={{$env.TELEGRAM_CENTRAL_WEBHOOK_URL || 'https://webhook.mitiendavirtual.cl/webhook/telegram-central'}}"
             }
           ]
         }
@@ -135,7 +135,7 @@
         "url": "=https://api.telegram.org/bot{{$env.TELEGRAM_BOT_TOKEN}}/setWebhook",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\"url\": \"https://webhook.mitiendavirtual.cl/webhook/telegram-central\"}",
+        "jsonBody": "={\"url\": \"{{$env.TELEGRAM_CENTRAL_WEBHOOK_URL || 'https://webhook.mitiendavirtual.cl/webhook/telegram-central'}}\"}",
         "options": {}
       },
       "id": "http-set-webhook-platform-0001",
