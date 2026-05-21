@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { FiX, FiFilter, FiExternalLink, FiLoader } from 'react-icons/fi';
 
-export default function LeadsView({ onClose, userId }: Readonly<{ onClose?: () => void, userId: string }>) {
+export default function TelegramLeadsView({ onClose, userId }: Readonly<{ onClose?: () => void; userId: string }>) {
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('todos');
@@ -24,7 +24,7 @@ export default function LeadsView({ onClose, userId }: Readonly<{ onClose?: () =
         .from('leads')
         .select('*')
         .eq('user_id', userId)
-        .ilike('sistema', 'instagram')
+        .ilike('sistema', 'telegram')
         .gte('created_at', dateLimit.toISOString())
         .order('created_at', { ascending: false });
 
@@ -35,13 +35,12 @@ export default function LeadsView({ onClose, userId }: Readonly<{ onClose?: () =
       const { data, error } = await query;
 
       if (error) {
-        console.error("Error en Supabase:", error.message);
+        console.error('Error en Supabase:', error.message);
       } else {
-        console.log("Datos cargados exitosamente:", data);
         setLeads(data || []);
       }
     } catch (err) {
-      console.error("Error inesperado:", err);
+      console.error('Error inesperado:', err);
     } finally {
       setLoading(false);
     }
@@ -52,22 +51,23 @@ export default function LeadsView({ onClose, userId }: Readonly<{ onClose?: () =
       .from('leads')
       .update({ status: newStatus })
       .eq('id', id);
-    
+
     if (!error) {
-      setLeads(leads.map(l => l.id === id ? { ...l, status: newStatus } : l));
+      setLeads(leads.map((l) => (l.id === id ? { ...l, status: newStatus } : l)));
     }
   };
 
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-400 p-6 md:p-12 font-sans">
-      
       <div className="max-w-7xl mx-auto mb-10">
         <div className="flex justify-between items-start mb-8">
           <div>
             <h1 className="text-4xl font-black text-white tracking-tighter italic">
-              PIPELINE <span className="text-zinc-800 not-italic font-thin"> IA</span>
+              PIPELINE <span className="text-zinc-800 not-italic font-thin">Telegram</span>
             </h1>
-            <p className="text-zinc-500 text-xs mt-2 uppercase tracking-widest font-bold">Gestión de Conversión Directa</p>
+            <p className="text-zinc-500 text-xs mt-2 uppercase tracking-widest font-bold">
+              Gestión de Conversión Directa
+            </p>
           </div>
           {onClose && (
             <button onClick={onClose} className="p-2 hover:bg-zinc-900 rounded-full transition-colors">
@@ -81,8 +81,8 @@ export default function LeadsView({ onClose, userId }: Readonly<{ onClose?: () =
           <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-tighter">
             <FiFilter className="text-amber-500" /> Filtrar:
           </div>
-          
-          <select 
+
+          <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="bg-black border border-zinc-800 text-zinc-300 text-xs rounded-lg px-3 py-2 outline-none focus:border-amber-500/50"
@@ -93,7 +93,7 @@ export default function LeadsView({ onClose, userId }: Readonly<{ onClose?: () =
             <option value="completado">Completados</option>
           </select>
 
-          <select 
+          <select
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
             className="bg-black border border-zinc-800 text-zinc-300 text-xs rounded-lg px-3 py-2 outline-none focus:border-amber-500/50"
@@ -132,18 +132,20 @@ export default function LeadsView({ onClose, userId }: Readonly<{ onClose?: () =
                   <td className="px-4 sm:px-8 py-4 sm:py-6">
                     <div className="text-zinc-100 font-bold text-base flex items-center gap-2">
                       {lead.cliente_nombre || 'Prospecto sin nombre'}
-                      <a 
-                        href={`https://wa.me/${lead.whatsapp_contacto?.replace(/\D/g,'')}`} 
-                        target="_blank" 
+                      <a
+                        href={`https://t.me/${lead.telegram_contacto?.replace(/\D/g, '')}`}
+                        target="_blank"
                         rel="noreferrer"
                         className="opacity-0 group-hover:opacity-100 text-emerald-500 hover:scale-110 transition-all"
                       >
                         <FiExternalLink />
                       </a>
                     </div>
-                    <div className="text-zinc-600 text-[10px] font-mono mt-1 italic">{lead.whatsapp_contacto || 'Sin contacto'}</div>
+                    <div className="text-zinc-600 text-[10px] font-mono mt-1 italic">
+                      {lead.telegram_contacto || 'Sin contacto'}
+                    </div>
                   </td>
-                  
+
                   <td className="px-4 sm:px-8 py-4 sm:py-6">
                     <div className="text-amber-500/90 text-sm font-semibold tracking-tight">
                       {lead.intencion_compra || 'Interés general'}
@@ -154,7 +156,7 @@ export default function LeadsView({ onClose, userId }: Readonly<{ onClose?: () =
                   </td>
 
                   <td className="px-4 sm:px-8 py-4 sm:py-6 text-center">
-                    <select 
+                    <select
                       value={lead.status}
                       onChange={(e) => updateStatus(lead.id, e.target.value)}
                       className={`text-[9px] font-black px-2 py-1 rounded border transition-all outline-none cursor-pointer ${statusClass}`}
@@ -176,7 +178,7 @@ export default function LeadsView({ onClose, userId }: Readonly<{ onClose?: () =
               })}
             </tbody>
           </table>
-          
+
           {!loading && leads.length === 0 && (
             <div className="py-24 text-center">
               <div className="text-zinc-800 font-black text-6xl mb-4 italic opacity-20">NO DATA</div>

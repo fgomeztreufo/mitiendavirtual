@@ -15,8 +15,8 @@ import FaqsView from './FaqsView' // <--- RE-INCORPORADO
 // --- VISTAS LEGALES ---
 import { PrivacyPolicy, TermsOfService, DataDeletion, SupportPage } from './LegalPages'
 import KnowlowerView from './KnowlowerView.tsx'
-import Leads from './Leads.tsx'
 import LeadsView from './Leads.tsx'
+import TelegramLeadsView from './TelegramLeadsView'
 import FloatingWhatsAppButton from './FloatingWhatsAppButton'
 import NotificationsView from './NotificationsView.tsx'
 import TelegramView from './TelegramView'
@@ -26,7 +26,9 @@ export default function Dashboard({ session }: { session: Session }) {
   const [profile, setProfile] = useState<any>(null)
   const [instance, setInstance] = useState<any>(null)
   const [activeTab, setActiveTab] = useState('home')
+  const [instagramMenuOpen, setInstagramMenuOpen] = useState(false)
   const [catalogOpen, setCatalogOpen] = useState(false)
+  const [telegramMenuOpen, setTelegramMenuOpen] = useState(false)
   const [legalView, setLegalView] = useState<string | null>(null);
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -113,6 +115,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <MobileNavBtn label="Ventas Capturadas" active={activeTab === 'leads'} onClick={() => { setActiveTab('leads'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} onClick={() => { setActiveTab('whatsapp'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Telegram" active={activeTab === 'telegram'} onClick={() => { setActiveTab('telegram'); setMobileMenuOpen(false); }} />
+            <MobileNavBtn label="Leads Telegram" active={activeTab === 'telegram-leads'} onClick={() => { setActiveTab('telegram-leads'); setMobileMenuOpen(false); }} />
             <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-4 mb-2 tracking-widest">Configuración</p>
             <MobileNavBtn label="Notificaciones" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Configura tu Instagram" active={activeTab === 'instagram'} onClick={() => { setActiveTab('instagram'); setMobileMenuOpen(false); }} />
@@ -152,11 +155,11 @@ export default function Dashboard({ session }: { session: Session }) {
         <SidebarBtn 
           label="Instagram" 
           active={ activeTab === 'leads'} 
-          onClick={() => setCatalogOpen(!catalogOpen)} 
+          onClick={() => setInstagramMenuOpen(!instagramMenuOpen)} 
           isParent={true} 
-          isOpen={catalogOpen} 
+          isOpen={instagramMenuOpen} 
         />
-        {catalogOpen && (
+        {instagramMenuOpen && (
           <div className="ml-4 border-l border-gray-800 pl-4 space-y-1">
             <SidebarSubBtn 
               label="Ventas Capturadas" 
@@ -172,9 +175,20 @@ export default function Dashboard({ session }: { session: Session }) {
           />
           <SidebarBtn 
             label="Telegram" 
-            active={activeTab === 'whatsapp'} 
-            onClick={() => {setActiveTab('whatsapp'); setLegalView(null)}} 
+            active={activeTab === 'telegram' || activeTab === 'telegram-leads'} 
+            onClick={() => setTelegramMenuOpen(!telegramMenuOpen)} 
+            isParent={true}
+            isOpen={telegramMenuOpen}
           />
+          {telegramMenuOpen && (
+            <div className="ml-4 border-l border-gray-800 pl-4 space-y-1">
+              <SidebarSubBtn
+                label="Leads"
+                active={activeTab === 'telegram-leads'}
+                onClick={() => setActiveTab('telegram-leads')}
+              />
+            </div>
+          )}
           
           <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Configuración</p>
         <SidebarBtn
@@ -278,6 +292,7 @@ export default function Dashboard({ session }: { session: Session }) {
                 goToPlans={() => setActiveTab('plans')}
               />
             )}
+            {activeTab === 'telegram-leads' && <TelegramLeadsView userId={session.user.id} />}
             
             {/* VISTA DE FAQs RE-INCORPORADA */}
             {activeTab === 'faqs' && <FaqsView session={session} />}

@@ -12,14 +12,22 @@ interface TelegramViewProps {
   goToPlans?: () => void
 }
 
+interface OwnBotInfo {
+  bot_type: 'own' | 'platform'
+  bot_username?: string
+  bot_id?: string
+  connected_at?: string
+}
+
 export default function TelegramView({ session, profile, instance, onUpdate, goToPlans }: TelegramViewProps) {
-  // Endpoints Vercel serverless — no requieren configuración extra
   const API_BASE = '/api';
   const [configs, setConfigs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [linking, setLinking] = useState(false)
   const [savingToken, setSavingToken] = useState(false)
+  const [disconnecting, setDisconnecting] = useState(false)
   const [botToken, setBotToken] = useState('')
+  const [ownBotInfo, setOwnBotInfo] = useState<OwnBotInfo | null>(null)
 
   const planCode = normalizePlanType(profile?.plan_type)
 
@@ -28,6 +36,15 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   useEffect(() => {
     if (session?.user?.id) fetchConfigs()
   }, [session?.user?.id])
+
+  // Load own bot info from instance.channels.telegram
+  useEffect(() => {
+    if (instance?.channels?.telegram) {
+      const tg = instance.channels.telegram
+      setOwnBotInfo(tg)
+      if (tg.bot_type === 'own') setBotChoice('own')
+    }
+  }, [instance])
 
   async function fetchConfigs() {
     try {
@@ -131,26 +148,63 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
 
     try {
       setSavingToken(true)
-      // Para Pro/Full con bot propio se sigue usando n8n para almacenamiento seguro
-      const WEBHOOK_BASE = ((import.meta as any).env?.VITE_WEBHOOK_BASE as string) || 'https://webhook.mitiendavirtual.cl/webhook';
-      const res = await fetch(`${WEBHOOK_BASE}/telegram-store-token`, {
+      const res = await fetch(`${API_BASE}/telegram-own-bot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-        body: JSON.stringify({ bot_token: botToken, instance_id: instance?.id, tienda_id: instance?.id })
+        body: JSON.stringify({ bot_token: botToken, instance_id: instance?.id })
       })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
         Swal.fire('Error', json.message || 'No se pudo guardar el token.', 'error')
         return
       }
-      Swal.fire('Guardado', 'Token guardado correctamente en el servidor.', 'success')
+      Swal.fire('¡Bot conectado!', `Tu bot @${json.bot_username} está activo y listo para recibir mensajes.`, 'success')
       setBotToken('')
+      setOwnBotInfo({ bot_type: 'own', bot_username: json.bot_username, bot_id: json.bot_id, connected_at: new Date().toISOString() })
       if (onUpdate) onUpdate()
     } catch (err) {
       console.error(err)
       Swal.fire('Error', 'Ocurrió un error al guardar el token.', 'error')
     } finally {
       setSavingToken(false)
+    }
+  }
+
+  async function disconnectOwnBot() {
+    const accessToken = (session as any)?.access_token || (session as any)?.accessToken || ''
+    if (!accessToken) return Swal.fire('Error', 'Sesión no válida.', 'error')
+
+    const confirm = await Swal.fire({
+      title: '¿Desconectar bot propio?',
+      text: 'Tu bot dejará de recibir mensajes. Se usará el bot de MiTiendaVirtual como respaldo.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Desconectar',
+      cancelButtonText: 'Cancelar'
+    })
+    if (!confirm.isConfirmed) return
+
+    try {
+      setDisconnecting(true)
+      const res = await fetch(`${API_BASE}/telegram-own-bot`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+        body: JSON.stringify({ instance_id: instance?.id })
+      })
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}))
+        Swal.fire('Error', json.message || 'No se pudo desconectar.', 'error')
+        return
+      }
+      Swal.fire('Desconectado', 'Bot propio desconectado. Se usará el bot de plataforma.', 'success')
+      setOwnBotInfo({ bot_type: 'platform' })
+      setBotChoice('platform')
+      if (onUpdate) onUpdate()
+    } catch (err) {
+      console.error(err)
+      Swal.fire('Error', 'Error al desconectar el bot.', 'error')
+    } finally {
+      setDisconnecting(false)
     }
   }
 
@@ -176,38 +230,114 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
       ) : (
         <div className="grid gap-4">
           {planCode === 'basic' && (
-            <div className="p-5 rounded-2xl border bg-gray-900 border-gray-800">
-              <p className="text-sm text-gray-300 mb-1 font-medium">Bot de ventas IA</p>
-              <p className="text-xs text-gray-500 mb-4">El bot de ventas IA con bot propio está disponible desde el plan Pro. Con el plan Basic usas el bot de MiTiendaVirtual.</p>
-              <button onClick={() => (goToPlans ? goToPlans() : window.dispatchEvent(new CustomEvent('changeTab', { detail: 'plans' })))} className="py-2 px-4 bg-blue-600 text-white rounded-xl text-sm">Actualizar a Pro</button>
+            <div className="p-5 rounded-2xl border bg-gray-900 border-gray-800 space-y-4">
+              <div>
+                <p className="text-sm text-gray-300 mb-1 font-medium">Bot de ventas IA</p>
+                <p className="text-xs text-gray-500 mb-4">Con el plan Basic usas el bot compartido de MiTiendaVirtual. Para usar tu propio bot actualiza a Pro.</p>
+                <button onClick={() => (goToPlans ? goToPlans() : window.dispatchEvent(new CustomEvent('changeTab', { detail: 'plans' })))} className="py-2 px-4 bg-blue-600 text-white rounded-xl text-sm">Actualizar a Pro</button>
+              </div>
+              <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700">
+                <p className="text-sm text-gray-300 mb-2 font-medium">QR para compartir con clientes</p>
+                <div className="flex items-center gap-4">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent('https://t.me/mi_tienda_virtual_bot')}`}
+                    alt="QR Bot MiTiendaVirtual"
+                    className="w-32 h-32 rounded-lg bg-white p-1"
+                  />
+                  <div className="text-xs text-gray-400 space-y-1">
+                    <p>Los clientes abren este bot y escriben el nombre de tu tienda.</p>
+                    <a href="https://t.me/mi_tienda_virtual_bot" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
+                      t.me/mi_tienda_virtual_bot
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
           {['pro', 'full'].includes(planCode) && (
             <div className="p-5 rounded-2xl border bg-gray-900 transition-all border-gray-800">
               <div className="mb-3">
-                <div className="text-white font-medium">Conectar Bot propio (Ventas con IA)</div>
-                <div className="text-xs text-gray-400">Puedes usar el bot de MiTiendaVirtual o conectar tu propio bot pegando su token. El token se almacenará de forma segura.</div>
+                <div className="text-white font-medium">Bot de Ventas IA en Telegram</div>
+                <div className="text-xs text-gray-400">Puedes usar el bot de MiTiendaVirtual o conectar tu propio bot. El token se almacena cifrado.</div>
               </div>
 
-              <div className="mb-4 flex gap-2">
-                <button type="button" onClick={() => {
-                  setBotChoice('platform')
-                  void startTelegramLink()
-                }} className={`py-2 px-4 rounded-xl ${botChoice === 'platform' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300'}`}>
-                  Usar bot de MiTiendaVirtual
-                </button>
-                <button type="button" onClick={() => setBotChoice('own')} className={`py-2 px-4 rounded-xl ${botChoice === 'own' ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-300'}`}>
-                  Usar mi bot
-                </button>
-              </div>
+              {/* Bot propio conectado — mostrar estado + QR + desconectar */}
+              {ownBotInfo?.bot_type === 'own' && ownBotInfo.bot_username ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-900/20 border border-emerald-800/40">
+                    <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
+                    <div>
+                      <div className="text-sm text-white font-medium">@{ownBotInfo.bot_username}</div>
+                      <div className="text-xs text-gray-400">Bot propio activo</div>
+                    </div>
+                  </div>
 
-              {botChoice === 'own' ? (
-                <div className="flex gap-3">
-                  <input value={botToken} onChange={(e) => setBotToken(e.target.value)} placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" className="flex-1 bg-black border border-gray-800 rounded-xl p-3 text-white outline-none" />
-                  <button onClick={() => saveBotToken()} disabled={savingToken} className="py-2 px-4 bg-emerald-600 text-white rounded-xl">{savingToken ? 'Guardando...' : 'Guardar token'}</button>
+                  {/* QR para compartir — bot propio */}
+                  <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700">
+                    <p className="text-sm text-gray-300 mb-2 font-medium">Comparte tu bot con clientes</p>
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent('https://t.me/' + ownBotInfo.bot_username)}
+                        alt="QR Bot propio"
+                        className="w-32 h-32 rounded-lg bg-white p-1"
+                      />
+                      <div className="text-xs text-gray-400 space-y-1">
+                        <p>Link directo:</p>
+                        <a href={`https://t.me/${ownBotInfo.bot_username}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline break-all">
+                          t.me/{ownBotInfo.bot_username}
+                        </a>
+                        <p className="mt-2">Los clientes abren el bot y hablan directo con tu IA de ventas.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button onClick={disconnectOwnBot} disabled={disconnecting} className="py-2 px-4 bg-red-600/80 hover:bg-red-600 text-white rounded-xl text-sm transition-colors">
+                    {disconnecting ? 'Desconectando...' : 'Desconectar bot propio'}
+                  </button>
                 </div>
               ) : (
-                <div className="text-sm text-gray-400">Se usará el bot oficial de MiTiendaVirtual para enviar notificaciones.</div>
+                <>
+                  {/* Selector de tipo de bot */}
+                  <div className="mb-4 flex gap-2">
+                    <button type="button" onClick={() => {
+                      setBotChoice('platform')
+                      void startTelegramLink()
+                    }} className={`py-2 px-4 rounded-xl text-sm ${botChoice === 'platform' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300'}`}>
+                      Usar bot de MiTiendaVirtual
+                    </button>
+                    <button type="button" onClick={() => setBotChoice('own')} className={`py-2 px-4 rounded-xl text-sm ${botChoice === 'own' ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-300'}`}>
+                      Usar mi bot
+                    </button>
+                  </div>
+
+                  {botChoice === 'own' ? (
+                    <div className="space-y-3">
+                      <div className="flex gap-3">
+                        <input value={botToken} onChange={(e) => setBotToken(e.target.value)} placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" className="flex-1 bg-black border border-gray-800 rounded-xl p-3 text-white outline-none text-sm" />
+                        <button onClick={() => saveBotToken()} disabled={savingToken} className="py-2 px-4 bg-emerald-600 text-white rounded-xl text-sm whitespace-nowrap">{savingToken ? 'Conectando...' : 'Conectar bot'}</button>
+                      </div>
+                      <p className="text-xs text-gray-500">Obtén el token desde <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">@BotFather</a> en Telegram → /newbot o /mybot → API Token.</p>
+                    </div>
+                  ) : (
+                    <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700">
+                      <p className="text-sm text-gray-300 mb-2 font-medium">QR del bot de plataforma</p>
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent('https://t.me/mi_tienda_virtual_bot')}`}
+                          alt="QR Bot MiTiendaVirtual"
+                          className="w-32 h-32 rounded-lg bg-white p-1"
+                        />
+                        <div className="text-xs text-gray-400 space-y-1">
+                          <p>Bot compartido de MiTiendaVirtual.</p>
+                          <p>Los clientes entran y escriben el nombre de tu tienda para conectarse.</p>
+                          <a href="https://t.me/mi_tienda_virtual_bot" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
+                            t.me/mi_tienda_virtual_bot
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}

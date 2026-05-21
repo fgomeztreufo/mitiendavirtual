@@ -1,0 +1,337 @@
+{
+  "name": "TLG Link Start",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "telegram-link-start",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "840c3d2a-03a9-4ecf-a89a-79a39d9a57c1",
+      "name": "Recibir Link de App",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        1104
+      ],
+      "webhookId": "wb-linkstart-0001-id"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extrae Authorization Bearer token pasado por el frontend y lo expone en el item\nconst body = items[0].json.body || {};\nconst headers = items[0].json.headers || {};\nconst authHeader = headers.authorization || headers.Authorization || '';\nconst userToken = (typeof authHeader === 'string') ? (authHeader.split(' ')[1] || '') : '';\nif (!userToken) throw new Error('Missing Authorization token');\nitems[0].json.user_token = userToken;\nreturn items;"
+      },
+      "id": "d06dbb90-154e-4719-93f7-7c575fe8d7e8",
+      "name": "Validar sesión (token)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        496,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://iesmzunoepfwkxilvxdv.supabase.co/auth/v1/user",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$json.user_token}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "28f91bc8-c1c4-4ac2-aefb-1c34c41e8639",
+      "name": "Get Supabase User",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        816,
+        1104
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bRPHwOivYfq5D2ib",
+          "name": "supa base secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Genera token único y prepara payload para INSERT en Supabase\nconst userResp = items[0].json;\nconst userBody = userResp && (userResp.body || userResp) || {};\nconst userId = userBody.id || (userBody.user && userBody.user.id) || null;\nif (!userId) throw new Error('Invalid session or user not found');\nconst randomHex = (size) => Array.from({ length: size }, () => Math.floor(Math.random() * 16).toString(16)).join('');\nconst linkToken = `${randomHex(48)}${Date.now().toString(16)}`;\nconst expiresAt = new Date(Date.now() + 10*60*1000).toISOString();\nitems[0].json = { user_id: userId, linkToken, expiresAt };\nreturn items;"
+      },
+      "id": "95ebf4ed-a128-4380-acbd-72347ebf84e0",
+      "name": "Generar token",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1152,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://iesmzunoepfwkxilvxdv.supabase.co/rest/v1/telegram_link_tokens",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Recibir Link de App').item.json.headers.authorization }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"user_id\": \"{{$json.user_id}}\", \"token\": \"{{$json.linkToken}}\", \"expires_at\": \"{{$json.expiresAt}}\"}",
+        "options": {}
+      },
+      "id": "08b4ef74-cd9e-4c50-b94f-d943870ae1b2",
+      "name": "Insert Token (Supabase)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1472,
+        1104
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bRPHwOivYfq5D2ib",
+          "name": "supa base secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/getWebhookInfo",
+        "options": {}
+      },
+      "id": "5ba7ae9d-4e14-4c08-be16-10fbc3924e8a",
+      "name": "Consultar Webhook Actual",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1792,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.result.url}}",
+              "operation": "notEqual",
+              "value2": "={{'https://webhook.mitiendavirtual.cl/webhook/telegram-central'}}"
+            }
+          ]
+        }
+      },
+      "id": "fd9046fd-ab88-4126-ae03-aca19179426f",
+      "name": "¿Webhook ya registrado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/setWebhook",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"url\": \"{{'https://webhook.mitiendavirtual.cl/webhook/telegram-central'}}\"}",
+        "options": {}
+      },
+      "id": "116247b2-182f-4d98-a4f5-cabbc8db3afe",
+      "name": "Registrar Webhook Bot Plataforma",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2224,
+        992
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"url\": \"https://t.me/mi_tienda_virtual_bot?start={{ $('Generar token').item.json.linkToken }}\",\n  \"token\": \"{{ $('Generar token').item.json.linkToken }}\"\n}",
+        "options": {}
+      },
+      "id": "e4ff84f8-8c00-4e0b-bf4f-0a5e25de32ac",
+      "name": "Responder a la App",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2448,
+        1120
+      ]
+    }
+  ],
+  "pinData": {
+    "Recibir Link de App": [
+      {
+        "json": {
+          "headers": {
+            "host": "webhook.mitiendavirtual.cl",
+            "user-agent": "node",
+            "content-length": "2",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "*",
+            "authorization": "Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6IjRmZjNmMDNiLWJlMDUtNDM3Yi04NTEyLTdhMzBkNDFhNjNkOSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2llc216dW5vZXBmd2t4aWx2eGR2LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJkY2JiZTNlNC1iM2Q5LTQzNTktOWNlYS05NzQ0NmU4NjM1MWIiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzc4MzgzNDQyLCJpYXQiOjE3NzgzNzk4NDIsImVtYWlsIjoidGVzdEBtaXRpZW5kYXZpcnR1YWwuY2wiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoidGVzdEBtaXRpZW5kYXZpcnR1YWwuY2wiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJzdWIiOiJkY2JiZTNlNC1iM2Q5LTQzNTktOWNlYS05NzQ0NmU4NjM1MWIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc3NzY4MzAxNH1dLCJzZXNzaW9uX2lkIjoiNWFjNjcwMDQtZTc0ZC00OGU4LWE0NmYtYjI2YmU0OGYzNTk0IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.6CRPh_5brIPA2-5wJMoKsx2ZDW0QC6pCt0Bffsduzq84DXerAPvUS0vO0KNhKc6h6FnBdHANyxy7fbD_EaPYMw",
+            "cdn-loop": "cloudflare; loops=1",
+            "cf-connecting-ip": "44.203.159.3",
+            "cf-ipcountry": "US",
+            "cf-ray": "9f957c64ab212fd6-IAD",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-warp-tag-id": "25fb36c4-be2f-495a-ad47-f72146c5307a",
+            "connection": "keep-alive",
+            "content-type": "application/json",
+            "sec-fetch-mode": "cors",
+            "x-forwarded-for": "44.203.159.3",
+            "x-forwarded-proto": "https",
+            "x-invocation-id": "gru1::ntbnc-1778379847786-eafa82b070a6",
+            "x-vercel-id": "gru1::ntbnc-1778379847786-eafa82b070a6"
+          },
+          "params": {},
+          "query": {},
+          "body": {},
+          "webhookUrl": "https://webhook.mitiendavirtual.cl/webhook/telegram-link-start",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Recibir Link de App": {
+      "main": [
+        [
+          {
+            "node": "Validar sesión (token)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar sesión (token)": {
+      "main": [
+        [
+          {
+            "node": "Get Supabase User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Supabase User": {
+      "main": [
+        [
+          {
+            "node": "Generar token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generar token": {
+      "main": [
+        [
+          {
+            "node": "Insert Token (Supabase)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Token (Supabase)": {
+      "main": [
+        [
+          {
+            "node": "Consultar Webhook Actual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar Webhook Actual": {
+      "main": [
+        [
+          {
+            "node": "¿Webhook ya registrado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Webhook ya registrado?": {
+      "main": [
+        [
+          {
+            "node": "Registrar Webhook Bot Plataforma",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder a la App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar Webhook Bot Plataforma": {
+      "main": [
+        [
+          {
+            "node": "Responder a la App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "e00a0575-a01d-49e5-98ea-046f1c62676f",
+  "meta": {
+    "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
+  },
+  "id": "lIyHgFvKGp8mc3myYp6wz",
+  "tags": []
+}
