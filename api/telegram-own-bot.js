@@ -26,9 +26,31 @@ async function verifySession(authHeader) {
 
 async function telegramGetMe(botToken) {
   const res = await fetch(`https://api.telegram.org/bot${botToken}/getMe`)
-  const json = await res.json()
-  if (!json.ok) return null
-  return json.result // { id, is_bot, first_name, username }
+  const json = await res.json().catch(() => ({}))
+  if (!json.ok) {
+    return {
+      ok: false,
+      description: json.description || 'Telegram API rejected the token'
+    }
+  }
+  return {
+    ok: true,
+    result: json.result
+  }
+}
+
+function normalizeBotToken(input) {
+  const raw = String(input || '').trim()
+  if (!raw) return ''
+
+  // Accept common copy/paste formats:
+  // - plain token: 123456:ABC...
+  // - prefixed token: bot123456:ABC...
+  // - URL: https://api.telegram.org/bot123456:ABC.../getMe
+  const cleaned = raw.replace(/\s+/g, '')
+  const tokenRegex = /(?:bot)?(\d{6,}:[A-Za-z0-9_-]{20,})/
+  const match = tokenRegex.exec(cleaned)
+  return match ? match[1] : cleaned
 }
 
 async function telegramSetWebhook(botToken, instanceId) {
@@ -163,16 +185,20 @@ export default async function handler(req, res) {
 
   // --- POST: Connect own bot ---
   if (req.method === 'POST') {
-    const botToken = (body.bot_token || '').trim()
+    const botToken = normalizeBotToken(body.bot_token)
     if (!botToken || !botToken.includes(':')) {
       return res.status(400).json({ message: 'Invalid bot token format' })
     }
 
     // 1. Validate token with Telegram
-    const botInfo = await telegramGetMe(botToken)
-    if (!botInfo) {
-      return res.status(400).json({ message: 'Token inválido. Verifica que el token sea correcto.' })
+    const botCheck = await telegramGetMe(botToken)
+    if (!botCheck.ok) {
+      return res.status(400).json({
+        message: 'Token inválido. Verifica que el token sea correcto.',
+        detail: botCheck.description
+      })
     }
+    const botInfo = botCheck.result
 
     // 2. Store encrypted credential
     const stored = await storeCredential(userId, instanceId, botToken)
