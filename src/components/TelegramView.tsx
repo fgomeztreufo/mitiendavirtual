@@ -99,7 +99,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
         cancelButtonText: 'Cancelar',
         didOpen: () => {
           let attempts = 0
-          const maxAttempts = 100
+          const maxAttempts = 24 // 5s × 24 = 2 minutos
           const interval = setInterval(async () => {
             attempts++
             try {
@@ -113,10 +113,10 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
                 clearInterval(interval)
                 fetchConfigs()
                 Swal.fire('¡Éxito!', '✅ Telegram vinculado correctamente.', 'success')
-              } else {
-                const el = document.getElementById('tg-status')
-                if (el) el.textContent = `Esperando confirmación... (${attempts * 3}s)`
+                return
               }
+              const el = document.getElementById('tg-status')
+              if (el) el.textContent = `Esperando confirmación... (${attempts * 5}s)`
             } catch { /* ignore */ }
 
             if (attempts >= maxAttempts) {
@@ -124,7 +124,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
               const el = document.getElementById('tg-status')
               if (el) el.textContent = '⏱ Tiempo agotado. Intenta de nuevo.'
             }
-          }, 3000)
+          }, 5000)
 
           (window as any)._tgPollInterval = interval
         },

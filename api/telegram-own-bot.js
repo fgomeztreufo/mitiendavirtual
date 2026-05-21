@@ -3,9 +3,17 @@
 // DELETE: remove webhook, delete credential
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-const SUPABASE_ENCRYPT_KEY = process.env.SUPABASE_ENCRYPT_KEY || ''
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || ''
+const SUPABASE_ENCRYPT_KEY = process.env.SUPABASE_ENCRYPT_KEY || process.env.SUPABASE_CREDENTIAL_ENCRYPT_KEY || ''
 const OWN_BOT_WEBHOOK_URL = process.env.OWN_BOT_WEBHOOK_URL || 'https://webhook.mitiendavirtual.cl/webhook/telegram-own'
+
+function getMissingConfig() {
+  const missing = []
+  if (!SUPABASE_URL) missing.push('SUPABASE_URL')
+  if (!SUPABASE_SERVICE_ROLE_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY')
+  if (!SUPABASE_ENCRYPT_KEY) missing.push('SUPABASE_ENCRYPT_KEY')
+  return missing
+}
 
 async function verifySession(authHeader) {
   if (!authHeader) return null
@@ -128,9 +136,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' })
   }
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !SUPABASE_ENCRYPT_KEY) {
-    console.error('Missing required env vars for telegram-own-bot')
-    return res.status(500).json({ message: 'Server misconfiguration' })
+  const missing = getMissingConfig()
+  if (missing.length > 0) {
+    console.error('Missing required env vars for telegram-own-bot:', missing.join(', '))
+    return res.status(500).json({
+      message: 'Server misconfiguration',
+      missing,
+      hint: 'Configure these variables in Vercel Project Settings > Environment Variables'
+    })
   }
 
   // Authenticate user
