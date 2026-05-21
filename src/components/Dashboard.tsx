@@ -203,8 +203,8 @@ export default function Dashboard({ session }: { session: Session }) {
         />
         <SidebarBtn 
           label="Configura tu WhatsApp" 
-          active={activeTab === 'telegram'} 
-          onClick={() => {setActiveTab('telegram'); setLegalView(null)}} 
+          active={activeTab === 'whatsapp'} 
+          onClick={() => {setActiveTab('whatsapp'); setLegalView(null)}} 
         />
         <SidebarBtn 
           label="Configura tu Telegram" 

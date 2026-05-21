@@ -105,11 +105,33 @@
     },
     {
       "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 2
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [260, 200],
+      "id": "a1b2c3d4-1001-4000-8000-000000000001",
+      "name": "Merge bienvenida"
+    },
+    {
+      "parameters": {
         "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Descifrar bot_token').item.json.bot_token }}/sendMessage",
+        "url": "=https://api.telegram.org/bot{{ $json.bot_token }}/sendMessage",
         "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\"chat_id\": \"{{ $('Preparar bienvenida').item.json.chat_id }}\", \"text\": \"{{ $('Preparar bienvenida').item.json.welcome_text }}\"}",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $json.chat_id }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.welcome_text }}"
+            }
+          ]
+        },
         "options": {}
       },
       "id": "a1b2c3d4-0007-4000-8000-000000000007",
@@ -279,8 +301,20 @@
     },
     {
       "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 2
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [1640, 600],
+      "id": "a1b2c3d4-1002-4000-8000-000000000002",
+      "name": "Merge envio Telegram"
+    },
+    {
+      "parameters": {
         "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Descifrar bot_token').item.json.bot_token }}/sendMessage",
+        "url": "=https://api.telegram.org/bot{{ $json.bot_token }}/sendMessage",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -338,7 +372,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Descifrar el bot_token de integration_credentials\n// Este nodo recibe el resultado del RPC get_decrypted_credential\nconst decrypted = $input.first().json;\n\nif (!decrypted || typeof decrypted !== 'string') {\n  // Si no hay token, usar variable de entorno como fallback\n  return [{ json: { bot_token: $env.TELEGRAM_BOT_TOKEN || '', is_fallback: true } }];\n}\n\nreturn [{ json: { bot_token: decrypted, is_fallback: false } }];"
+        "jsCode": "// Descifrar el bot_token de integration_credentials\n// El HTTP Request entrega texto en una propiedad JSON cuando Response Format = Text\nconst payload = $input.first().json || {};\nconst decrypted = typeof payload.data === 'string' ? payload.data : '';\n\nif (!decrypted) {\n  // Si no hay token, usar variable del workflow como fallback\n  return [{ json: { bot_token: $vars.TELEGRAM_BOT_TOKEN || '', is_fallback: true } }];\n}\n\nreturn [{ json: { bot_token: decrypted, is_fallback: false } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -349,17 +383,17 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/rpc/get_decrypted_credential",
+        "url": "={{ (($vars.SUPABASE_URL || 'https://iesmzunoepfwkxilvxdv.supabase.co').replace(/\\/$/, '')) + '/rest/v1/rpc/get_decrypted_credential' }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              "value": "={{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              "value": "=Bearer {{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -369,8 +403,15 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"p_user_id\": \"{{ $('Get Instance (resolver user)').item.json.user_id }}\",\n  \"p_instance_id\": \"{{ $('Extraer datos').item.json.instance_id }}\",\n  \"p_provider\": \"telegram\",\n  \"p_credential_type\": \"bot_token\",\n  \"p_encrypt_key\": \"{{ $env.SUPABASE_ENCRYPT_KEY }}\"\n}",
-        "options": {}
+        "jsonBody": "={\n  \"p_user_id\": \"{{ $('Get Instance (resolver user)').item.json.user_id }}\",\n  \"p_instance_id\": \"{{ $('Extraer datos').item.json.instance_id }}\",\n  \"p_provider\": \"telegram\",\n  \"p_credential_type\": \"bot_token\",\n  \"p_encrypt_key\": \"{{ $vars.SUPABASE_ENCRYPT_KEY }}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "data"
+            }
+          }
+        }
       },
       "id": "a1b2c3d4-0018-4000-8000-000000000018",
       "name": "RPC Descifrar credential",
@@ -393,7 +434,7 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [-1200, 0],
+      "position": [-600, 0],
       "id": "a1b2c3d4-0019-4000-8000-000000000019",
       "name": "Get Instance (resolver user)",
       "credentials": {
@@ -718,11 +759,6 @@
             "node": "Extraer datos",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Get Instance (resolver user)",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -732,6 +768,11 @@
         [
           {
             "node": "¿Es /start?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Instance (resolver user)",
             "type": "main",
             "index": 0
           }
@@ -768,6 +809,17 @@
       ]
     },
     "Preparar bienvenida": {
+      "main": [
+        [
+          {
+            "node": "Merge bienvenida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge bienvenida": {
       "main": [
         [
           {
@@ -859,6 +911,17 @@
       "main": [
         [
           {
+            "node": "Merge envio Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge envio Telegram": {
+      "main": [
+        [
+          {
             "node": "Enviar a Telegram",
             "type": "main",
             "index": 0
@@ -906,6 +969,22 @@
             "node": "Descifrar bot_token",
             "type": "main",
             "index": 0
+          }
+        ]
+      ]
+    },
+    "Descifrar bot_token": {
+      "main": [
+        [
+          {
+            "node": "Merge bienvenida",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge envio Telegram",
+            "type": "main",
+            "index": 1
           }
         ]
       ]

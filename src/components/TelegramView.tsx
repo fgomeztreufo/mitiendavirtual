@@ -99,7 +99,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
         cancelButtonText: 'Cancelar',
         didOpen: () => {
           let attempts = 0
-          const maxAttempts = 24 // 5s × 24 = 2 minutos
+          const maxAttempts = 12 // 5s × 12 = 1 minuto
           const interval = setInterval(async () => {
             attempts++
             try {
