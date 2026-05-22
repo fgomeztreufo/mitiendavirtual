@@ -63,6 +63,41 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
     }
   }, [instance])
 
+  // Downgrade protection: if user has own bot but plan is not pro/full, auto-disconnect
+  useEffect(() => {
+    if (
+      ownBotInfo?.bot_type === 'own' &&
+      ownBotInfo?.bot_username &&
+      !['pro', 'full'].includes(planCode)
+    ) {
+      // Show alert and auto-disconnect
+      Swal.fire({
+        title: 'Bot propio desconectado',
+        html: `<p>Tu plan actual (<b>${planCode === 'free' ? 'Semilla' : 'Básico'}</b>) no incluye bot propio.</p><p>Tu bot <b>@${ownBotInfo.bot_username}</b> ha sido desconectado automáticamente.</p><p>Para volver a usarlo, actualiza a Pro o Full.</p>`,
+        icon: 'warning',
+        confirmButtonText: 'Ver planes',
+        showCancelButton: true,
+        cancelButtonText: 'Entendido'
+      }).then((result) => {
+        if (result.isConfirmed) goToPlans?.()
+      })
+
+      // Fire disconnect in background
+      const accessToken = (session as any)?.access_token || (session as any)?.accessToken || ''
+      if (accessToken) {
+        fetch(`${API_BASE}/telegram-own-bot`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+          body: JSON.stringify({ instance_id: instance?.id })
+        }).then(() => {
+          setOwnBotInfo({ bot_type: 'platform' })
+          setBotChoice('platform')
+          if (onUpdate) onUpdate()
+        }).catch((err) => console.error('Auto-disconnect failed', err))
+      }
+    }
+  }, [ownBotInfo, planCode])
+
   async function fetchConfigs() {
     try {
       const { data, error } = await supabase

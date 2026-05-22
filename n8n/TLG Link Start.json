@@ -13,7 +13,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        240,
+        0,
         1104
       ],
       "webhookId": "wb-linkstart-0001-id"
@@ -27,7 +27,7 @@
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
       "position": [
-        496,
+        256,
         1104
       ]
     },
@@ -52,7 +52,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        816,
+        576,
         1104
       ],
       "credentials": {
@@ -71,7 +71,7 @@
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
       "position": [
-        1152,
+        912,
         1104
       ]
     },
@@ -108,7 +108,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        1472,
+        1232,
         1104
       ],
       "alwaysOutputData": true,
@@ -129,7 +129,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        1792,
+        1552,
         1104
       ]
     },
@@ -138,7 +138,7 @@
         "conditions": {
           "string": [
             {
-              "value1": "={{$json.result.url}}",
+              "value1": "={{ $('Consultar Webhook Actual').first().json.result.url }}",
               "operation": "notEqual",
               "value2": "={{'https://webhook.mitiendavirtual.cl/webhook/telegram-central'}}"
             }
@@ -175,7 +175,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"url\": \"https://t.me/mi_tienda_virtual_bot?start={{ $('Generar token').item.json.linkToken }}\",\n  \"token\": \"{{ $('Generar token').item.json.linkToken }}\"\n}",
+        "responseBody": "={\n  \"url\": \"https://t.me/mi_tienda_virtual_bot?start={{ $('Generar token').item.json.linkToken }}\",\n  \"token\": \"{{ $('Generar token').item.json.linkToken }}\",\n\"user_id\": \"{{ $('Get Profile').first().json.id}}\"\n}",
         "options": {}
       },
       "id": "e4ff84f8-8c00-4e0b-bf4f-0a5e25de32ac",
@@ -183,9 +183,37 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        2448,
+        2528,
         1120
       ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "profiles",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "keyValue": "={{ $('Get Supabase User').item.json.email }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1776,
+        1104
+      ],
+      "id": "ca7301db-64db-4a31-b387-b56f76d9be82",
+      "name": "Get Profile",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
     }
   ],
   "pinData": {
@@ -195,29 +223,32 @@
           "headers": {
             "host": "webhook.mitiendavirtual.cl",
             "user-agent": "node",
-            "content-length": "2",
+            "content-length": "109",
             "accept": "*/*",
             "accept-encoding": "gzip, br",
             "accept-language": "*",
-            "authorization": "Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6IjRmZjNmMDNiLWJlMDUtNDM3Yi04NTEyLTdhMzBkNDFhNjNkOSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2llc216dW5vZXBmd2t4aWx2eGR2LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJkY2JiZTNlNC1iM2Q5LTQzNTktOWNlYS05NzQ0NmU4NjM1MWIiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzc4MzgzNDQyLCJpYXQiOjE3NzgzNzk4NDIsImVtYWlsIjoidGVzdEBtaXRpZW5kYXZpcnR1YWwuY2wiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoidGVzdEBtaXRpZW5kYXZpcnR1YWwuY2wiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJzdWIiOiJkY2JiZTNlNC1iM2Q5LTQzNTktOWNlYS05NzQ0NmU4NjM1MWIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc3NzY4MzAxNH1dLCJzZXNzaW9uX2lkIjoiNWFjNjcwMDQtZTc0ZC00OGU4LWE0NmYtYjI2YmU0OGYzNTk0IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.6CRPh_5brIPA2-5wJMoKsx2ZDW0QC6pCt0Bffsduzq84DXerAPvUS0vO0KNhKc6h6FnBdHANyxy7fbD_EaPYMw",
+            "authorization": "Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6IjRmZjNmMDNiLWJlMDUtNDM3Yi04NTEyLTdhMzBkNDFhNjNkOSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2llc216dW5vZXBmd2t4aWx2eGR2LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJkY2JiZTNlNC1iM2Q5LTQzNTktOWNlYS05NzQ0NmU4NjM1MWIiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzc5NDE5NDUwLCJpYXQiOjE3Nzk0MTU4NTAsImVtYWlsIjoidGVzdEBtaXRpZW5kYXZpcnR1YWwuY2wiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoidGVzdEBtaXRpZW5kYXZpcnR1YWwuY2wiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJzdWIiOiJkY2JiZTNlNC1iM2Q5LTQzNTktOWNlYS05NzQ0NmU4NjM1MWIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc3OTQxNTg1MH1dLCJzZXNzaW9uX2lkIjoiYWU2NGUxZDItY2I1ZC00ZDIyLTg4YjMtNDU1ZGRmOGVkMzIzIiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.35ngY299K86xg4ooOzlE3i_PhZsP0iSAvsz-ieUC4RX9QtvVcksjHJ0tmKu-lqljI6j485EeMdp0LWbDy9srYA",
             "cdn-loop": "cloudflare; loops=1",
-            "cf-connecting-ip": "44.203.159.3",
+            "cf-connecting-ip": "52.206.198.123",
             "cf-ipcountry": "US",
-            "cf-ray": "9f957c64ab212fd6-IAD",
+            "cf-ray": "9ff8860d3aa5cc0c-IAD",
             "cf-visitor": "{\"scheme\":\"https\"}",
             "cf-warp-tag-id": "25fb36c4-be2f-495a-ad47-f72146c5307a",
             "connection": "keep-alive",
             "content-type": "application/json",
             "sec-fetch-mode": "cors",
-            "x-forwarded-for": "44.203.159.3",
+            "x-forwarded-for": "52.206.198.123",
             "x-forwarded-proto": "https",
-            "x-invocation-id": "gru1::ntbnc-1778379847786-eafa82b070a6",
-            "x-vercel-id": "gru1::ntbnc-1778379847786-eafa82b070a6"
+            "x-invocation-id": "gru1::z4s7l-1779418194072-cb5faf1b83c0",
+            "x-vercel-id": "gru1::z4s7l-1779418194072-cb5faf1b83c0"
           },
           "params": {},
           "query": {},
-          "body": {},
-          "webhookUrl": "https://webhook.mitiendavirtual.cl/webhook/telegram-link-start",
+          "body": {
+            "user_id": "dcbbe3e4-b3d9-4359-9cea-97446e86351b",
+            "token": "af833470de6cca8c397ca307dc3c01dbdcfbb74baa3975cd"
+          },
+          "webhookUrl": "http://localhost:5678/webhook/telegram-link-start",
           "executionMode": "production"
         },
         "pairedItem": {
@@ -286,7 +317,7 @@
       "main": [
         [
           {
-            "node": "¿Webhook ya registrado?",
+            "node": "Get Profile",
             "type": "main",
             "index": 0
           }
@@ -321,6 +352,17 @@
           }
         ]
       ]
+    },
+    "Get Profile": {
+      "main": [
+        [
+          {
+            "node": "¿Webhook ya registrado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -328,8 +370,9 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "e00a0575-a01d-49e5-98ea-046f1c62676f",
+  "versionId": "c5baa373-a089-4bf4-9cad-a5f89622833a",
   "meta": {
+    "templateCredsSetupCompleted": true,
     "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
   },
   "id": "lIyHgFvKGp8mc3myYp6wz",

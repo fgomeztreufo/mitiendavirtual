@@ -8,11 +8,14 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "id": "08ae0585-49ca-40e9-9983-faed17e5ec2b",
       "name": "Webhook Own Bot",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [-1200, 400],
+      "position": [
+        8080,
+        1440
+      ],
       "webhookId": "wb-telegram-own-0001-id"
     },
     {
@@ -21,11 +24,14 @@
         "responseBody": "={\n  \"ok\": true\n}",
         "options": {}
       },
-      "id": "a1b2c3d4-0002-4000-8000-000000000002",
+      "id": "86030be3-0579-4d00-8861-fbe2665013be",
       "name": "Responder Telegram",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [2800, 400]
+      "position": [
+        12064,
+        1200
+      ]
     },
     {
       "parameters": {
@@ -33,8 +39,11 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-900, 400],
-      "id": "a1b2c3d4-0003-4000-8000-000000000003",
+      "position": [
+        8304,
+        1440
+      ],
+      "id": "d8754d15-1243-4a15-ac11-875fac810638",
       "name": "Extraer datos"
     },
     {
@@ -64,8 +73,11 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [-600, 400],
-      "id": "a1b2c3d4-0004-4000-8000-000000000004",
+      "position": [
+        8528,
+        1584
+      ],
+      "id": "649f19f7-7142-4cd5-af63-19f6f953c8cb",
       "name": "¿Es /start?"
     },
     {
@@ -83,8 +95,11 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [-300, 200],
-      "id": "a1b2c3d4-0005-4000-8000-000000000005",
+      "position": [
+        10320,
+        1184
+      ],
+      "id": "ac27bcc6-93f2-48c2-b5d3-c42c90f9e2db",
       "name": "Get Instance (bienvenida)",
       "credentials": {
         "supabaseApi": {
@@ -99,20 +114,26 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [0, 200],
-      "id": "a1b2c3d4-0006-4000-8000-000000000006",
+      "position": [
+        10864,
+        1184
+      ],
+      "id": "74d25210-c3d2-451b-ac48-5f280e6ee950",
       "name": "Preparar bienvenida"
     },
     {
       "parameters": {
         "mode": "combine",
         "combineBy": "combineByPosition",
-        "numberInputs": 2
+        "options": {}
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
-      "position": [260, 200],
-      "id": "a1b2c3d4-1001-4000-8000-000000000001",
+      "position": [
+        11392,
+        1040
+      ],
+      "id": "288d4cec-9047-407a-bed2-2b8abe10ff47",
       "name": "Merge bienvenida"
     },
     {
@@ -134,11 +155,14 @@
         },
         "options": {}
       },
-      "id": "a1b2c3d4-0007-4000-8000-000000000007",
+      "id": "539226c8-07a2-40d7-8b56-e8704b62ebca",
       "name": "Enviar bienvenida",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [500, 200]
+      "position": [
+        11616,
+        1040
+      ]
     },
     {
       "parameters": {
@@ -174,8 +198,11 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [-300, 600],
-      "id": "a1b2c3d4-0008-4000-8000-000000000008",
+      "position": [
+        8752,
+        1728
+      ],
+      "id": "f727abbe-dbcb-4717-847a-a5da282ac1b9",
       "name": "Inicializa usage_logs",
       "alwaysOutputData": true,
       "executeOnce": true,
@@ -202,8 +229,11 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [0, 600],
-      "id": "a1b2c3d4-0009-4000-8000-000000000009",
+      "position": [
+        8976,
+        1728
+      ],
+      "id": "fc0ce9a8-77bb-4a60-ae61-31249bd9ef6d",
       "name": "Get Instance",
       "credentials": {
         "supabaseApi": {
@@ -218,8 +248,11 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [300, 600],
-      "id": "a1b2c3d4-0010-4000-8000-000000000010",
+      "position": [
+        9200,
+        1728
+      ],
+      "id": "82b8f2d6-9840-4c37-8593-b3db72123757",
       "name": "Preparar contexto"
     },
     {
@@ -237,8 +270,11 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [600, 600],
-      "id": "a1b2c3d4-0011-4000-8000-000000000011",
+      "position": [
+        9424,
+        1728
+      ],
+      "id": "b62dc4a9-4d4c-4232-a766-b0016afe64fd",
       "name": "Get Profile",
       "credentials": {
         "supabaseApi": {
@@ -253,9 +289,54 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [900, 600],
-      "id": "a1b2c3d4-0012-4000-8000-000000000012",
+      "position": [
+        10096,
+        1488
+      ],
+      "id": "15006e39-06e6-49f3-a604-3c104566fdfc",
       "name": "Resolver plan"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "plan-own-bot-check-001",
+              "leftValue": "={{ $json.plan }}",
+              "rightValue": "pro",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "plan-own-bot-check-002",
+              "leftValue": "={{ $json.plan }}",
+              "rightValue": "full",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        10200,
+        1488
+      ],
+      "id": "plan-own-bot-gate-001",
+      "name": "¿Plan permite bot propio?"
     },
     {
       "parameters": {
@@ -272,8 +353,11 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [1200, 600],
-      "id": "a1b2c3d4-0013-4000-8000-000000000013",
+      "position": [
+        10320,
+        1488
+      ],
+      "id": "bee89384-f866-4995-97c2-efff9034fcd1",
       "name": "Get Instance IA",
       "credentials": {
         "supabaseApi": {
@@ -292,8 +376,11 @@
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
-      "position": [1500, 600],
-      "id": "a1b2c3d4-0014-4000-8000-000000000014",
+      "position": [
+        10800,
+        1376
+      ],
+      "id": "b9a544d3-57b8-4cde-bfd3-365acb81f416",
       "name": "Agente Telegram Own",
       "retryOnFail": true,
       "waitBetweenTries": 5000,
@@ -303,12 +390,15 @@
       "parameters": {
         "mode": "combine",
         "combineBy": "combineByPosition",
-        "numberInputs": 2
+        "options": {}
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
-      "position": [1640, 600],
-      "id": "a1b2c3d4-1002-4000-8000-000000000002",
+      "position": [
+        11392,
+        1296
+      ],
+      "id": "c5d998e5-a1c5-4241-960a-b1cc6d77d382",
       "name": "Merge envio Telegram"
     },
     {
@@ -330,11 +420,14 @@
         },
         "options": {}
       },
-      "id": "a1b2c3d4-0015-4000-8000-000000000015",
+      "id": "9ce825f9-21ed-4437-a2f9-a807033b96f1",
       "name": "Enviar a Telegram",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [1900, 600]
+      "position": [
+        11616,
+        1296
+      ]
     },
     {
       "parameters": {
@@ -360,8 +453,11 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [2200, 600],
-      "id": "a1b2c3d4-0016-4000-8000-000000000016",
+      "position": [
+        11840,
+        1280
+      ],
+      "id": "7e4a73ad-7b04-4ab5-b8ae-9def81e30894",
       "name": "Update contador",
       "credentials": {
         "supabaseApi": {
@@ -376,8 +472,11 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-600, 0],
-      "id": "a1b2c3d4-0017-4000-8000-000000000017",
+      "position": [
+        10864,
+        944
+      ],
+      "id": "2fffb881-582e-4c82-8cf0-ce9adc5a254b",
       "name": "Descifrar bot_token"
     },
     {
@@ -389,11 +488,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -403,21 +502,23 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"p_user_id\": \"{{ $('Get Instance (resolver user)').item.json.user_id }}\",\n  \"p_instance_id\": \"{{ $('Extraer datos').item.json.instance_id }}\",\n  \"p_provider\": \"telegram\",\n  \"p_credential_type\": \"bot_token\",\n  \"p_encrypt_key\": \"{{ $vars.SUPABASE_ENCRYPT_KEY }}\"\n}",
+        "jsonBody": "={\n  \"p_user_id\": \"{{ $('Get Instance (resolver user)').item.json.user_id }}\",\n  \"p_instance_id\": \"{{ $('Extraer datos').item.json.instance_id }}\",\n  \"p_provider\": \"telegram\",\n  \"p_credential_type\": \"bot_token\",\n  \"p_encrypt_key\": \"{{ $env.SUPABASE_ENCRYPT_KEY }}\"\n}",
         "options": {
           "response": {
             "response": {
-              "responseFormat": "text",
-              "outputPropertyName": "data"
+              "responseFormat": "text"
             }
           }
         }
       },
-      "id": "a1b2c3d4-0018-4000-8000-000000000018",
+      "id": "76d1c4eb-8958-4fa0-8d97-50b38e1cdebc",
       "name": "RPC Descifrar credential",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [-900, 0]
+      "position": [
+        10320,
+        944
+      ]
     },
     {
       "parameters": {
@@ -434,8 +535,11 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [-600, 0],
-      "id": "a1b2c3d4-0019-4000-8000-000000000019",
+      "position": [
+        10096,
+        944
+      ],
+      "id": "0ce0dd04-21d5-4bf7-8d45-d25a1d482085",
       "name": "Get Instance (resolver user)",
       "credentials": {
         "supabaseApi": {
@@ -457,8 +561,11 @@
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
-      "position": [1400, 900],
-      "id": "a1b2c3d4-0020-4000-8000-000000000020",
+      "position": [
+        10544,
+        1600
+      ],
+      "id": "7bc2786a-071d-4e3c-8ee1-75f2ff370deb",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
@@ -474,8 +581,11 @@
       },
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
-      "position": [1600, 900],
-      "id": "a1b2c3d4-0021-4000-8000-000000000021",
+      "position": [
+        10672,
+        1600
+      ],
+      "id": "a8a4a31c-6300-4986-b60b-91298c594a50",
       "name": "Memoria de agente"
     },
     {
@@ -531,8 +641,11 @@
       },
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
-      "position": [1800, 900],
-      "id": "a1b2c3d4-0022-4000-8000-000000000022",
+      "position": [
+        10800,
+        1600
+      ],
+      "id": "1a834ec5-e79d-44ca-a9ba-37af702db77d",
       "name": "Call 'Tool Buscador Inteligente'"
     },
     {
@@ -628,8 +741,11 @@
       },
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
-      "position": [2000, 900],
-      "id": "a1b2c3d4-0023-4000-8000-000000000023",
+      "position": [
+        10928,
+        1600
+      ],
+      "id": "60ee92b2-1608-42ab-bede-52155fa50aa9",
       "name": "Call 'Cosechador de Oro'"
     },
     {
@@ -697,8 +813,11 @@
       },
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
-      "position": [2200, 900],
-      "id": "a1b2c3d4-0024-4000-8000-000000000024",
+      "position": [
+        11056,
+        1600
+      ],
+      "id": "f75ceb75-b391-42aa-8f6f-35944bfc0e0e",
       "name": "Call 'Tool - Pasar a Humano'"
     },
     {
@@ -746,11 +865,414 @@
       },
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
-      "position": [2400, 900],
-      "id": "a1b2c3d4-0025-4000-8000-000000000025",
+      "position": [
+        11184,
+        1600
+      ],
+      "id": "abec9928-588f-42e5-85db-0ec801b1cfb2",
       "name": "Call 'El Silenciador'"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "profiles",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Get Profile').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "plan_type",
+              "fieldValue": "free"
+            },
+            {
+              "fieldId": "plan_expires_at",
+              "fieldValue": "={{ null }}"
+            },
+            {
+              "fieldId": "messages_used",
+              "fieldValue": "0"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        10864,
+        1776
+      ],
+      "id": "0e7d1aee-45b9-4acb-9d63-6396b243a012",
+      "name": "actualiza plan free",
+      "alwaysOutputData": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "889414ec-ddbf-4443-a3b7-f17f59ea6e3c",
+              "leftValue": "={{ $('Get Profile').item.json.messages_used_tl }}",
+              "rightValue": "={{ $('Get Plans').item.json.messages_limit || 50 }}",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        9872,
+        1728
+      ],
+      "id": "2af952de-c73b-4dd6-a586-ce2ed68050df",
+      "name": "valida cantidad mensajes quedan"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "30f60d4f-64db-4d5e-81a8-f821b5fd63c6",
+              "leftValue": "={{ $('Get Plans').item.json.code || $('Get Plans').item.json.code }}",
+              "rightValue": "free",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        10096,
+        1872
+      ],
+      "id": "88ce1cd8-e84a-452e-abe8-2ee7aae824b3",
+      "name": "valida plan"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://iesmzunoepfwkxilvxdv.supabase.co/rest/v1/rpc/suspend_excess_products",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_user_id",
+              "value": "={{ $('Get Profile').item.json.id }}"
+            },
+            {
+              "name": "p_limit",
+              "value": 10
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        11392,
+        1776
+      ],
+      "id": "1ba540ac-79a1-4f59-9ff7-677f4589b79b",
+      "name": "Suspender Productos Excedentes",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bRPHwOivYfq5D2ib",
+          "name": "supa base secret"
+        }
+      },
+      "notes": "Suspende los productos que exceden el límite del plan Free (10). Llama a la función RPC suspend_excess_products en Supabase."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "vPSFne1fztiV-nqjxUcf8",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/vPSFne1fztiV-nqjxUcf8",
+          "cachedResultName": "El notificador"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email_from": "alerta@mitiendavirtual.cl",
+            "user_id": "={{ $('Get Profile').item.json.id }}",
+            "email_to": "={{ $('Get Profile').item.json.email }}",
+            "email_subject": "🚨 URGENTE: Tu Bot se quedó sin saldo",
+            "email_body": "=<p>Hola <strong>{{ $('Get Profile').item.json.full_name }}</strong>,</p><p>Tu cliente intentó hablar con el bot, pero no pudimos responder porque <strong>tu saldo mensual se ha agotado</strong> o tu plan venció.Para tu seguridad.🛑</p><p>Para no perder más ventas, recarga tu plan ahora mismo:</p><p>👉 <a href='https://mitiendavirtual.cl'><strong>Click aquí para Recargar Saldo</strong></a></p><p>Saludos,<br>El equipo de MiTiendaVirtual</p>"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email_from",
+              "displayName": "email_from",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email_to",
+              "displayName": "email_to",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email_subject",
+              "displayName": "email_subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email_body",
+              "displayName": "email_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        10320,
+        1968
+      ],
+      "id": "8cfc0f52-c529-454a-b597-293241fa8321",
+      "name": "Call 'El notificador'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "vPSFne1fztiV-nqjxUcf8",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/vPSFne1fztiV-nqjxUcf8",
+          "cachedResultName": "El notificador"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Get Profile').item.json.id }}",
+            "email_from": "alerta@mitiendavirtual.cl",
+            "email_to": "={{ $('Get Profile').item.json.email }}",
+            "email_subject": "🚨 URGENTE: Tu Bot se quedó sin saldo",
+            "email_body": "=<p>Hola <strong>{{ $('Get Profile').item.json.full_name }}</strong>,</p><p>Tu cliente intentó hablar con el bot, pero no pudimos responder porque <strong>tu saldo mensual se ha agotado</strong> o tu plan venció.Para tu seguridad, hemos actualizado tu plan a free, que te da algunas conversaciones mas, para que puedas operar. 🛑</p><p>Para no perder más ventas, recarga tu plan ahora mismo:</p><p>👉 <a href='https://mitiendavirtual.cl'><strong>Click aquí para Recargar Saldo</strong></a></p><p>Saludos,<br>El equipo de MiTiendaVirtual</p>"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email_from",
+              "displayName": "email_from",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email_to",
+              "displayName": "email_to",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email_subject",
+              "displayName": "email_subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email_body",
+              "displayName": "email_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        10320,
+        1776
+      ],
+      "id": "885e4fec-3312-462b-bdc3-65f411f479b8",
+      "name": "Call 'El notificador'1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "plans",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "code",
+              "keyValue": "={{ $json.plan_type }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        9648,
+        1728
+      ],
+      "id": "63191a7c-2b30-4681-b117-f99d3d8ccaf4",
+      "name": "Get Plans",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
     }
   ],
+  "pinData": {
+    "Webhook Own Bot": [
+      {
+        "json": {
+          "headers": {
+            "host": "webhook.mitiendavirtual.cl",
+            "content-length": "313",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1",
+            "cf-connecting-ip": "91.108.5.35",
+            "cf-ipcountry": "NL",
+            "cf-ray": "9ff761229eeafebb-AMS",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-warp-tag-id": "25fb36c4-be2f-495a-ad47-f72146c5307a",
+            "connection": "keep-alive",
+            "content-type": "application/json",
+            "x-forwarded-for": "91.108.5.35",
+            "x-forwarded-proto": "https",
+            "x-telegram-bot-api-secret-token": "6dde7fb1-4037-4bfc-bc66-b9c6cad44ee1"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "update_id": 236085754,
+            "message": {
+              "message_id": 46,
+              "from": {
+                "id": 7612723970,
+                "is_bot": false,
+                "first_name": "Felipe",
+                "last_name": "Gómez",
+                "language_code": "es"
+              },
+              "chat": {
+                "id": 7612723970,
+                "first_name": "Felipe",
+                "last_name": "Gómez",
+                "type": "private"
+              },
+              "date": 1779406336,
+              "text": "Hola que planes tiene para contratar"
+            }
+          },
+          "webhookUrl": "http://localhost:5678/webhook/telegram-own",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
   "connections": {
     "Webhook Own Bot": {
       "main": [
@@ -878,7 +1400,7 @@
       "main": [
         [
           {
-            "node": "Resolver plan",
+            "node": "Get Plans",
             "type": "main",
             "index": 0
           }
@@ -889,7 +1411,25 @@
       "main": [
         [
           {
+            "node": "¿Plan permite bot propio?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Plan permite bot propio?": {
+      "main": [
+        [
+          {
             "node": "Get Instance IA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder Telegram",
             "type": "main",
             "index": 0
           }
@@ -1054,17 +1594,87 @@
           }
         ]
       ]
+    },
+    "actualiza plan free": {
+      "main": [
+        [
+          {
+            "node": "Suspender Productos Excedentes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "valida cantidad mensajes quedan": {
+      "main": [
+        [
+          {
+            "node": "Resolver plan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "valida plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "valida plan": {
+      "main": [
+        [
+          {
+            "node": "Call 'El notificador'1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'El notificador'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'El notificador'1": {
+      "main": [
+        [
+          {
+            "node": "actualiza plan free",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Plans": {
+      "main": [
+        [
+          {
+            "node": "valida cantidad mensajes quedan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "00000000-0000-0000-0000-000000000001",
+  "versionId": "6d625a55-ef00-4dfd-a583-7fed9edd169f",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
   },
+  "id": "0mE0xEh5HuKs0RGUUyrKU",
   "tags": []
 }

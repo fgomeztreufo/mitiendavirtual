@@ -13,8 +13,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        -1376,
-        192
+        -2272,
+        400
       ],
       "webhookId": "wb-telegram-central-0001-id"
     },
@@ -29,8 +29,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        3136,
-        336
+        2528,
+        -80
       ]
     },
     {
@@ -57,8 +57,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        2336,
-        848
+        1488,
+        512
       ]
     },
     {
@@ -68,8 +68,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -768,
-        368
+        -2048,
+        496
       ],
       "id": "289e18cb-e69c-4a1b-8931-0fbab27ad91f",
       "name": "Extraer mensaje"
@@ -102,8 +102,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -480,
-        368
+        -1792,
+        -16
       ],
       "id": "32ac6a67-c789-4227-8462-4703a8b4077c",
       "name": "¿Es mensaje valido ?"
@@ -115,8 +115,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        288,
-        832
+        -1152,
+        560
       ],
       "id": "78416ff5-081d-49a7-8501-f931d5ed97dc",
       "name": "Evalua  vinculacion"
@@ -149,8 +149,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        528,
-        832
+        -928,
+        560
       ],
       "id": "3468ffe0-2dde-40d4-8cf5-ae41d602bc9d",
       "name": "¿Chat vinculado?"
@@ -162,8 +162,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1184,
-        848
+        -32,
+        512
       ],
       "id": "059204ad-fef0-46a1-847e-a34dd71aea0b",
       "name": "Resolver plan"
@@ -184,8 +184,8 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        800,
-        848
+        -704,
+        752
       ],
       "id": "68f54bea-7214-4ba1-aba8-9ccc525f7530",
       "name": "Get Profile",
@@ -212,8 +212,8 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -16,
-        832
+        -1376,
+        560
       ],
       "id": "4f477105-f115-45a3-8946-71699651f56e",
       "name": "Datos Telegram",
@@ -295,8 +295,8 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        2656,
-        1232
+        896,
+        640
       ],
       "id": "3e250071-7123-4700-bca6-f2c8632e0bb1",
       "name": "Call 'Tool - Pasar a Humano'"
@@ -315,8 +315,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        1808,
-        1232
+        640,
+        640
       ],
       "id": "4e0afaba-9fab-41f7-aa81-cacc384857e1",
       "name": "OpenAI Chat Model",
@@ -335,8 +335,8 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        1984,
-        1232
+        768,
+        640
       ],
       "id": "3a1c7755-4807-41e2-b99c-5ff1b8c44119",
       "name": "Memoria de agente"
@@ -442,8 +442,8 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        2480,
-        1232
+        1024,
+        640
       ],
       "id": "a4e09019-5ac7-4435-8c5e-722fe3170bc2",
       "name": "Call 'Cosechador de Oro'"
@@ -504,8 +504,8 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        2304,
-        1232
+        1152,
+        640
       ],
       "id": "e4ef03bc-a901-4d41-88df-e5243439381b",
       "name": "Call 'Tool Buscador Inteligente'"
@@ -558,8 +558,8 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [
-        2144,
-        1232
+        1280,
+        640
       ],
       "id": "c2c3e263-8ed3-4e7a-a305-8e0c5d7713a6",
       "name": "Call 'El Silenciador'"
@@ -580,8 +580,8 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        1408,
-        848
+        192,
+        512
       ],
       "id": "571cac75-0bf2-47f2-87ca-f9afe8e3be10",
       "name": "get instance",
@@ -608,8 +608,8 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        1664,
-        848
+        416,
+        512
       ],
       "id": "06234ad9-25e5-49c8-8235-b0561447efe4",
       "name": "get instance IA",
@@ -631,8 +631,8 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1968,
-        848
+        896,
+        416
       ],
       "id": "737e6f1e-472e-45b9-8874-af6592d118bb",
       "name": "Agente Telegram",
@@ -656,8 +656,8 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        800,
-        528
+        1488,
+        192
       ],
       "id": "a9f97f06-d78c-4ef0-8870-17185f5b3a9f",
       "name": "Busca Empresa",
@@ -719,8 +719,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -784,
-        112
+        -2064,
+        -256
       ],
       "id": "8805bc2d-f73a-40c8-9e65-c734c7f9509c",
       "name": "Call 'Vincula Cuenta TL Token'"
@@ -730,8 +730,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        -480,
-        112
+        -1808,
+        -272
       ],
       "id": "36414128-9dcd-49ef-b41e-81705f6839f6",
       "name": "Termina vinculacion"
@@ -764,8 +764,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1024,
-        528
+        1712,
+        192
       ],
       "id": "418aab4c-4e37-4e38-9221-b77f7a0f0586",
       "name": "¿Empresa Fantasma ?"
@@ -807,8 +807,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        1824,
-        688
+        2384,
+        384
       ],
       "id": "1c75ed07-21b9-4aaa-a2b0-82420aead58a",
       "name": "Call 'Vincula Cuenta TL Token' con empresa"
@@ -842,8 +842,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        1488,
-        512
+        1936,
+        96
       ]
     },
     {
@@ -853,8 +853,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1520,
-        688
+        2160,
+        384
       ],
       "id": "31ab4791-7271-4349-9892-2f077c4b0a57",
       "name": "Extrae Nodo Webhook"
@@ -866,8 +866,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1232,
-        688
+        1936,
+        288
       ],
       "id": "03aef256-0008-426f-b62d-2aa36d6b2f2c",
       "name": "Genera Token"
@@ -907,8 +907,8 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -272,
-        832
+        -1600,
+        560
       ],
       "id": "62dccf08-1a0d-44cb-a1da-c4d403eaecfd",
       "name": "inicializa usage_logs",
@@ -963,8 +963,8 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        2576,
-        848
+        1712,
+        512
       ],
       "id": "ecb93f2f-bddc-4ff2-85e6-017deb295423",
       "name": "Guardar Log Uso DMs",
@@ -991,7 +991,7 @@
         "fieldsUi": {
           "fieldValues": [
             {
-              "fieldId": "messages_used",
+              "fieldId": "messages_used_tl",
               "fieldValue": "={{ $('Get Profile').item.json.messages_used_tl +1 }}"
             }
           ]
@@ -1000,11 +1000,359 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        2800,
-        848
+        1936,
+        512
       ],
       "id": "c9f96e1d-650f-4b0e-a373-bdfe5b5a4424",
       "name": "Update  contador envia DM",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "profiles",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Get Profile').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "plan_type",
+              "fieldValue": "free"
+            },
+            {
+              "fieldId": "plan_expires_at",
+              "fieldValue": "={{ null }}"
+            },
+            {
+              "fieldId": "messages_used",
+              "fieldValue": "0"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        416,
+        816
+      ],
+      "id": "5ae7759f-6308-4ffc-87f1-dde5740e3808",
+      "name": "actualiza plan free",
+      "alwaysOutputData": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "889414ec-ddbf-4443-a3b7-f17f59ea6e3c",
+              "leftValue": "={{ $('Get Profile').item.json.messages_used_tl }}",
+              "rightValue": "={{ $('Get Plans').item.json.messages_limit || 50 }}",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -256,
+        752
+      ],
+      "id": "04a41834-dca1-440f-9362-64d42bcf42a3",
+      "name": "valida cantidad mensajes quedan"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "30f60d4f-64db-4d5e-81a8-f821b5fd63c6",
+              "leftValue": "={{ $('Get Plans').item.json.code || $('Get Plans').item.json.code }}",
+              "rightValue": "free",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -32,
+        912
+      ],
+      "id": "9f08a551-47b6-4cef-9916-a1d2de9c7c49",
+      "name": "valida plan"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://iesmzunoepfwkxilvxdv.supabase.co/rest/v1/rpc/suspend_excess_products",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_user_id",
+              "value": "={{ $('Get Profile').item.json.id }}"
+            },
+            {
+              "name": "p_limit",
+              "value": 10
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        960,
+        816
+      ],
+      "id": "891e7066-9f41-437e-ba41-04504ea1f445",
+      "name": "Suspender Productos Excedentes",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bRPHwOivYfq5D2ib",
+          "name": "supa base secret"
+        }
+      },
+      "notes": "Suspende los productos que exceden el límite del plan Free (10). Llama a la función RPC suspend_excess_products en Supabase."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "vPSFne1fztiV-nqjxUcf8",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/vPSFne1fztiV-nqjxUcf8",
+          "cachedResultName": "El notificador"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email_from": "alerta@mitiendavirtual.cl",
+            "user_id": "={{ $('Get Profile').item.json.id }}",
+            "email_to": "={{ $('Get Profile').item.json.email }}",
+            "email_subject": "🚨 URGENTE: Tu Bot se quedó sin saldo",
+            "email_body": "=<p>Hola <strong>{{ $('Get Profile').item.json.full_name }}</strong>,</p><p>Tu cliente intentó hablar con el bot, pero no pudimos responder porque <strong>tu saldo mensual se ha agotado</strong> o tu plan venció.Para tu seguridad.🛑</p><p>Para no perder más ventas, recarga tu plan ahora mismo:</p><p>👉 <a href='https://mitiendavirtual.cl'><strong>Click aquí para Recargar Saldo</strong></a></p><p>Saludos,<br>El equipo de MiTiendaVirtual</p>"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email_from",
+              "displayName": "email_from",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email_to",
+              "displayName": "email_to",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email_subject",
+              "displayName": "email_subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email_body",
+              "displayName": "email_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        1008
+      ],
+      "id": "7546f8ee-4e44-4116-ac85-4410d04ab1e5",
+      "name": "Call 'El notificador'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "vPSFne1fztiV-nqjxUcf8",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/vPSFne1fztiV-nqjxUcf8",
+          "cachedResultName": "El notificador"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Get Profile').item.json.id }}",
+            "email_from": "alerta@mitiendavirtual.cl",
+            "email_to": "={{ $('Get Profile').item.json.email }}",
+            "email_subject": "🚨 URGENTE: Tu Bot se quedó sin saldo",
+            "email_body": "=<p>Hola <strong>{{ $('Get Profile').item.json.full_name }}</strong>,</p><p>Tu cliente intentó hablar con el bot, pero no pudimos responder porque <strong>tu saldo mensual se ha agotado</strong> o tu plan venció.Para tu seguridad, hemos actualizado tu plan a free, que te da algunas conversaciones mas, para que puedas operar. 🛑</p><p>Para no perder más ventas, recarga tu plan ahora mismo:</p><p>👉 <a href='https://mitiendavirtual.cl'><strong>Click aquí para Recargar Saldo</strong></a></p><p>Saludos,<br>El equipo de MiTiendaVirtual</p>"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email_from",
+              "displayName": "email_from",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email_to",
+              "displayName": "email_to",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email_subject",
+              "displayName": "email_subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "email_body",
+              "displayName": "email_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        816
+      ],
+      "id": "ac6498de-43da-4de6-804e-1304037b558f",
+      "name": "Call 'El notificador'1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "plans",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "code",
+              "keyValue": "={{ $json.plan_type }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        752
+      ],
+      "id": "fea69ac7-975b-4869-869f-f8315147a50d",
+      "name": "Get Plans",
       "credentials": {
         "supabaseApi": {
           "id": "4hWqjffSDMk2pC8i",
@@ -1019,12 +1367,12 @@
         "json": {
           "headers": {
             "host": "webhook.mitiendavirtual.cl",
-            "content-length": "294",
+            "content-length": "282",
             "accept-encoding": "gzip, br",
             "cdn-loop": "cloudflare; loops=1",
             "cf-connecting-ip": "91.108.5.112",
             "cf-ipcountry": "NL",
-            "cf-ray": "9fdedc50f928b912-AMS",
+            "cf-ray": "9ff8a4026c293466-AMS",
             "cf-visitor": "{\"scheme\":\"https\"}",
             "cf-warp-tag-id": "25fb36c4-be2f-495a-ad47-f72146c5307a",
             "connection": "keep-alive",
@@ -1035,9 +1383,9 @@
           "params": {},
           "query": {},
           "body": {
-            "update_id": 755188865,
+            "update_id": 755188896,
             "message": {
-              "message_id": 136,
+              "message_id": 174,
               "from": {
                 "id": 7612723970,
                 "is_bot": false,
@@ -1051,8 +1399,8 @@
                 "last_name": "Gómez",
                 "type": "private"
               },
-              "date": 1779149237,
-              "text": "Botan escombros?"
+              "date": 1779419561,
+              "text": "Hola"
             }
           },
           "webhookUrl": "http://localhost:5678/webhook/telegram-central",
@@ -1165,7 +1513,7 @@
       "main": [
         [
           {
-            "node": "Resolver plan",
+            "node": "Get Plans",
             "type": "main",
             "index": 0
           }
@@ -1387,6 +1735,75 @@
           }
         ]
       ]
+    },
+    "actualiza plan free": {
+      "main": [
+        [
+          {
+            "node": "Suspender Productos Excedentes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "valida cantidad mensajes quedan": {
+      "main": [
+        [
+          {
+            "node": "Resolver plan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "valida plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "valida plan": {
+      "main": [
+        [
+          {
+            "node": "Call 'El notificador'1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'El notificador'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'El notificador'1": {
+      "main": [
+        [
+          {
+            "node": "actualiza plan free",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Plans": {
+      "main": [
+        [
+          {
+            "node": "valida cantidad mensajes quedan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -1394,7 +1811,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "5eb88502-9ead-434e-9618-e5ff44fb9cdd",
+  "versionId": "97f46d5a-9258-491c-83a2-78b2e20eb408",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"

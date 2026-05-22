@@ -16,7 +16,7 @@
       "typeVersion": 1.1,
       "position": [
         -1760,
-        1184
+        800
       ],
       "id": "c866193c-8fd7-4ba3-bc37-571011ecdf9d",
       "name": "Vincular Cuenta Token"
@@ -31,7 +31,7 @@
       "typeVersion": 1,
       "position": [
         -1536,
-        1184
+        800
       ]
     },
     {
@@ -50,8 +50,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -1264,
-        1184
+        -1344,
+        336
       ]
     },
     {
@@ -71,7 +71,7 @@
       "typeVersion": 1,
       "position": [
         -1040,
-        496
+        320
       ]
     },
     {
@@ -90,8 +90,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -352,
-        832
+        -432,
+        592
       ]
     },
     {
@@ -108,21 +108,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        544,
-        960
-      ]
-    },
-    {
-      "parameters": {
-        "functionCode": "const tokenRow = $node['Marca Token usado'].json.tokenRow;\nconst user_id = $node['Marca Token usado'].json.user_id;\nconst chatId = $node['Marca Token usado'].json.chat_id;\nconst username = $node['Evalua Token'].json.username;\nconst connectedAt = new Date().toISOString();\nreturn [{ json: {\n  user_id: user_id,\n  telegram_chat_id: chatId,\n  telegram_username: username,\n  connected_at: connectedAt,\n  chat_id: chatId\n} }];"
-      },
-      "id": "10aa41c1-1c53-4df5-8baa-a03966f75566",
-      "name": "Preparar config",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
-      "position": [
-        -1472,
-        176
+        512,
+        1152
       ]
     },
     {
@@ -139,8 +126,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        544,
-        704
+        512,
+        560
       ]
     },
     {
@@ -152,8 +139,8 @@
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
       "position": [
-        -576,
-        832
+        -656,
+        592
       ]
     },
     {
@@ -164,56 +151,10 @@
       "typeVersion": 1,
       "position": [
         464,
-        208
+        112
       ],
       "id": "7a45165b-dc0e-4ebe-be3f-ae9788be87bc",
       "name": "Sticky Note"
-    },
-    {
-      "parameters": {
-        "operation": "update",
-        "tableId": "telegram_link_tokens",
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "id",
-              "condition": "eq",
-              "keyValue": "={{ $json.tokenRow.id }}"
-            }
-          ]
-        },
-        "fieldsUi": {
-          "fieldValues": [
-            {
-              "fieldId": "user_id",
-              "fieldValue": "={{ $json.tokenRow.user_id }}"
-            },
-            {
-              "fieldId": "chat_id",
-              "fieldValue": "={{ $json.chat_id }}"
-            },
-            {
-              "fieldId": "telegram_username",
-              "fieldValue": "={{ $json.username }}"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        -1696,
-        176
-      ],
-      "id": "174f6404-8d79-4cb8-a9e5-067504bf5aa3",
-      "name": "Marca Token usado",
-      "alwaysOutputData": true,
-      "credentials": {
-        "supabaseApi": {
-          "id": "4hWqjffSDMk2pC8i",
-          "name": "Supabase account"
-        }
-      }
     },
     {
       "parameters": {
@@ -227,11 +168,6 @@
               "keyName": "token",
               "condition": "eq",
               "keyValue": "={{$json.link_token}}"
-            },
-            {
-              "keyName": "used",
-              "condition": "eq",
-              "keyValue": "false"
             }
           ]
         }
@@ -239,8 +175,8 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -816,
-        832
+        -864,
+        592
       ],
       "id": "24869567-341b-44e6-8b32-a0c858728fe6",
       "name": "Busca Token",
@@ -281,8 +217,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        96,
-        704
+        -16,
+        576
       ],
       "id": "c39d1a91-42b0-4e3d-9a48-bccfe0cf3755",
       "name": "Existe registro"
@@ -302,7 +238,7 @@
             {
               "keyName": "user_id",
               "condition": "eq",
-              "keyValue": "={{ $('Vincular Cuenta Token').item.json.inicio.user_id }}"
+              "keyValue": "={{ $json.tokenRow.user_id }}"
             }
           ]
         }
@@ -310,8 +246,8 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -128,
-        704
+        -208,
+        576
       ],
       "id": "4e62d439-1802-4148-945e-78fe1fad4d82",
       "name": "busca registro",
@@ -321,23 +257,25 @@
           "id": "4hWqjffSDMk2pC8i",
           "name": "Supabase account"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
         "operation": "update",
         "tableId": "telegram_link_tokens",
+        "matchType": "allFilters",
         "filters": {
           "conditions": [
             {
               "keyName": "user_id",
               "condition": "eq",
-              "keyValue": "={{ $('Vincular Cuenta Token').item.json.inicio.user_id }}"
+              "keyValue": "={{ $json.user_id }}"
             },
             {
-              "keyName": "chat_id",
+              "keyName": "token",
               "condition": "eq",
-              "keyValue": "={{ $('Vincular Cuenta Token').item.json.inicio.body.message.chat.id }}"
+              "keyValue": "={{ $('¿Trae token?').item.json.link_token }}"
             }
           ]
         },
@@ -348,60 +286,16 @@
               "fieldValue": "={{ $now.plus({ hours: 24 }) }}"
             },
             {
-              "fieldId": "token",
-              "fieldValue": "={{ $('Extraer /start').item.json.link_token }}"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        320,
-        576
-      ],
-      "id": "e97df173-cc5e-48ba-ba66-c700860f8ae8",
-      "name": "Actualiza Registro",
-      "executeOnce": false,
-      "credentials": {
-        "supabaseApi": {
-          "id": "4hWqjffSDMk2pC8i",
-          "name": "Supabase account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "tableId": "telegram_link_tokens",
-        "fieldsUi": {
-          "fieldValues": [
-            {
-              "fieldId": "user_id",
-              "fieldValue": "={{ $('Vincular Cuenta Token').item.json.inicio.user_id }}"
-            },
-            {
-              "fieldId": "token",
-              "fieldValue": "={{ $('¿Trae token?').item.json.link_token }}"
-            },
-            {
               "fieldId": "chat_id",
-              "fieldValue": "={{ $('¿Trae token?').item.json.message.chat.id }}"
+              "fieldValue": "={{ $('¿Trae token?').item.json.chat_id }}"
             },
             {
               "fieldId": "telegram_username",
-              "fieldValue": "={{ $('¿Trae token?').item.json.message.chat.first_name }} {{ $('¿Trae token?').item.json.message.chat.last_name }}"
+              "fieldValue": "={{ $('¿Trae token?').item.json.username }}"
             },
             {
               "fieldId": "used",
               "fieldValue": "true"
-            },
-            {
-              "fieldId": "created_at",
-              "fieldValue": "={{ $now }}"
-            },
-            {
-              "fieldId": "expires_at",
-              "fieldValue": "={{ $now.plus({ hours: 24 }) }}"
             }
           ]
         }
@@ -409,11 +303,12 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        320,
-        800
+        272,
+        560
       ],
-      "id": "9bf087af-c668-469f-b0ed-22546a7be376",
-      "name": "Inserta registro",
+      "id": "e97df173-cc5e-48ba-ba66-c700860f8ae8",
+      "name": "Actualiza Registro",
+      "executeOnce": false,
       "credentials": {
         "supabaseApi": {
           "id": "4hWqjffSDMk2pC8i",
@@ -435,8 +330,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        544,
-        464
+        480,
+        272
       ]
     },
     {
@@ -446,8 +341,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -1024,
-        192
+        -1344,
+        0
       ],
       "id": "be45f557-164f-4cc8-8a49-ab0574b8533e",
       "name": "Sticky Note2"
@@ -463,37 +358,20 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        960,
-        1168
+        848,
+        352
       ]
     },
     {
-      "parameters": {
-        "operation": "get",
-        "tableId": "telegram_link_tokens",
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "token",
-              "keyValue": "={{ $('Extraer /start').item.json.link_token }}"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.supabase",
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        -1696,
-        -48
+        288,
+        784
       ],
-      "id": "8db68e3d-969a-43d7-8f5c-a3be304a57ca",
-      "name": "Obtiene token",
-      "credentials": {
-        "supabaseApi": {
-          "id": "4hWqjffSDMk2pC8i",
-          "name": "Supabase account"
-        }
-      }
+      "id": "d3e2614a-0a6a-4633-bf11-a6cc9eefbef4",
+      "name": "No Operation, do nothing"
     }
   ],
   "pinData": {
@@ -503,12 +381,12 @@
           "inicio": {
             "headers": {
               "host": "webhook.mitiendavirtual.cl",
-              "content-length": "300",
+              "content-length": "402",
               "accept-encoding": "gzip, br",
               "cdn-loop": "cloudflare; loops=1",
               "cf-connecting-ip": "91.108.5.112",
               "cf-ipcountry": "NL",
-              "cf-ray": "9fd6fb17c97f6686-AMS",
+              "cf-ray": "9ff89fa8eb7cb145-AMS",
               "cf-visitor": "{\"scheme\":\"https\"}",
               "cf-warp-tag-id": "25fb36c4-be2f-495a-ad47-f72146c5307a",
               "connection": "keep-alive",
@@ -519,9 +397,9 @@
             "params": {},
             "query": {},
             "body": {
-              "update_id": 755188847,
+              "update_id": 755188893,
               "message": {
-                "message_id": 101,
+                "message_id": 170,
                 "from": {
                   "id": 7612723970,
                   "is_bot": false,
@@ -535,13 +413,19 @@
                   "last_name": "Gómez",
                   "type": "private"
                 },
-                "date": 1779066612,
-                "text": "/start 598664429d5da36f5f87827b6a1dfa2fe167f04a90c41a8319e38a22f22"
+                "date": 1779419383,
+                "text": "/start 569d1f9587ffaa73ee49716d976cc7cabb581b778a76522e19e4d520b0e",
+                "entities": [
+                  {
+                    "offset": 0,
+                    "length": 6,
+                    "type": "bot_command"
+                  }
+                ]
               }
             },
             "webhookUrl": "http://localhost:5678/webhook/telegram-central",
-            "executionMode": "production",
-            "user_id": "dcbbe3e4-b3d9-4359-9cea-97446e86351b"
+            "executionMode": "production"
           }
         },
         "pairedItem": {
@@ -627,11 +511,6 @@
         ]
       ]
     },
-    "Preparar config": {
-      "main": [
-        []
-      ]
-    },
     "Enviar éxito": {
       "main": [
         [
@@ -648,17 +527,6 @@
         [
           {
             "node": "¿Token válido?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Marca Token usado": {
-      "main": [
-        [
-          {
-            "node": "Preparar config",
             "type": "main",
             "index": 0
           }
@@ -687,7 +555,7 @@
         ],
         [
           {
-            "node": "Inserta registro",
+            "node": "No Operation, do nothing",
             "type": "main",
             "index": 0
           }
@@ -706,17 +574,6 @@
       ]
     },
     "Actualiza Registro": {
-      "main": [
-        [
-          {
-            "node": "Enviar éxito",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Inserta registro": {
       "main": [
         [
           {
@@ -755,7 +612,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "4f6ad8b0-6164-44ad-a6b9-89090cd1f02b",
+  "versionId": "6a0c488a-5167-46e4-8bdf-352cc23bc4bf",
   "meta": {
     "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
   },
