@@ -72,40 +72,163 @@ export default async function handler(req, res) {
     }
   }
 
-  // If we have a service client and a user id, create a one-time token and persist
-  if (supabaseAdmin && userId) {
+  // If we have a user id, generate a one-time token and persist it.
+  // Behaviour: if a token row already exists for this user, update that row (no duplicates).
+  if (userId) {
+    const token = randomBytes(24).toString('hex')
+    const expiresAt = new Date(Date.now() + (body?.expires_in ? Number(body.expires_in) * 1000 : 10 * 60 * 1000))
+
     try {
-      const token = randomBytes(24).toString('hex')
-      const expiresAt = new Date(Date.now() + (body?.expires_in ? Number(body.expires_in) * 1000 : 10 * 60 * 1000))
+      let persisted = false
+      let row = null
 
-      const { data, error } = await supabaseAdmin
-        .from('telegram_link_tokens')
-        .insert({ user_id: userId, token, expires_at: expiresAt.toISOString() })
-        .select()
-        .single()
+      // 1) Try to update existing rows for this user via supabaseAdmin (if available)
+      if (supabaseAdmin) {
+        try {
+          const { data: updatedRows, error: updateError } = await supabaseAdmin
+            .from('telegram_link_tokens')
+            .update({ token, expires_at: expiresAt.toISOString(), used: false })
+            .eq('user_id', userId)
+            .select()
 
-      if (error) {
-        console.error('Failed inserting telegram_link_tokens row', error)
-      } else {
-        const url = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${token}`
+          if (updateError) {
+            console.warn('[telegram-link-start] supabaseAdmin update error', updateError)
+          } else if (updatedRows && updatedRows.length > 0) {
+            row = Array.isArray(updatedRows) ? updatedRows[0] : updatedRows
+            persisted = true
+            console.log('[telegram-link-start] updated existing token via supabaseAdmin', { id: row?.id })
+          }
+        } catch (err) {
+          console.warn('[telegram-link-start] supabaseAdmin update threw', err)
+        }
+      }
 
-        // fire-and-forget notify to n8n (keeps backward compatibility without blocking)
-        if (N8N_LINK_START_URL) {
+      // 2) If no existing row updated, try REST PATCH (service role) to update any existing row
+      if (!persisted && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        try {
+          const restUrl = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/telegram_link_tokens?user_id=eq.${userId}`
+          const resp = await fetch(restUrl, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+              Prefer: 'return=representation'
+            },
+            body: JSON.stringify({ token, expires_at: expiresAt.toISOString(), used: false })
+          })
+
+          const json = await resp.json().catch(() => null)
+          if (resp.ok && json && (Array.isArray(json) ? json.length > 0 : true)) {
+            row = Array.isArray(json) ? json[0] : json
+            persisted = true
+            console.log('[telegram-link-start] updated existing token via REST', { id: row?.id })
+          }
+        } catch (err) {
+          console.warn('[telegram-link-start] REST patch threw', err)
+        }
+      }
+
+      // 3) If still not persisted, insert a fresh row (using supabaseAdmin or REST fallback)
+      if (!persisted) {
+        if (supabaseAdmin) {
           try {
-            void fetch(N8N_LINK_START_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', ...(authHeader ? { Authorization: authHeader } : {}) },
-              body: JSON.stringify({ ...(body || {}), token })
-            })
+            const { data: insertedData, error: insertError } = await supabaseAdmin
+              .from('telegram_link_tokens')
+              .insert({ user_id: userId, token, expires_at: expiresAt.toISOString() })
+              .select()
+              .single()
+
+            if (insertError) {
+              console.warn('[telegram-link-start] supabaseAdmin insert error', insertError)
+            } else {
+              row = insertedData
+              persisted = true
+              console.log('[telegram-link-start] inserted via supabaseAdmin', { id: row?.id })
+            }
           } catch (err) {
-            console.warn('Failed forwarding new token to n8n (ignored)', err)
+            console.warn('[telegram-link-start] supabaseAdmin insert threw', err)
           }
         }
 
-        return res.status(200).json({ url, token })
+        if (!persisted && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+          try {
+            const restUrl = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/telegram_link_tokens`
+            const resp = await fetch(restUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                Prefer: 'return=representation'
+              },
+              body: JSON.stringify({ user_id: userId, token, expires_at: expiresAt.toISOString() })
+            })
+
+            const json = await resp.json().catch(() => null)
+            if (resp.ok) {
+              row = Array.isArray(json) ? json[0] : json
+              persisted = true
+              console.log('[telegram-link-start] inserted via REST', { id: row?.id })
+            } else {
+              console.error('[telegram-link-start] REST insert failed', resp.status, json)
+            }
+          } catch (err) {
+            console.error('[telegram-link-start] REST insert threw', err)
+          }
+        }
       }
+
+      const url = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${token}`
+
+      // fire-and-forget notify to n8n (keeps backward compatibility without blocking)
+      if (N8N_LINK_START_URL) {
+        try {
+          void fetch(N8N_LINK_START_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...(authHeader ? { Authorization: authHeader } : {}) },
+            body: JSON.stringify({ ...(body || {}), token })
+          })
+        } catch (err) {
+          console.warn('Failed forwarding new token to n8n (ignored)', err)
+        }
+      }
+
+      if (!persisted) {
+        console.warn('[telegram-link-start] token generated but not persisted')
+        return res.status(200).json({ url, token, persisted: false })
+      }
+
+      // Cleanup duplicates: delete any other rows for this user, keep the current one
+      try {
+        if (row?.id) {
+          if (supabaseAdmin) {
+            try {
+              await supabaseAdmin
+                .from('telegram_link_tokens')
+                .delete()
+                .neq('id', row.id)
+                .eq('user_id', userId)
+            } catch (err) {
+              console.warn('[telegram-link-start] cleanup delete threw', err)
+            }
+          } else if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+            try {
+              const delUrl = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/telegram_link_tokens?user_id=eq.${userId}&id=neq.${row.id}`
+              await fetch(delUrl, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` }
+              })
+            } catch (err) {
+              console.warn('[telegram-link-start] REST cleanup delete threw', err)
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[telegram-link-start] cleanup failed', err)
+      }
+
+      return res.status(200).json({ url, token, persisted: true })
     } catch (err) {
-      console.error('Error creating telegram link token', err)
+      console.error('Error creating/updating telegram link token', err)
       // fall through to forwarding
     }
   }

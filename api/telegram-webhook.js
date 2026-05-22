@@ -38,6 +38,48 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: 'Invalid JSON' })
   }
 
+  // Try to extract link token from /start and resolve user_id server-side
+  let resolvedUserId = null
+  let linkToken = null
+  try {
+    const text = (body && ((body.message && body.message.text) || (body.message && body.message.caption))) || ''
+    if (text && typeof text === 'string' && text.startsWith('/start')) {
+      linkToken = text.replace('/start', '').trim()
+      if (linkToken) {
+        try {
+          const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
+          const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+          if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+            const restUrl = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/telegram_link_tokens?token=eq.${encodeURIComponent(linkToken)}&select=user_id,used,expires_at,created_at`
+            const lookup = await fetch(restUrl, {
+              method: 'GET',
+              headers: {
+                Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                Accept: 'application/json'
+              }
+            })
+            if (lookup.ok) {
+              const rows = await lookup.json().catch(() => [])
+              if (Array.isArray(rows) && rows.length > 0) {
+                const row = rows[0]
+                // Check expiration if present
+                if (!row.expires_at || new Date(row.expires_at) > new Date()) {
+                  resolvedUserId = row.user_id || null
+                }
+              }
+            } else {
+              console.warn('telegram-webhook: lookup request failed', lookup.status)
+            }
+          }
+        } catch (err) {
+          console.warn('telegram-webhook: token lookup failed', err)
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('telegram-webhook: token parse failed', err)
+  }
+
   // If no n8n target configured, log and return OK (Vercel = example only).
   if (!N8N_WEBHOOK_URL) {
     console.warn('N8N_WEBHOOK_URL not set — acting as sample webhook (no forwarding).')
@@ -50,7 +92,9 @@ export default async function handler(req, res) {
     const payload = {
       forwarded_by: 'vercel-telegram-proxy',
       forwarded_at: new Date().toISOString(),
-      update: body
+      update: body,
+      ...(linkToken ? { link_token: linkToken } : {}),
+      ...(resolvedUserId ? { user_id: resolvedUserId } : {})
     }
 
     const forwardRes = await fetch(N8N_WEBHOOK_URL, {
