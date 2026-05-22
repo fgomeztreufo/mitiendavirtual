@@ -123,7 +123,8 @@ export default function NotificationsView({ session, profile }: any) {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${accessToken}`
-          }
+          },
+          body: JSON.stringify({ user_id: session.user.id })
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok || !json.url) {

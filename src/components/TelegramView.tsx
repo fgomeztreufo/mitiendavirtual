@@ -30,12 +30,29 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   const [ownBotInfo, setOwnBotInfo] = useState<OwnBotInfo | null>(null)
 
   const planCode = normalizePlanType(profile?.plan_type)
+  const [planMessagesLimit, setPlanMessagesLimit] = useState<number | null>(null)
 
   const [botChoice, setBotChoice] = useState<'platform' | 'own'>('platform')
 
   useEffect(() => {
     if (session?.user?.id) fetchConfigs()
   }, [session?.user?.id])
+
+  useEffect(() => {
+    let mounted = true
+    async function loadPlanLimit() {
+      try {
+        const { data, error } = await supabase
+          .from('plans')
+          .select('messages_limit')
+          .eq('code', planCode)
+          .single()
+        if (!error && mounted) setPlanMessagesLimit(data?.messages_limit ?? null)
+      } catch (_) { /* silent */ }
+    }
+    if (planCode) loadPlanLimit()
+    return () => { mounted = false }
+  }, [planCode])
 
   // Load own bot info from instance.channels.telegram
   useEffect(() => {
@@ -70,7 +87,8 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
       setLinking(true)
       const res = await fetch(`${API_BASE}/telegram-link-start`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` }
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+        body: JSON.stringify({ user_id: session.user.id })
       })
       const json = await res.json().catch(() => ({}))
       if (!res.ok || !json.url) {
@@ -210,15 +228,143 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
 
   const telegramConfig = configs.find(c => c.channel_type === 'telegram')
 
+  // ── Créditos ────────────────────────────────────────────────
+  const messagesUsedTl = profile?.messages_used_tl ?? 0
+  const messagesLimit: number | null = planMessagesLimit
+  const usagePct = messagesLimit ? Math.min((messagesUsedTl / messagesLimit) * 100, 100) : 0
+  let barColor = '#6366f1'
+  if (usagePct > 85) barColor = '#ef4444'
+  else if (usagePct > 60) barColor = '#f59e0b'
+
+  const isTelegramConnected = !!(telegramConfig?.telegram_chat_id || ownBotInfo?.bot_type === 'own' && ownBotInfo?.bot_username)
+  const limitReached = messagesLimit !== null && messagesUsedTl >= messagesLimit
+
+  // Clases del card Estado del Bot (evita ternarios anidados en JSX)
+  let statusCardBg: string
+  let statusDotClass: string
+  let statusTextClass: string
+  let statusLabel: string
+  if (limitReached) {
+    statusCardBg = 'bg-red-950/20 border-red-500/30'
+    statusDotClass = 'bg-red-500'
+    statusTextClass = 'text-red-400'
+    statusLabel = 'Bot Pausado'
+  } else if (isTelegramConnected) {
+    statusCardBg = 'bg-emerald-900/20 border-emerald-700/30'
+    statusDotClass = 'bg-emerald-400 shadow-[0_0_8px_2px_rgba(52,211,153,0.5)]'
+    statusTextClass = 'text-emerald-400'
+    statusLabel = 'Telegram Conectado'
+  } else {
+    statusCardBg = 'bg-gray-900/60 border-white/5'
+    statusDotClass = 'bg-gray-600'
+    statusTextClass = 'text-gray-500'
+    statusLabel = 'Sin Conexión'
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 p-4">
       <h2 className="text-2xl font-bold text-white">Telegram</h2>
       <p className="text-gray-400 text-sm">Configura el bot de ventas IA para tu tienda en Telegram.</p>
 
+      {/* ── Cards de estado ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        {/* ESTADO DEL BOT */}
+        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-5 space-y-4 backdrop-blur-sm">
+          <p className="text-[11px] font-bold tracking-[0.18em] text-gray-500 uppercase text-center">Estado del Bot</p>
+          <div className={`rounded-xl p-4 text-center space-y-2 border ${statusCardBg}`}>
+            <div className={`w-3 h-3 rounded-full mx-auto ${statusDotClass}`} />
+            <p className={`text-sm font-extrabold tracking-widest uppercase ${statusTextClass}`}>
+              {statusLabel}
+            </p>
+            {ownBotInfo?.bot_type === 'own' && ownBotInfo?.bot_username && (
+              <>
+                <div className="h-px bg-white/5 mx-2" />
+                <p className="text-[10px] tracking-widest text-gray-500 uppercase">Bot vinculado</p>
+                <div className="inline-block bg-black/40 rounded-lg px-3 py-1.5">
+                  <span className="text-xs text-white font-mono">@{ownBotInfo.bot_username}</span>
+                </div>
+              </>
+            )}
+            {telegramConfig?.telegram_chat_id && (
+              <>
+                <div className="h-px bg-white/5 mx-2" />
+                <p className="text-[10px] tracking-widest text-gray-500 uppercase">Chat ID vinculado</p>
+                <div className="inline-block bg-black/40 rounded-lg px-3 py-1.5">
+                  <span className="text-xs text-white font-mono">{telegramConfig.telegram_chat_id}</span>
+                </div>
+              </>
+            )}
+          </div>
+          {isTelegramConnected && (
+            <button
+              className="w-full text-center text-[10px] text-red-400/80 cursor-pointer hover:text-red-400 transition-colors bg-transparent border-0"
+              onClick={disconnectOwnBot}
+            >
+              DESVINCULAR CUENTA
+            </button>
+          )}
+        </div>
+
+        {/* CRÉDITOS MENSUALES */}
+        <div className={`rounded-2xl bg-white/[0.03] border p-5 space-y-4 backdrop-blur-sm ${limitReached ? 'border-red-500/40' : 'border-white/5'}`}>
+          <p className="text-[11px] font-bold tracking-[0.18em] text-gray-500 uppercase text-center">Créditos Mensuales</p>
+          <div className={`rounded-xl border p-4 text-center space-y-3 ${limitReached ? 'bg-red-950/30 border-red-500/30' : 'bg-gray-900/60 border-white/5'}`}>
+            <p className="text-4xl font-black tracking-tight text-white italic">{(profile?.plan_type || 'FREE').toUpperCase()}</p>
+            <div className="flex justify-between text-xs text-gray-400 px-1">
+              <span>USO</span>
+              <span className="font-mono text-white">
+                {messagesUsedTl.toLocaleString('es-CL')} / {messagesLimit ? messagesLimit.toLocaleString('es-CL') : '∞'}
+              </span>
+            </div>
+            <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: messagesLimit ? `${usagePct}%` : '100%', background: messagesLimit ? barColor : '#6366f1', opacity: messagesLimit ? 1 : 0.4 }}
+              />
+            </div>
+            {!messagesLimit && (
+              <p className="text-[10px] text-indigo-400/70 italic">Mensajes ilimitados bajo política de uso justo</p>
+            )}
+            {limitReached && (
+              <p className="text-[10px] text-red-400 font-bold tracking-wide uppercase">Límite alcanzado — bot pausado</p>
+            )}
+            {!limitReached && messagesLimit && usagePct > 85 && (
+              <p className="text-[10px] text-amber-400 italic">Cerca del límite — considera actualizar tu plan</p>
+            )}
+          </div>
+          {planCode !== 'full' && (
+            <button
+              onClick={() => goToPlans?.()}
+              className="w-full py-2 text-xs font-bold rounded-xl border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 transition-all"
+            >
+              Ver planes →
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Info: notificaciones están en pestaña separada */}
       <div className="p-4 rounded-xl bg-blue-900/20 border border-blue-800/40 text-sm text-blue-300">
         💬 Para recibir alertas de ventas e inventario en tu Telegram personal, ve a <button onClick={() => window.dispatchEvent(new CustomEvent('changeTab', { detail: 'notifications' }))} className="underline font-medium">Notificaciones</button>.
       </div>
+
+      {/* BLOQUEO POR LÍMITE */}
+      {limitReached && (
+        <div className="relative rounded-2xl overflow-hidden border border-red-500/40 bg-red-950/20 p-6 text-center space-y-3">
+          <div className="text-3xl">🚫</div>
+          <p className="text-red-400 font-bold text-base">Bot pausado — límite mensual alcanzado</p>
+          <p className="text-gray-400 text-sm max-w-sm mx-auto">
+            Has usado todos tus mensajes de Telegram este mes. El bot no responderá hasta que actualices tu plan.
+          </p>
+          <button
+            onClick={() => goToPlans?.()}
+            className="mt-2 inline-block py-2.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold transition-colors"
+          >
+            Actualizar plan →
+          </button>
+        </div>
+      )}
 
       {planCode === 'free' ? (
         <div className="p-6 rounded-2xl bg-gray-900 border border-gray-800">

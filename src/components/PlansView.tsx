@@ -2,6 +2,8 @@ import Swal from 'sweetalert2'
 import { planDisplayToCode, normalizePlanType } from '../utils/planUtils'
 import { Session } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
+import type { IconType } from 'react-icons'
+import { FaInstagram, FaTelegram, FaWhatsapp, FaGoogle } from 'react-icons/fa'
 import { supabase } from '../supabaseClient'
 
 interface Profile {
@@ -12,6 +14,49 @@ interface Profile {
 interface PlansViewProps {
     session: Session;
     profile: Profile | null;
+}
+
+// Colores de marca para cada canal
+const CHANNEL_COLORS: Record<string, string> = {
+    instagram: 'text-pink-500',
+    telegram: 'text-sky-400',
+    whatsapp: 'text-green-400',
+    google_calendar: 'text-blue-400',
+}
+
+interface PlanChannel {
+    id: string;
+    Icon: IconType;
+    label: string;
+    available: boolean;
+}
+
+// Canales y features por plan (refleja la lógica de negocio)
+const PLAN_CHANNELS: Record<string, PlanChannel[]> = {
+    free: [
+        { id: 'instagram',       Icon: FaInstagram, label: 'Bot IA en Instagram',       available: true  },
+        { id: 'telegram',        Icon: FaTelegram,  label: 'Bot IA en Telegram',         available: false },
+        { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: false },
+        { id: 'google_calendar', Icon: FaGoogle,    label: 'Agenda con Google Calendar', available: false },
+    ],
+    basic: [
+        { id: 'instagram',       Icon: FaInstagram, label: 'Bot IA en Instagram',       available: true  },
+        { id: 'telegram',        Icon: FaTelegram,  label: 'Bot IA en Telegram',         available: true  },
+        { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: false },
+        { id: 'google_calendar', Icon: FaGoogle,    label: 'Agenda con Google Calendar', available: false },
+    ],
+    pro: [
+        { id: 'instagram',       Icon: FaInstagram, label: 'Bot IA en Instagram',       available: true  },
+        { id: 'telegram',        Icon: FaTelegram,  label: 'Bot IA en Telegram',         available: true  },
+        { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: true  },
+        { id: 'google_calendar', Icon: FaGoogle,    label: 'Agenda con Google Calendar', available: false },
+    ],
+    full: [
+        { id: 'instagram',       Icon: FaInstagram, label: 'Bot IA en Instagram',       available: true  },
+        { id: 'telegram',        Icon: FaTelegram,  label: 'Bot IA en Telegram',         available: true  },
+        { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: true  },
+        { id: 'google_calendar', Icon: FaGoogle,    label: 'Agenda con Google Calendar', available: true  },
+    ],
 }
 
 export default function PlansView({ session, profile }: PlansViewProps) {
@@ -88,7 +133,7 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                     Elige el motor de tu crecimiento 🚀
                 </h1>
                 <p className="text-gray-400 max-w-2xl mx-auto text-base">
-                    Automatiza tus ventas con IA. Sin contratos amarrados, pagas por mes. 
+                    Automatiza tus ventas con IA en todos tus canales. Sin contratos amarrados, pagas por mes.
                     Si no renuevas, vuelves al plan inicial sin perder tus datos.
                 </p>
             </div>
@@ -99,55 +144,127 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                 <div className="col-span-full text-center text-gray-400">No hay planes configurados en la base de datos.</div>
               )}
 
-                            {!loading && plans.map((plan: any) => {
-                                const code = plan.code
-                                const isCurrent = normalizePlanType(profile?.plan_type) === code
-                                const price = Number(plan.monthly_price_clp || 0)
+              {!loading && plans.map((plan: any) => {
+                const code = plan.code
+                const isCurrent = normalizePlanType(profile?.plan_type) === code
+                const price = Number(plan.monthly_price_clp || 0)
+                const channels = PLAN_CHANNELS[code] || []
 
-                                const baseClasses = `rounded-2xl p-6 flex flex-col h-full relative`
-                                const borderClass = code === 'pro' ? 'border-2 border-purple-500/60 shadow-[0_10px_30px_rgba(124,58,237,0.16)]' : code === 'full' ? 'border-orange-500' : isCurrent ? 'border-blue-500' : 'border-gray-800'
-                                const bgClass = code === 'pro' ? 'bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800' : 'bg-gray-900'
+                const baseClasses = `rounded-2xl p-6 flex flex-col h-full relative`
+                let borderClass = 'border border-gray-800'
+                if (code === 'pro') {
+                    borderClass = 'border-2 border-purple-500/60 shadow-[0_10px_30px_rgba(124,58,237,0.16)]'
+                } else if (code === 'full') {
+                    borderClass = 'border-2 border-orange-500/50 shadow-[0_10px_30px_rgba(249,115,22,0.10)]'
+                } else if (code === 'basic') {
+                    // Borde celeste (light blue) para el plan Básico
+                    borderClass = 'border-2 border-sky-400/70 shadow-[0_8px_20px_rgba(56,189,248,0.06)]'
+                } else if (code === 'free') {
+                    // Borde verde para el plan Semilla
+                    borderClass = 'border-2 border-emerald-500/70 shadow-[0_8px_20px_rgba(16,185,129,0.06)]'
+                } else if (isCurrent) {
+                    borderClass = 'border border-blue-500'
+                }
+                const bgClass = code === 'pro'
+                    ? 'bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800'
+                    : code === 'full'
+                    ? 'bg-gradient-to-b from-gray-900 via-gray-900 to-orange-950/20'
+                    : 'bg-gray-900'
 
-                                const buttonDefault = 'w-full py-2 text-sm font-bold rounded-xl transition-all'
-                                const buttonDisabled = 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                                const buttonPrimary = code === 'pro' ? 'bg-purple-500 hover:bg-purple-400 text-white shadow-lg' : code === 'full' ? 'border border-orange-500 text-orange-500 bg-transparent hover:bg-orange-50' : 'bg-blue-600 hover:bg-blue-500 text-white'
+                const buttonDefault = 'w-full py-2 text-sm font-bold rounded-xl transition-all'
+                const buttonDisabled = 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                const buttonPrimary = code === 'pro'
+                    ? 'bg-purple-500 hover:bg-purple-400 text-white shadow-lg'
+                    : code === 'full'
+                    ? 'border border-orange-500 text-orange-400 bg-transparent hover:bg-orange-500/10'
+                    : 'bg-blue-600 hover:bg-blue-500 text-white'
 
-                                const label = isCurrent ? 'Tu Plan Actual' : (code === 'free' ? 'Plan Base' : code === 'pro' ? 'Potenciar mi Tienda' : code === 'full' ? 'Dominar el Mercado' : ('Elegir ' + plan.display_name))
+                const label = isCurrent
+                    ? 'Tu Plan Actual'
+                    : code === 'free'
+                    ? 'Plan Base'
+                    : code === 'pro'
+                    ? 'Potenciar mi Tienda'
+                    : code === 'full'
+                    ? 'Dominar el Mercado'
+                    : ('Elegir ' + plan.display_name)
 
-                                return (
-                                    <div key={code} className={`${bgClass} ${borderClass} ${baseClasses}`}> 
-                                        {code === 'pro' && (
-                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-purple-500 text-white text-xs font-bold">MÁS POPULAR</div>
-                                        )}
-                                        <h3 className="text-lg font-bold text-white mb-2">{plan.display_name} {code === 'free' ? '🌱' : code === 'pro' ? '💎' : code === 'full' ? '🔥' : ''}</h3>
-                                        <div className="text-3xl font-bold text-white mb-4">${price.toLocaleString('es-CL')} <span className="text-sm text-gray-500 font-normal">/mes</span></div>
-                                        {plan.description && <p className="text-[11px] text-gray-400 mb-6 italic">{plan.description}</p>}
+                const planEmoji = code === 'free' ? '🌱' : code === 'pro' ? '💎' : code === 'full' ? '🔥' : '⚡'
 
-                                        <ul className="space-y-4 mb-8 flex-1">
-                                            <li className="flex items-start gap-2 text-xs text-gray-300">
-                                                <span className="text-green-500 font-bold">✓</span> {plan.products_limit || 0} Productos en catálogo
-                                            </li>
-                                            <li className="flex items-start gap-2 text-xs text-gray-300">
-                                                <span className="text-green-500 font-bold">✓</span> {plan.messages_limit ? `${plan.messages_limit} Mensajes IA / mes` : 'Mensajes Ilimitados'}
-                                            </li>
-                                        </ul>
+                // UI rules requested:
+                // - Mark 'basic' as the most popular
+                // - Block purchase buttons for 'pro' and 'full'
+                // - Show 'PRÓXIMAMENTE' ribbon on 'pro'
+                const mostPopular = 'basic'
+                const isBlocked = code === 'pro' || code === 'full'
+                const buttonLabelComputed = isCurrent ? 'Tu Plan Actual' : isBlocked ? 'Próximamente' : label
+                const isButtonDisabled = isCurrent || isBlocked
 
-                                        <button
-                                            onClick={() => handleBuyPlan(plan.display_name, price)}
-                                            className={`${buttonDefault} ${isCurrent ? buttonDisabled : buttonPrimary}`}
-                                            disabled={isCurrent}
-                                        >
-                                            {label}
-                                        </button>
-                                    </div>
-                                )
-                            })}
+                return (
+                    <div key={code} className={`${bgClass} ${borderClass} ${baseClasses}`}>
+                        {code === mostPopular && (
+                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-indigo-600 text-white text-xs font-bold">MÁS POPULAR</div>
+                        )}
 
+                        {(code === 'pro' || code === 'full') && (
+                            <div className="absolute top-2 right-2 transform rotate-12 bg-yellow-400 text-black text-[10px] px-3 py-0.5 rounded-sm font-bold">PRÓXIMAMENTE</div>
+                        )}
+
+                        <h3 className="text-lg font-bold text-white mb-1">{plan.display_name} {planEmoji}</h3>
+                        <div className="text-3xl font-bold text-white mb-1">
+                            ${price.toLocaleString('es-CL')}
+                            <span className="text-sm text-gray-500 font-normal"> /mes</span>
+                        </div>
+                        {plan.description && (
+                            <p className="text-[11px] text-gray-400 mb-5 italic leading-relaxed">{plan.description}</p>
+                        )}
+
+                        {/* Límites */}
+                        <ul className="space-y-2 mb-5 pb-5 border-b border-gray-800">
+                            <li className="flex items-start gap-2 text-xs text-gray-300">
+                                <span className="text-green-500 font-bold mt-0.5">✓</span>
+                                <span>{plan.products_limit || 0} productos en catálogo</span>
+                            </li>
+                            <li className="flex items-start gap-2 text-xs text-gray-300">
+                                <span className="text-green-500 font-bold mt-0.5">✓</span>
+                                <span>
+                                    {plan.messages_limit
+                                        ? `${plan.messages_limit.toLocaleString('es-CL')} mensajes IA / mes`
+                                        : 'Mensajes IA ilimitados'}
+                                    {plan.messages_limit && (
+                                        <span className="text-gray-500 text-[10px] ml-1">(todos los canales)</span>
+                                    )}
+                                </span>
+                            </li>
+                        </ul>
+
+                        {/* Canales */}
+                        <ul className="space-y-2 mb-8 flex-1">
+                            {channels.map((ch) => (
+                                <li key={ch.id} className={`flex items-center gap-2 text-xs ${ch.available ? 'text-gray-200' : 'text-gray-600'}`}>
+                                    <ch.Icon className={`text-base shrink-0 ${ch.available ? CHANNEL_COLORS[ch.id] : 'opacity-30'}`} />
+                                    <span className={ch.available ? '' : 'line-through'}>{ch.label}</span>
+                                    {ch.available && <span className="ml-auto text-green-500 text-[10px] font-bold">✓</span>}
+                                </li>
+                            ))}
+                        </ul>
+
+                        <button
+                            onClick={() => { if (!isButtonDisabled) handleBuyPlan(plan.display_name, price) }}
+                            className={`${buttonDefault} ${isButtonDisabled ? buttonDisabled : buttonPrimary}`}
+                            disabled={isButtonDisabled}
+                        >
+                            {buttonLabelComputed}
+                        </button>
+                    </div>
+                )
+              })}
             </div>
-            
+
             <footer className="mt-16 text-center space-y-2">
                 <p className="text-gray-500 text-[10px] italic">
-                    *El plan Full incluye mensajes ilimitados bajo política de "uso justo" para garantizar la estabilidad del servicio.
+                    *Los mensajes IA ilimitados están sujetos a política de "uso justo" para garantizar la estabilidad del servicio.<br/>
+                    Los mensajes de todos los canales (Instagram, Telegram, WhatsApp) comparten el pool del plan.
                 </p>
                 <p className="text-gray-400 text-xs">
                     🔒 Pagos procesados de forma segura vía Mercado Pago.

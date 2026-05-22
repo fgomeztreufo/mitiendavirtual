@@ -4,6 +4,7 @@ import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
 import { FiSave, FiSettings, FiMessageSquare, FiShield, FiCpu } from 'react-icons/fi'
 import { normalizePlanType, planCodeToDisplay } from '../utils/planUtils'
+import { sanitizeInstructions, looksMalicious } from '../utils/sanitizeInstructions'
 
 interface InstagramViewProps {
   session: Session
@@ -119,8 +120,9 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
         setWizType(data.biz_type || '');
         setWizAiName(data.ai_name || '');
         setWizTone(data.ai_tone || 'Amable, cercano y con uso de emojis');
-        setBotPrompt(data.bot_prompt || '');
-        setPublicReply(data.reply_public || '');
+        // Sanitize loaded prompts to avoid showing/using malicious content
+        setBotPrompt(sanitizeInstructions(data.bot_prompt || ''));
+        setPublicReply(sanitizeInstructions(data.reply_public || ''));
         setActivationKeyword(data.activation_keyword || '');
         setAntispamEnabled(data.antispam_enabled !== false);
       }
@@ -214,15 +216,36 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
   async function handleSaveBot() {
     try {
       setSaving(true);
-      // Guardado unificado en la nueva tabla
+      // Sanitize inputs before saving
+      const sanitizedBotPrompt = sanitizeInstructions(botPrompt)
+      const sanitizedPublicReply = sanitizeInstructions(publicReply)
+
+      // If suspicious patterns are detected, ask user before saving
+      if (looksMalicious(botPrompt) || looksMalicious(publicReply)) {
+        const resp = await Swal.fire({
+          icon: 'warning',
+          title: 'Contenido sospechoso detectado',
+          html: 'Se detectaron patrones que parecen comandos o código. ¿Deseas limpiar el contenido y guardar de todos modos? <br/><small class="text-gray-300">(Se eliminarán bloques de código y comandos peligrosos)</small>',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, limpiar y guardar',
+          cancelButtonText: 'Cancelar',
+          confirmButtonColor: '#2563EB'
+        })
+        if (!resp.isConfirmed) {
+          setSaving(false)
+          return
+        }
+      }
+
+      // Guardado unificado en la nueva tabla (usando contenido sanitizado)
       const { error } = await supabase.from('instance_personalities').upsert({
         instance_id: instance.id,
         biz_name: wizName,
         biz_type: wizType,
         ai_name: wizAiName,
         ai_tone: wizTone,
-        bot_prompt: botPrompt,
-        reply_public: publicReply,
+        bot_prompt: sanitizedBotPrompt,
+        reply_public: sanitizedPublicReply,
         activation_keyword: activationKeyword,
         antispam_enabled: antispamEnabled
       }, { onConflict: 'instance_id' });
