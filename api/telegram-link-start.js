@@ -45,6 +45,16 @@ export default async function handler(req, res) {
   const userIdFromBody = body?.user_id || body?.userId || body?.user || null
   let userId = userIdFromBody
 
+  // Debug logging: surface incoming values for troubleshooting
+  try {
+    console.log('[telegram-link-start] incoming', {
+      userIdFromBody,
+      authHeader: authHeader ? '[REDACTED]' : '',
+      bodySummary: typeof body === 'object' ? Object.keys(body).slice(0,10) : String(body)
+    })
+  } catch (e) {
+    console.warn('[telegram-link-start] logging failed', e)
+  }
   // If user_id not provided, try to resolve it from the bearer token via Supabase auth endpoint
   if (!userId && authHeader && SUPABASE_URL) {
     try {
