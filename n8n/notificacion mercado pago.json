@@ -752,63 +752,7 @@
       "notes": "Al activar plan Full, reactiva todos los productos del usuario (sin límite)."
     }
   ],
-  "pinData": {
-    "Webhook - Notificación MP": [
-      {
-        "json": {
-          "headers": {
-            "host": "webhook.mitiendavirtual.cl",
-            "user-agent": "MercadoPago WebHook v1.0 payment",
-            "content-length": "188",
-            "accept": "application/json",
-            "accept-encoding": "gzip, br",
-            "cdn-loop": "cloudflare; loops=1",
-            "cf-connecting-ip": "18.213.114.129",
-            "cf-ipcountry": "US",
-            "cf-ray": "9ff8ad567ff8e601-IAD",
-            "cf-visitor": "{\"scheme\":\"https\"}",
-            "cf-warp-tag-id": "25fb36c4-be2f-495a-ad47-f72146c5307a",
-            "connection": "keep-alive",
-            "content-type": "application/json",
-            "referer": "https://mercadopago.com.ar",
-            "traceparent": "00-0000000000000000b17b966c9a58f13d-6459c4190595700d-00",
-            "x-b3-sampled": "0",
-            "x-b3-spanid": "6459c4190595700d",
-            "x-b3-traceid": "0000000000000000b17b966c9a58f13d",
-            "x-forwarded-for": "18.213.114.129",
-            "x-forwarded-proto": "https",
-            "x-request-id": "4f209a7e-6538-431d-8a97-cb52baad00c7",
-            "x-rest-pool-name": "pool_unknown",
-            "x-signature": "ts=1779419943,v1=cc862edd0a7c5a1087e90b01229a45aecc8ffa2901a99bc1d3aa5ae9f39b46f8",
-            "x-socket-timeout": "25000",
-            "x-trace-digest-09": "6F7MBIFyM136q7wsnxhZbABHu045mcZ5P6MUZ+wTWEw/mQcWmhb3OjkRgkYCb2UV7t4t+2ZCRzuNCzfj6100YO6/Sj4yBI5oDVIPb/MJu/VsquBSuogDI48yLV6RU4zX"
-          },
-          "params": {},
-          "query": {
-            "data.id": "1346742825",
-            "type": "payment"
-          },
-          "body": {
-            "action": "payment.created",
-            "api_version": "v1",
-            "data": {
-              "id": "1346742825"
-            },
-            "date_created": "2026-05-22T03:19:02Z",
-            "id": 132348885523,
-            "live_mode": false,
-            "type": "payment",
-            "user_id": "3153242687"
-          },
-          "webhookUrl": "http://localhost:5678/webhook/payment-notification",
-          "executionMode": "production"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ]
-  },
+  
   "connections": {
     "Webhook - Notificación MP": {
       "main": [

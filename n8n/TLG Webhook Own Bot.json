@@ -1221,58 +1221,7 @@
       }
     }
   ],
-  "pinData": {
-    "Webhook Own Bot": [
-      {
-        "json": {
-          "headers": {
-            "host": "webhook.mitiendavirtual.cl",
-            "content-length": "313",
-            "accept-encoding": "gzip, br",
-            "cdn-loop": "cloudflare; loops=1",
-            "cf-connecting-ip": "91.108.5.35",
-            "cf-ipcountry": "NL",
-            "cf-ray": "9ff761229eeafebb-AMS",
-            "cf-visitor": "{\"scheme\":\"https\"}",
-            "cf-warp-tag-id": "25fb36c4-be2f-495a-ad47-f72146c5307a",
-            "connection": "keep-alive",
-            "content-type": "application/json",
-            "x-forwarded-for": "91.108.5.35",
-            "x-forwarded-proto": "https",
-            "x-telegram-bot-api-secret-token": "6dde7fb1-4037-4bfc-bc66-b9c6cad44ee1"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "update_id": 236085754,
-            "message": {
-              "message_id": 46,
-              "from": {
-                "id": 7612723970,
-                "is_bot": false,
-                "first_name": "Felipe",
-                "last_name": "Gómez",
-                "language_code": "es"
-              },
-              "chat": {
-                "id": 7612723970,
-                "first_name": "Felipe",
-                "last_name": "Gómez",
-                "type": "private"
-              },
-              "date": 1779406336,
-              "text": "Hola que planes tiene para contratar"
-            }
-          },
-          "webhookUrl": "http://localhost:5678/webhook/telegram-own",
-          "executionMode": "production"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ]
-  },
+  
   "connections": {
     "Webhook Own Bot": {
       "main": [

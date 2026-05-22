@@ -1361,57 +1361,7 @@
       }
     }
   ],
-  "pinData": {
-    "Webhook Telegram Central": [
-      {
-        "json": {
-          "headers": {
-            "host": "webhook.mitiendavirtual.cl",
-            "content-length": "282",
-            "accept-encoding": "gzip, br",
-            "cdn-loop": "cloudflare; loops=1",
-            "cf-connecting-ip": "91.108.5.112",
-            "cf-ipcountry": "NL",
-            "cf-ray": "9ff8a4026c293466-AMS",
-            "cf-visitor": "{\"scheme\":\"https\"}",
-            "cf-warp-tag-id": "25fb36c4-be2f-495a-ad47-f72146c5307a",
-            "connection": "keep-alive",
-            "content-type": "application/json",
-            "x-forwarded-for": "91.108.5.112",
-            "x-forwarded-proto": "https"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "update_id": 755188896,
-            "message": {
-              "message_id": 174,
-              "from": {
-                "id": 7612723970,
-                "is_bot": false,
-                "first_name": "Felipe",
-                "last_name": "Gómez",
-                "language_code": "es"
-              },
-              "chat": {
-                "id": 7612723970,
-                "first_name": "Felipe",
-                "last_name": "Gómez",
-                "type": "private"
-              },
-              "date": 1779419561,
-              "text": "Hola"
-            }
-          },
-          "webhookUrl": "http://localhost:5678/webhook/telegram-central",
-          "executionMode": "production"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ]
-  },
+  
   "connections": {
     "Webhook Telegram Central": {
       "main": [

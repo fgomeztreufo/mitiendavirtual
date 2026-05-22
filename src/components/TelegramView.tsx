@@ -273,6 +273,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
 
   const isTelegramConnected = !!(telegramConfig?.telegram_chat_id || ownBotInfo?.bot_type === 'own' && ownBotInfo?.bot_username)
   const limitReached = messagesLimit !== null && messagesUsedTl >= messagesLimit
+  const canDisconnectOwnBot = ownBotInfo?.bot_type === 'own'
 
   // Clases del card Estado del Bot (evita ternarios anidados en JSX)
   let statusCardBg: string
@@ -331,7 +332,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
               </>
             )}
           </div>
-          {isTelegramConnected && (
+          {canDisconnectOwnBot && (
             <button
               className="w-full text-center text-[10px] text-red-400/80 cursor-pointer hover:text-red-400 transition-colors bg-transparent border-0"
               onClick={disconnectOwnBot}
