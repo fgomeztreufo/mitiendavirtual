@@ -270,10 +270,11 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   let barColor = '#6366f1'
   if (usagePct > 85) barColor = '#ef4444'
   else if (usagePct > 60) barColor = '#f59e0b'
-
-  const isTelegramConnected = !!(telegramConfig?.telegram_chat_id || ownBotInfo?.bot_type === 'own' && ownBotInfo?.bot_username)
+  const hasNotificationChat = !!telegramConfig?.telegram_chat_id
+  const hasOwnBot = ownBotInfo?.bot_type === 'own' && ownBotInfo?.bot_username
+  const isTelegramConnected = !!hasOwnBot
   const limitReached = messagesLimit !== null && messagesUsedTl >= messagesLimit
-  const canDisconnectOwnBot = ownBotInfo?.bot_type === 'own'
+  const canDisconnectOwnBot = !!hasOwnBot
 
   // Clases del card Estado del Bot (evita ternarios anidados en JSX)
   let statusCardBg: string
@@ -285,11 +286,16 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
     statusDotClass = 'bg-red-500'
     statusTextClass = 'text-red-400'
     statusLabel = 'Bot Pausado'
-  } else if (isTelegramConnected) {
+  } else if (hasOwnBot) {
     statusCardBg = 'bg-emerald-900/20 border-emerald-700/30'
     statusDotClass = 'bg-emerald-400 shadow-[0_0_8px_2px_rgba(52,211,153,0.5)]'
     statusTextClass = 'text-emerald-400'
     statusLabel = 'Telegram Conectado'
+  } else if (hasNotificationChat) {
+    statusCardBg = 'bg-sky-900/10 border-sky-500/20'
+    statusDotClass = 'bg-sky-400'
+    statusTextClass = 'text-sky-300'
+    statusLabel = 'Notificaciones activas'
   } else {
     statusCardBg = 'bg-gray-900/60 border-white/5'
     statusDotClass = 'bg-gray-600'
