@@ -73,20 +73,30 @@ export default async function handler(req, res) {
   }
 
   // Proxy behavior: forward the incoming request to the configured n8n endpoint.
-  // This file acts as a passthrough; n8n will be the single orchestrator for the link-start flow.
+  // Ensure we forward the Authorization header and include `user_id` and `user_token`
+  // in the forwarded body so n8n can act as the single orchestrator.
   if (!N8N_LINK_START_URL) {
     console.error('N8N_LINK_START_URL not configured; cannot proxy to n8n.')
     return res.status(500).json({ message: 'N8N_LINK_START_URL not configured' })
   }
 
   try {
+    // Derive a user token from the Authorization header if present
+    const bearerToken = authHeader && String(authHeader).startsWith('Bearer ') ? String(authHeader).slice(7) : (authHeader || '')
+
+    // Build the forwarded body: include original body, ensure user_id and user_token present
+    const forwardBody = Object.assign({}, (body && typeof body === 'object') ? body : {})
+    if (!forwardBody.user_id && userId) forwardBody.user_id = userId
+    if (!forwardBody.user_token && bearerToken) forwardBody.user_token = bearerToken
+
+    const forwardHeaders = { 'Content-Type': 'application/json' }
+    // Forward original Authorization header if present
+    if (authHeader) forwardHeaders.Authorization = authHeader
+
     const forwardRes = await fetch(N8N_LINK_START_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(authHeader ? { Authorization: authHeader } : {})
-      },
-      body: JSON.stringify(body || {})
+      headers: forwardHeaders,
+      body: JSON.stringify(forwardBody)
     })
 
     const responseText = await forwardRes.text()
