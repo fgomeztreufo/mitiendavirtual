@@ -37,6 +37,8 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   const [planMessagesLimit, setPlanMessagesLimit] = useState<number | null>(null)
 
   const [botChoice, setBotChoice] = useState<'platform' | 'own'>('platform')
+  const [tokenConnected, setTokenConnected] = useState(false)
+  const [lastTokenRow, setLastTokenRow] = useState<any | null>(null)
 
   useEffect(() => {
     if (session?.user?.id) fetchConfigs()
@@ -111,6 +113,32 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
 
       if (error) throw error
       setConfigs(data || [])
+
+      // También comprobamos la tabla telegram_link_tokens para determinar
+      // si el usuario ya está "conectado" según la regla: existe una
+      // fila con user_id, used = true y telegram_username = 'admin'.
+      try {
+        const { data: tkData, error: tkErr } = await supabase
+          .from('telegram_link_tokens')
+          .select('id, token, chat_id, telegram_username, used, created_at')
+          .eq('user_id', session.user.id)
+          .eq('telegram_username', 'admin')
+          .eq('used', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
+
+        if (!tkErr && tkData && tkData.length > 0) {
+          setTokenConnected(true)
+          setLastTokenRow(tkData[0])
+        } else {
+          setTokenConnected(false)
+          setLastTokenRow(null)
+        }
+      } catch (e) {
+        console.error('Error checking telegram_link_tokens', e)
+        setTokenConnected(false)
+        setLastTokenRow(null)
+      }
     } catch (err) {
       console.error('Error:', err)
     } finally {
@@ -325,7 +353,9 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   else if (usagePct > 60) barColor = '#f59e0b'
   const hasNotificationChat = !!telegramConfig?.telegram_chat_id
   const hasOwnBot = ownBotInfo?.bot_type === 'own' && ownBotInfo?.bot_username
-  const isTelegramConnected = !!hasOwnBot
+  // También consideramos conectado si existe un token en telegram_link_tokens
+  // con used = true y telegram_username = 'admin' (regla solicitada).
+  const isTelegramConnected = !!hasOwnBot || tokenConnected
   const limitReached = messagesLimit !== null && messagesUsedTl >= messagesLimit
   const canDisconnectOwnBot = !!hasOwnBot
 
@@ -339,7 +369,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
     statusDotClass = 'bg-red-500'
     statusTextClass = 'text-red-400'
     statusLabel = 'Bot Pausado'
-  } else if (hasOwnBot) {
+  } else if (hasOwnBot || tokenConnected) {
     statusCardBg = 'bg-emerald-900/20 border-emerald-700/30'
     statusDotClass = 'bg-emerald-400 shadow-[0_0_8px_2px_rgba(52,211,153,0.5)]'
     statusTextClass = 'text-emerald-400'
