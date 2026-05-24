@@ -72,8 +72,9 @@ export default async function handler(req, res) {
     }
   }
 
-  // If we have a user id, generate a one-time token and persist it.
-  // Behaviour: if a token row already exists for this user, update that row (no duplicates).
+  // If we have a user id, generate or reuse a single one-time token and persist it.
+  // Behaviour: reuse an existing active token for this user when possible, update a single row,
+  // and cleanup any duplicates so we keep exactly one row per user.
   if (userId) {
     const token = randomBytes(24).toString('hex')
     const expiresAt = new Date(Date.now() + (body?.expires_in ? Number(body.expires_in) * 1000 : 10 * 60 * 1000))
@@ -82,53 +83,92 @@ export default async function handler(req, res) {
       let persisted = false
       let row = null
 
-      // 1) Try to update existing rows for this user via supabaseAdmin (if available)
+      // 0) Try to find an existing row for this user and reuse/update it (supabaseAdmin preferred)
       if (supabaseAdmin) {
         try {
-          const { data: updatedRows, error: updateError } = await supabaseAdmin
+          const { data: existingRows, error: selErr } = await supabaseAdmin
             .from('telegram_link_tokens')
-            .update({ token, expires_at: expiresAt.toISOString(), used: false })
+            .select('*')
             .eq('user_id', userId)
-            .select()
+            .order('created_at', { ascending: false })
+            .limit(1)
 
-          if (updateError) {
-            console.warn('[telegram-link-start] supabaseAdmin update error', updateError)
-          } else if (updatedRows && updatedRows.length > 0) {
-            row = Array.isArray(updatedRows) ? updatedRows[0] : updatedRows
-            persisted = true
-            console.log('[telegram-link-start] updated existing token via supabaseAdmin', { id: row?.id })
+          const existing = Array.isArray(existingRows) && existingRows.length > 0 ? existingRows[0] : existingRows
+          if (!selErr && existing) {
+            // If found and still valid (not used and not expired) return it
+            if (!existing.used && existing.expires_at && new Date(existing.expires_at) > new Date()) {
+              row = existing
+              persisted = true
+              console.log('[telegram-link-start] reusing existing token', { id: row?.id })
+            } else {
+              // Update the chosen existing row with a fresh token/expiry
+              try {
+                const { data: updated, error: updateErr } = await supabaseAdmin
+                  .from('telegram_link_tokens')
+                  .update({ token, expires_at: expiresAt.toISOString(), used: false })
+                  .eq('id', existing.id)
+                  .select()
+
+                if (!updateErr && updated) {
+                  row = Array.isArray(updated) ? updated[0] : updated
+                  persisted = true
+                  console.log('[telegram-link-start] updated existing token via supabaseAdmin', { id: row?.id })
+                }
+              } catch (err) {
+                console.warn('[telegram-link-start] supabaseAdmin update threw', err)
+              }
+            }
           }
         } catch (err) {
-          console.warn('[telegram-link-start] supabaseAdmin update threw', err)
+          console.warn('[telegram-link-start] supabaseAdmin select threw', err)
         }
       }
 
-      // 2) If no existing row updated, try REST PATCH (service role) to update any existing row
+      // 1) If still not persisted, attempt REST GET/PATCH fallback to reuse or update an existing row
       if (!persisted && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
         try {
-          const restUrl = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/telegram_link_tokens?user_id=eq.${userId}`
-          const resp = await fetch(restUrl, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-              Prefer: 'return=representation'
-            },
-            body: JSON.stringify({ token, expires_at: expiresAt.toISOString(), used: false })
+          const restGet = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/telegram_link_tokens?user_id=eq.${userId}`
+          const resp = await fetch(restGet, {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` }
           })
-
           const json = await resp.json().catch(() => null)
-          if (resp.ok && json && (Array.isArray(json) ? json.length > 0 : true)) {
-            row = Array.isArray(json) ? json[0] : json
-            persisted = true
-            console.log('[telegram-link-start] updated existing token via REST', { id: row?.id })
+          if (resp.ok && json && Array.isArray(json) && json.length > 0) {
+            const existing = json[0]
+            if (!existing.used && existing.expires_at && new Date(existing.expires_at) > new Date()) {
+              row = existing
+              persisted = true
+              console.log('[telegram-link-start] reusing existing token via REST', { id: row?.id })
+            } else {
+              // Patch the first existing row
+              try {
+                const patchUrl = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/telegram_link_tokens?id=eq.${existing.id}`
+                const patchRes = await fetch(patchUrl, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                    Prefer: 'return=representation'
+                  },
+                  body: JSON.stringify({ token, expires_at: expiresAt.toISOString(), used: false })
+                })
+                const patched = await patchRes.json().catch(() => null)
+                if (patchRes.ok) {
+                  row = Array.isArray(patched) ? patched[0] : patched
+                  persisted = true
+                  console.log('[telegram-link-start] patched existing row via REST', { id: row?.id })
+                }
+              } catch (err) {
+                console.warn('[telegram-link-start] REST patch threw', err)
+              }
+            }
           }
         } catch (err) {
-          console.warn('[telegram-link-start] REST patch threw', err)
+          console.warn('[telegram-link-start] REST select threw', err)
         }
       }
 
-      // 3) If still not persisted, insert a fresh row (using supabaseAdmin or REST fallback)
+      // 2) If still not persisted, insert a fresh row (preferring supabaseAdmin)
       if (!persisted) {
         if (supabaseAdmin) {
           try {
@@ -177,24 +217,19 @@ export default async function handler(req, res) {
         }
       }
 
-      const url = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${token}`
-
       // fire-and-forget notify to n8n (keeps backward compatibility without blocking)
+      const finalToken = row?.token || token
+      const url = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${finalToken}`
       if (N8N_LINK_START_URL) {
         try {
           void fetch(N8N_LINK_START_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...(authHeader ? { Authorization: authHeader } : {}) },
-            body: JSON.stringify({ ...(body || {}), token })
+            body: JSON.stringify({ ...(body || {}), token: finalToken })
           })
         } catch (err) {
           console.warn('Failed forwarding new token to n8n (ignored)', err)
         }
-      }
-
-      if (!persisted) {
-        console.warn('[telegram-link-start] token generated but not persisted')
-        return res.status(200).json({ url, token, persisted: false })
       }
 
       // Cleanup duplicates: delete any other rows for this user, keep the current one
@@ -226,7 +261,12 @@ export default async function handler(req, res) {
         console.warn('[telegram-link-start] cleanup failed', err)
       }
 
-      return res.status(200).json({ url, token, persisted: true })
+      if (!persisted) {
+        console.warn('[telegram-link-start] token generated but not persisted')
+        return res.status(200).json({ url, token: finalToken, persisted: false })
+      }
+
+      return res.status(200).json({ url, token: finalToken, persisted: true })
     } catch (err) {
       console.error('Error creating/updating telegram link token', err)
       // fall through to forwarding
