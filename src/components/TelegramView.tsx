@@ -29,6 +29,10 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   const [botToken, setBotToken] = useState('')
   const [ownBotInfo, setOwnBotInfo] = useState<OwnBotInfo | null>(null)
 
+  // Deep-link for platform bot (used in Basic plan to avoid asking store name)
+  const [platformDeepLink, setPlatformDeepLink] = useState<string | null>(null)
+  const [platformLinkLoading, setPlatformLinkLoading] = useState(false)
+
   const planCode = normalizePlanType(profile?.plan_type)
   const [planMessagesLimit, setPlanMessagesLimit] = useState<number | null>(null)
 
@@ -191,6 +195,55 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
       Swal.fire('Error', 'Ocurrió un error al generar el enlace.', 'error')
     } finally {
       setLinking(false)
+    }
+  }
+
+  // Generate a deep-link for the shared platform bot that includes the start token.
+  async function generatePlatformDeepLink(force = false) {
+    if (!session?.user?.id) return
+    if (!force && platformDeepLink) return
+    const accessToken = (session as any)?.access_token || (session as any)?.accessToken || ''
+    if (!accessToken) return
+
+    try {
+      setPlatformLinkLoading(true)
+      const res = await fetch(`${API_BASE}/telegram-link-start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({ user_id: session.user.id })
+      })
+      const json = await res.json().catch(() => ({}))
+      if (res.ok && json.url) {
+        setPlatformDeepLink(json.url)
+      } else {
+        console.error('No se pudo generar deep-link', json)
+      }
+    } catch (err) {
+      console.error('Error generando deep-link', err)
+    } finally {
+      setPlatformLinkLoading(false)
+    }
+  }
+
+  // Auto-generate the platform deep-link when a Basic user opens this view
+  useEffect(() => {
+    if (planCode === 'basic' && session?.user?.id) {
+      void generatePlatformDeepLink()
+    }
+  }, [planCode, session?.user?.id])
+
+  // Bind the platform bot to this store: generate deep-link and copy it
+  async function bindPlatformBot() {
+    await generatePlatformDeepLink(true)
+    if (platformDeepLink) {
+      try {
+        await navigator.clipboard.writeText(platformDeepLink)
+        Swal.fire('Vinculado', 'Enlace generado y copiado al portapapeles.', 'success')
+      } catch (err) {
+        Swal.fire('Vinculado', 'Enlace generado.', 'success')
+      }
+    } else {
+      Swal.fire('Error', 'No se pudo generar el enlace. Intenta nuevamente.', 'error')
     }
   }
 
@@ -425,20 +478,65 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
                 <button onClick={() => (goToPlans ? goToPlans() : window.dispatchEvent(new CustomEvent('changeTab', { detail: 'plans' })))} className="py-2 px-4 bg-blue-600 text-white rounded-xl text-sm">Actualizar a Pro</button>
               </div>
               <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700">
-                <p className="text-sm text-gray-300 mb-2 font-medium">QR para compartir con clientes</p>
-                <div className="flex items-center gap-4">
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent('https://t.me/mi_tienda_virtual_bot')}`}
-                    alt="QR Bot MiTiendaVirtual"
-                    className="w-32 h-32 rounded-lg bg-white p-1"
-                  />
-                  <div className="text-xs text-gray-400 space-y-1">
-                    <p>Los clientes abren este bot y escriben el nombre de tu tienda.</p>
-                    <a href="https://t.me/mi_tienda_virtual_bot" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
-                      t.me/mi_tienda_virtual_bot
-                    </a>
-                  </div>
-                </div>
+                    <p className="text-sm text-gray-300 mb-2 font-medium">QR para compartir con clientes</p>
+                    <div className="flex items-center gap-4">
+                      <div className="relative w-32 h-32">
+                        <img
+                          src={platformDeepLink ? `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(platformDeepLink)}` : `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent('https://t.me/mi_tienda_virtual_bot')}`}
+                          alt="QR Bot MiTiendaVirtual"
+                          className="w-32 h-32 rounded-lg bg-white p-1"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram" className="w-6 h-6" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-400 space-y-1">
+                        <p>{platformDeepLink ? 'Comparte este enlace para que tus clientes inicien conversación sin escribir el nombre de la tienda.' : 'Los clientes abren este bot y escriben el nombre de tu tienda.'}</p>
+                        {platformDeepLink ? (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <a href={platformDeepLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline break-all">
+                                {platformDeepLink}
+                              </a>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await navigator.clipboard.writeText(platformDeepLink)
+                                    Swal.fire('Copiado', 'Enlace copiado al portapapeles', 'success')
+                                  } catch (err) {
+                                    console.error('Clipboard error', err)
+                                    Swal.fire('Error', 'No se pudo copiar el enlace', 'error')
+                                  }
+                                }}
+                                className="ml-2 py-1 px-2 bg-indigo-600 text-white rounded text-xs"
+                              >
+                                Copiar
+                              </button>
+                            </div>
+                            <p className="mt-2">El enlace usa start params para identificar tu tienda automáticamente.</p>
+                            <div className="mt-2 flex gap-2">
+                              <button onClick={() => void generatePlatformDeepLink(true)} disabled={platformLinkLoading} className="py-1 px-3 rounded text-xs bg-gray-700 text-white">
+                                {platformLinkLoading ? 'Generando...' : 'Regenerar enlace'}
+                              </button>
+                              <button onClick={() => void bindPlatformBot()} className="py-1 px-3 rounded text-xs bg-indigo-600 text-white">
+                                Vincular bot
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <a href="https://t.me/mi_tienda_virtual_bot" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
+                              t.me/mi_tienda_virtual_bot
+                            </a>
+                            <button onClick={() => void bindPlatformBot()} className="ml-2 py-1 px-2 bg-indigo-600 text-white rounded text-xs">
+                              Vincular bot
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
               </div>
             </div>
           )}
