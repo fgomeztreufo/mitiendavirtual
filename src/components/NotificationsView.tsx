@@ -79,26 +79,9 @@ export default function NotificationsView({ session, profile }: any) {
             console.error('Toggle error:', updateError);
             Swal.fire('Error', 'No se pudo actualizar el estado.', 'error');
           } else {
-            fetchConfigs();
+            await fetchConfigs();
             if (!newActive) {
-              // Intentar limpiar tokens y credenciales asociadas (no bloquear si falla)
-              try {
-                const chatId = config?.config?.telegram_chat_id;
-                if (chatId) {
-                  const { error: delTokensErr } = await supabase.from('telegram_link_tokens').delete().eq('chat_id', String(chatId));
-                  if (delTokensErr) console.warn('No se pudo eliminar telegram_link_tokens por chat_id', delTokensErr);
-                } else {
-                  const { error: delTokensErr } = await supabase.from('telegram_link_tokens').delete().eq('user_id', session.user.id);
-                  if (delTokensErr) console.warn('No se pudo eliminar telegram_link_tokens por user_id', delTokensErr);
-                }
-
-                const { error: delCredsErr } = await supabase.from('integration_credentials').delete().eq('user_id', session.user.id).eq('provider', 'telegram');
-                if (delCredsErr) console.warn('No se pudo eliminar integration_credentials (telegram)', delCredsErr);
-              } catch (e) {
-                console.warn('Cleanup warning', e);
-              }
-
-              Swal.fire('Desconectado', 'Telegram ha sido desconectado y los datos de vinculación se eliminaron.', 'success');
+              Swal.fire('Desconectado', 'Telegram ha sido desactivado para este canal. Los registros de vinculación se conservaron para análisis.', 'success');
             }
           }
         } catch (err) {

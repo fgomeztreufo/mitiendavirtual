@@ -72,6 +72,28 @@ export default async function handler(req, res) {
     }
   }
 
+  // If we have a resolved user_id, check whether the user's instance already
+  // has a Telegram `bot_type: 'own'`. If so, block link-start to enforce
+  // exclusivity (only own bot OR platform bot can be active).
+  if (userId && supabaseAdmin) {
+    try {
+      const { data: instances, error } = await supabaseAdmin
+        .from('instances')
+        .select('channels')
+        .eq('user_id', userId)
+        .limit(1)
+
+      if (!error && Array.isArray(instances) && instances.length > 0) {
+        const channels = instances[0].channels || {}
+        if (channels && channels.telegram && channels.telegram.bot_type === 'own') {
+          return res.status(403).json({ message: 'Esta tienda tiene un bot propio activo; no puedes vincular con el bot compartido.' })
+        }
+      }
+    } catch (err) {
+      console.warn('telegram-link-start: instance check failed', err)
+    }
+  }
+
   // Proxy behavior: forward the incoming request to the configured n8n endpoint.
   // Ensure we forward the Authorization header and include `user_id` and `user_token`
   // in the forwarded body so n8n can act as the single orchestrator.

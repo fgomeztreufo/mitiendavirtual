@@ -6,6 +6,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL |
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || ''
 const SUPABASE_ENCRYPT_KEY = process.env.SUPABASE_ENCRYPT_KEY || process.env.SUPABASE_CREDENTIAL_ENCRYPT_KEY || ''
 const OWN_BOT_WEBHOOK_URL = process.env.OWN_BOT_WEBHOOK_URL || 'https://webhook.mitiendavirtual.cl/webhook/telegram-own'
+const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || ''
 
 function getMissingConfig() {
   const missing = []
@@ -138,6 +139,51 @@ async function upsertInstanceChannel(instanceId, channelData) {
   return patchRes.ok
 }
 
+// Deactivate any active platform link tokens for a user (used = true -> false)
+async function deactivateUserLinkTokens(userId) {
+  try {
+    const updateUrl = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/telegram_link_tokens?user_id=eq.${userId}&used=eq.true`
+    const patchRes = await fetch(updateUrl, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        Prefer: 'return=representation'
+      },
+      body: JSON.stringify({ used: false })
+    })
+
+    if (!patchRes.ok) {
+      const txt = await patchRes.text().catch(() => '')
+      console.warn('deactivateUserLinkTokens: failed to patch', patchRes.status, txt)
+      return
+    }
+
+    const updatedRows = await patchRes.json().catch(() => [])
+
+    // Notify central webhook so automation can stop processing messages
+    try {
+      if (N8N_WEBHOOK_URL) {
+        if (Array.isArray(updatedRows) && updatedRows.length > 0) {
+          // Notify per chat_id where available
+          for (const r of updatedRows) {
+            const body = { action: 'deactivate', user_id: userId, chat_id: r.chat_id || null }
+            await fetch(N8N_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+          }
+        } else {
+          const body = { action: 'deactivate', user_id: userId, chat_id: null }
+          await fetch(N8N_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        }
+      }
+    } catch (err) {
+      console.warn('deactivateUserLinkTokens: notify failed', err)
+    }
+  } catch (err) {
+    console.warn('deactivateUserLinkTokens error', err)
+  }
+}
+
 async function getInstanceForUser(userId) {
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/instances?user_id=eq.${userId}&select=id&limit=1`,
@@ -221,6 +267,13 @@ export default async function handler(req, res) {
       bot_username: botInfo.username,
       connected_at: new Date().toISOString()
     })
+
+    // Enforce exclusivity: deactivate any active platform link tokens for this user
+    try {
+      await deactivateUserLinkTokens(userId)
+    } catch (e) {
+      console.warn('Failed to deactivate platform link tokens after registering own bot', e)
+    }
 
     return res.status(200).json({
       ok: true,

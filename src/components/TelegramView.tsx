@@ -39,6 +39,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   const [botChoice, setBotChoice] = useState<'platform' | 'own'>('platform')
   const [tokenConnected, setTokenConnected] = useState(false)
   const [lastTokenRow, setLastTokenRow] = useState<any | null>(null)
+  const [disconnectingToken, setDisconnectingToken] = useState(false)
 
   useEffect(() => {
     if (session?.user?.id) fetchConfigs()
@@ -105,6 +106,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   }, [ownBotInfo, planCode])
 
   async function fetchConfigs() {
+    setLoading(true)
     try {
       const { data, error } = await supabase
         .from('user_notification_configs')
@@ -117,6 +119,8 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
       // También comprobamos la tabla telegram_link_tokens para determinar
       // si el usuario ya está "conectado" según la regla: existe una
       // fila con user_id, used = true y telegram_username = 'admin'.
+      // NOTE: used=true es la fuente de verdad para actividad; no eliminamos
+      // registros por política comercial.
       try {
         const { data: tkData, error: tkErr } = await supabase
           .from('telegram_link_tokens')
@@ -140,13 +144,17 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
         setLastTokenRow(null)
       }
     } catch (err) {
-      console.error('Error:', err)
+      console.error('Error fetching configs:', err)
+      setTokenConnected(false)
+      setLastTokenRow(null)
     } finally {
       setLoading(false)
     }
   }
 
+  // Start a link flow: generate a start token + show modal + poll for token use
   async function startTelegramLink() {
+    if (!session?.user?.id) return
     const accessToken = (session as any)?.access_token || (session as any)?.accessToken || ''
     if (!accessToken) return Swal.fire('Error', 'Sesión no válida. Vuelve a iniciar sesión.', 'error')
 
@@ -154,11 +162,31 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
       setLinking(true)
       const res = await fetch(`${API_BASE}/telegram-link-start`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
         body: JSON.stringify({ user_id: session.user.id })
       })
       const json = await res.json().catch(() => ({}))
-      if (!res.ok || !json.url) {
+      if (!res.ok) {
+        if (res.status === 403) {
+          // The backend blocks link-start when an own-bot is active. Offer to
+          // disconnect the own-bot so the user can use the shared bot instead.
+          const resp = await Swal.fire({
+            title: 'Bot propio activo',
+            html: `Esta tienda tiene un bot propio activo; no puedes vincular con el bot compartido.<br/><br/>¿Deseas desconectar el bot propio para usar el bot compartido?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Desconectar bot propio',
+            cancelButtonText: 'Cancelar'
+          })
+          if (resp.isConfirmed) {
+            // Disconnect without asking again, then retry the link-start
+            await disconnectOwnBot(true)
+            // Small delay to allow DB/webhook to settle before retrying
+            await new Promise(r => setTimeout(r, 800))
+            return startTelegramLink()
+          }
+          return
+        }
         Swal.fire('Error', json.message || 'No se pudo generar el enlace.', 'error')
         return
       }
@@ -184,7 +212,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
         cancelButtonText: 'Cancelar',
         didOpen: () => {
           let attempts = 0
-          const maxAttempts = 12 // 5s × 12 = 1 minuto
+          const maxAttempts = 100
           const interval = setInterval(async () => {
             attempts++
             try {
@@ -201,7 +229,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
                 return
               }
               const el = document.getElementById('tg-status')
-              if (el) el.textContent = `Esperando confirmación... (${attempts * 5}s)`
+              if (el) el.textContent = `Esperando confirmación... (${attempts * 3}s)`
             } catch { /* ignore */ }
 
             if (attempts >= maxAttempts) {
@@ -209,7 +237,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
               const el = document.getElementById('tg-status')
               if (el) el.textContent = '⏱ Tiempo agotado. Intenta de nuevo.'
             }
-          }, 5000)
+          }, 3000)
 
           (window as any)._tgPollInterval = interval
         },
@@ -304,19 +332,21 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
     }
   }
 
-  async function disconnectOwnBot() {
+  async function disconnectOwnBot(skipConfirm = false) {
     const accessToken = (session as any)?.access_token || (session as any)?.accessToken || ''
     if (!accessToken) return Swal.fire('Error', 'Sesión no válida.', 'error')
 
-    const confirm = await Swal.fire({
-      title: '¿Desconectar bot propio?',
-      text: 'Tu bot dejará de recibir mensajes. Se usará el bot de MiTiendaVirtual como respaldo.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Desconectar',
-      cancelButtonText: 'Cancelar'
-    })
-    if (!confirm.isConfirmed) return
+    if (!skipConfirm) {
+      const confirm = await Swal.fire({
+        title: '¿Desconectar bot propio?',
+        text: 'Tu bot dejará de recibir mensajes. Se usará el bot de MiTiendaVirtual como respaldo.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Desconectar',
+        cancelButtonText: 'Cancelar'
+      })
+      if (!confirm.isConfirmed) return
+    }
 
     try {
       setDisconnecting(true)
@@ -340,6 +370,55 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
     } finally {
       setDisconnecting(false)
     }
+  }
+
+  async function disconnectLinkToken() {
+    const confirm = await Swal.fire({
+      title: '¿Desconectar Telegram?',
+      text: 'La vinculación se eliminará y no recibirás más mensajes en este canal.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Desconectar',
+      cancelButtonText: 'Cancelar'
+    })
+    if (!confirm.isConfirmed) return
+
+      try {
+        setDisconnectingToken(true)
+
+        // Llamamos al endpoint que marca telegram_link_tokens.used = false
+        // para todos los tokens del usuario (incluyendo admin).
+        const accessToken = (session as any)?.access_token || (session as any)?.accessToken || ''
+        try {
+          const res = await fetch(`${API_BASE}/telegram-deactivate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+            body: JSON.stringify({ chat_id: telegramConfig?.telegram_chat_id || null })
+          })
+          const json = await res.json().catch(() => ({}))
+          if (!res.ok) {
+            console.error('telegram-deactivate failed', json)
+            Swal.fire('Error', json.message || 'No se pudo desvincular Telegram.', 'error')
+            return
+          }
+        } catch (e) {
+          console.error('Error calling telegram-deactivate', e)
+          Swal.fire('Error', 'Error al comunicarse con el servidor.', 'error')
+          return
+        }
+
+        // Refrescar configuración local
+        await fetchConfigs()
+        Swal.fire('Desconectado', 'Telegram ha sido desactivado para este canal. Los registros de vinculación se conservaron para análisis.', 'success')
+        setOwnBotInfo({ bot_type: 'platform' })
+        setBotChoice('platform')
+        if (onUpdate) onUpdate()
+      } catch (err) {
+        console.error(err)
+        Swal.fire('Error', 'Error al desactivar Telegram.', 'error')
+      } finally {
+        setDisconnectingToken(false)
+      }
   }
 
   const telegramConfig = configs.find(c => c.channel_type === 'telegram')
@@ -421,14 +500,22 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
               </>
             )}
           </div>
-          {canDisconnectOwnBot && (
+          {canDisconnectOwnBot ? (
             <button
               className="w-full text-center text-[10px] text-red-400/80 cursor-pointer hover:text-red-400 transition-colors bg-transparent border-0"
               onClick={disconnectOwnBot}
             >
               DESVINCULAR CUENTA
             </button>
-          )}
+          ) : tokenConnected ? (
+            <button
+              className="w-full text-center text-[10px] text-red-400/80 cursor-pointer hover:text-red-400 transition-colors bg-transparent border-0"
+              onClick={disconnectLinkToken}
+              disabled={disconnectingToken}
+            >
+              {disconnectingToken ? 'Desconectando...' : 'DESVINCULAR CUENTA'}
+            </button>
+          ) : null}
         </div>
 
         {/* CRÉDITOS MENSUALES */}
