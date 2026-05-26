@@ -70,6 +70,21 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
     }
   }, [instance])
 
+  // Helper to obtain a valid access token: prefer prop, fallback to supabase client session
+  async function getAccessToken(): Promise<string> {
+    const propToken = (session as any)?.access_token || (session as any)?.accessToken || ''
+    if (propToken) return propToken
+    try {
+      // supabase-js v2: auth.getSession()
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const { data } = await supabase.auth.getSession()
+      return data?.session?.access_token || data?.session?.accessToken || ''
+    } catch (e) {
+      return ''
+    }
+  }
+
   // Downgrade protection: allow own bots for Basic/Pro/Full, auto-disconnect otherwise
   useEffect(() => {
     if (
@@ -155,7 +170,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   // Start a link flow: generate a start token + show modal + poll for token use
   async function startTelegramLink() {
     if (!session?.user?.id) return
-    const accessToken = (session as any)?.access_token || (session as any)?.accessToken || ''
+    const accessToken = await getAccessToken()
     if (!accessToken) return Swal.fire('Error', 'Sesión no válida. Vuelve a iniciar sesión.', 'error')
 
     try {
@@ -258,7 +273,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   async function generatePlatformDeepLink(force = false) {
     if (!session?.user?.id) return
     if (!force && platformDeepLink) return
-    const accessToken = (session as any)?.access_token || (session as any)?.accessToken || ''
+    const accessToken = await getAccessToken()
     if (!accessToken) return
 
     try {
@@ -305,7 +320,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
 
   async function saveBotToken() {
     if (!botToken) return Swal.fire('Error', 'Ingresa el token del bot.', 'warning')
-    const accessToken = (session as any)?.access_token || (session as any)?.accessToken || ''
+    const accessToken = await getAccessToken()
     if (!accessToken) return Swal.fire('Error', 'Sesión no válida. Vuelve a iniciar sesión.', 'error')
 
     try {
@@ -333,7 +348,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   }
 
   async function disconnectOwnBot(skipConfirm = false) {
-    const accessToken = (session as any)?.access_token || (session as any)?.accessToken || ''
+    const accessToken = await getAccessToken()
     if (!accessToken) return Swal.fire('Error', 'Sesión no válida.', 'error')
 
     if (!skipConfirm) {
@@ -388,7 +403,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
 
         // Llamamos al endpoint que marca telegram_link_tokens.used = false
         // para todos los tokens del usuario (incluyendo admin).
-        const accessToken = (session as any)?.access_token || (session as any)?.accessToken || ''
+        const accessToken = await getAccessToken()
         try {
           const res = await fetch(`${API_BASE}/telegram-deactivate`, {
             method: 'POST',
