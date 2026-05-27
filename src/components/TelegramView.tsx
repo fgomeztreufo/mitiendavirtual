@@ -702,34 +702,70 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
                     <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700">
                       <p className="text-sm text-gray-300 mb-2 font-medium">QR del bot de plataforma</p>
                         <div className="flex items-center gap-4">
-                          <img
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent('https://t.me/mi_tienda_virtual_bot')}`}
-                            alt="QR Bot MiTiendaVirtual"
-                            className="w-32 h-32 rounded-lg bg-white p-1"
-                          />
+                          <div className="relative w-32 h-32">
+                            <img
+                              src={platformDeepLink ? 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(platformDeepLink) : 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent('https://t.me/mi_tienda_virtual_bot')}
+                              alt="QR Bot MiTiendaVirtual"
+                              className="w-32 h-32 rounded-lg bg-white p-1"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow z-30">
+                                {/* Inline SVG fallback: garantiza visibilidad aunque la imagen externa falle */}
+                              <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram" className="w-6 h-6" />
+                              </div>
+                            </div>
+                          </div>
                           <div className="text-xs text-gray-400 space-y-1">
-                            <p>Bot compartido de MiTiendaVirtual.</p>
-                            <p>Los clientes entran y escriben el nombre de tu tienda para conectarse.</p>
-                            <a href="https://t.me/mi_tienda_virtual_bot" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
-                              t.me/mi_tienda_virtual_bot
-                            </a>
-
-                            <div className="mt-3 flex gap-2">
+                        <p>{platformDeepLink ? 'Comparte este enlace para que tus clientes inicien conversación sin escribir el nombre de la tienda.' : 'Los clientes abren este bot y escriben el nombre de tu tienda.'}</p>
+                        {platformDeepLink ? (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <a href={platformDeepLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline break-all">
+                                {platformDeepLink}
+                              </a>
                               <button
-                                onClick={bindPlatformBot}
-                                disabled={platformLinkLoading}
-                                className={`py-2 px-3 rounded-xl text-sm ${platformLinkLoading ? 'bg-gray-700 text-gray-300' : 'bg-blue-600 text-white'}`}>
-                                {platformLinkLoading ? 'Generando...' : 'Compartir enlace con token'}
+                                onClick={async () => {
+                                  try {
+                                    await navigator.clipboard.writeText(platformDeepLink)
+                                    Swal.fire('Copiado', 'Enlace copiado al portapapeles', 'success')
+                                  } catch (err) {
+                                    console.error('Clipboard error', err)
+                                    Swal.fire('Error', 'No se pudo copiar el enlace', 'error')
+                                  }
+                                }}
+                                className="ml-2 py-1 px-2 bg-indigo-600 text-white rounded text-xs"
+                              >
+                                Copiar
                               </button>
-
-                              <button
-                                onClick={regeneratePlatformToken}
-                                disabled={platformLinkLoading}
-                                className="py-2 px-3 rounded-xl text-sm border border-gray-700 text-gray-300 hover:bg-white/5">
-                                Regenerar token
+                            </div>
+                            <p className="mt-2">El enlace usa start params para identificar tu tienda automáticamente.</p>
+                            <div className="mt-2 flex gap-2">
+                              <button onClick={() => void bindPlatformBot()} className="py-1 px-3 rounded text-xs bg-indigo-600 text-white">
+                                Compartir enlace con token
+                              </button>
+                              <button onClick={() => void regeneratePlatformToken()} disabled={platformLinkLoading} className="py-1 px-3 rounded text-xs bg-gray-700 text-white">
+                                {platformLinkLoading ? 'Generando...' : 'Regenerar token'}
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <div className="flex items-center gap-2 break-words">
+                              <a href="https://t.me/mi_tienda_virtual_bot" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
+                                t.me/mi_tienda_virtual_bot
+                              </a>
+                            </div>
+                            <div className="flex gap-2">
+                              <button onClick={() => void bindPlatformBot()} className="py-1 px-3 rounded text-xs bg-indigo-600 text-white">
+                                Compartir enlace con token
+                              </button>
+                              <button onClick={() => void regeneratePlatformToken()} disabled={platformLinkLoading} className="py-1 px-3 rounded text-xs bg-gray-700 text-white">
+                                {platformLinkLoading ? 'Generando...' : 'Regenerar token'}
                               </button>
                             </div>
                           </div>
+                        )}
+                      </div>
                         </div>
                     </div>
                   )}
