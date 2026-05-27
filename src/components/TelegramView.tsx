@@ -681,7 +681,6 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
                   <div className="mb-4 flex gap-2">
                     <button type="button" onClick={() => {
                       setBotChoice('platform')
-                      void startTelegramLink()
                     }} className={`py-2 px-4 rounded-xl text-sm ${botChoice === 'platform' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300'}`}>
                       Usar bot de MiTiendaVirtual
                     </button>
