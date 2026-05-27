@@ -270,11 +270,13 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   }
 
   // Generate a deep-link for the shared platform bot that includes the start token.
+  // Generate a deep-link for the shared platform bot that includes the start token.
+  // Returns the JSON payload returned by the API (e.g. { url, token }) or null.
   async function generatePlatformDeepLink(force = false) {
-    if (!session?.user?.id) return
-    if (!force && platformDeepLink) return
+    if (!session?.user?.id) return null
+    if (!force && platformDeepLink) return { url: platformDeepLink }
     const accessToken = await getAccessToken()
-    if (!accessToken) return
+    if (!accessToken) return null
 
     try {
       setPlatformLinkLoading(true)
@@ -286,11 +288,14 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
       const json = await res.json().catch(() => ({}))
       if (res.ok && json.url) {
         setPlatformDeepLink(json.url)
+        return json
       } else {
         console.error('No se pudo generar deep-link', json)
+        return null
       }
     } catch (err) {
       console.error('Error generando deep-link', err)
+      return null
     } finally {
       setPlatformLinkLoading(false)
     }
@@ -305,10 +310,18 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
 
   // Bind the platform bot to this store: generate deep-link and copy it
   async function bindPlatformBot() {
-    await generatePlatformDeepLink(true)
-    if (platformDeepLink) {
+    const result = await generatePlatformDeepLink(true)
+    const url = result?.url
+    if (url) {
       try {
-        await navigator.clipboard.writeText(platformDeepLink)
+        if ((navigator as any).share) {
+          try {
+            await (navigator as any).share({ title: 'Enlace Telegram', text: 'Enlace para conectar tu tienda', url })
+            Swal.fire('Compartido', 'Enlace compartido vía el diálogo del dispositivo.', 'success')
+            return
+          } catch { /* fall back to clipboard */ }
+        }
+        await navigator.clipboard.writeText(url)
         Swal.fire('Vinculado', 'Enlace generado y copiado al portapapeles.', 'success')
       } catch (err) {
         Swal.fire('Vinculado', 'Enlace generado.', 'success')
@@ -316,6 +329,24 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
     } else {
       Swal.fire('Error', 'No se pudo generar el enlace. Intenta nuevamente.', 'error')
     }
+  }
+
+  async function regeneratePlatformToken() {
+    const result = await generatePlatformDeepLink(true)
+    const url = result?.url
+    if (!url) {
+      Swal.fire('Error', 'No se pudo regenerar el enlace.', 'error')
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch {}
+    Swal.fire({
+      title: 'Enlace regenerado',
+      html: `<div class="break-words text-left">Nuevo enlace: <a href="${url}" target="_blank" class="underline text-blue-400">${url}</a></div>`,
+      icon: 'success',
+      confirmButtonText: 'Copiado al portapapeles'
+    })
   }
 
   async function saveBotToken() {
@@ -670,20 +701,36 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
                   ) : (
                     <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700">
                       <p className="text-sm text-gray-300 mb-2 font-medium">QR del bot de plataforma</p>
-                      <div className="flex items-center gap-4">
-                        <img
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent('https://t.me/mi_tienda_virtual_bot')}`}
-                          alt="QR Bot MiTiendaVirtual"
-                          className="w-32 h-32 rounded-lg bg-white p-1"
-                        />
-                        <div className="text-xs text-gray-400 space-y-1">
-                          <p>Bot compartido de MiTiendaVirtual.</p>
-                          <p>Los clientes entran y escriben el nombre de tu tienda para conectarse.</p>
-                          <a href="https://t.me/mi_tienda_virtual_bot" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
-                            t.me/mi_tienda_virtual_bot
-                          </a>
+                        <div className="flex items-center gap-4">
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent('https://t.me/mi_tienda_virtual_bot')}`}
+                            alt="QR Bot MiTiendaVirtual"
+                            className="w-32 h-32 rounded-lg bg-white p-1"
+                          />
+                          <div className="text-xs text-gray-400 space-y-1">
+                            <p>Bot compartido de MiTiendaVirtual.</p>
+                            <p>Los clientes entran y escriben el nombre de tu tienda para conectarse.</p>
+                            <a href="https://t.me/mi_tienda_virtual_bot" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
+                              t.me/mi_tienda_virtual_bot
+                            </a>
+
+                            <div className="mt-3 flex gap-2">
+                              <button
+                                onClick={bindPlatformBot}
+                                disabled={platformLinkLoading}
+                                className={`py-2 px-3 rounded-xl text-sm ${platformLinkLoading ? 'bg-gray-700 text-gray-300' : 'bg-blue-600 text-white'}`}>
+                                {platformLinkLoading ? 'Generando...' : 'Compartir enlace con token'}
+                              </button>
+
+                              <button
+                                onClick={regeneratePlatformToken}
+                                disabled={platformLinkLoading}
+                                className="py-2 px-3 rounded-xl text-sm border border-gray-700 text-gray-300 hover:bg-white/5">
+                                Regenerar token
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                      </div>
                     </div>
                   )}
                 </>
