@@ -36,7 +36,7 @@ export default function Dashboard({ session }: { session: Session }) {
   // Plan access helpers (evaluated after profile loads)
   const planCode = normalizePlanType(profile?.plan_type)
   const hasTelegram = ['basic', 'pro', 'full'].includes(planCode)
-  const hasWhatsApp = false // próximamente para todos
+  const hasWhatsApp = true // habilitado para pruebas
 
   // Manejo de alertas por URL (Pagos o Conexiones)
   useEffect(() => {

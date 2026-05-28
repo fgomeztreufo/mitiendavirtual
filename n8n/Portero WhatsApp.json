@@ -1,0 +1,98 @@
+{
+  "name": "Portero WhatsApp",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "whatsapp-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2a37764f-ffce-4745-8e6d-d3ca6a2cf5c3",
+      "name": "Webhook",
+      "webhookId": "2d712af3-e775-44ec-aa9a-f7753f1fcb5f"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query[\"hub.challenge\"] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        208,
+        0
+      ],
+      "id": "0af86cab-8b75-4c09-addc-8ed06ee20f2d",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "webhook.mitiendavirtual.cl",
+            "user-agent": "facebookplatform/1.0 (+http://developers.facebook.com)",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1",
+            "cf-connecting-ip": "2a03:2880:12ff:2::",
+            "cf-ipcountry": "US",
+            "cf-ray": "a028968228dd55cb-DFW",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-warp-tag-id": "25fb36c4-be2f-495a-ad47-f72146c5307a",
+            "connection": "keep-alive",
+            "x-forwarded-for": "2a03:2880:12ff:2::",
+            "x-forwarded-proto": "https"
+          },
+          "params": {},
+          "query": {
+            "hub.mode": "subscribe",
+            "hub.challenge": "2065804648",
+            "hub.verify_token": "ChileNoruega.2026",
+            "hub_mode": "subscribe",
+            "hub_challenge": "2065804648",
+            "hub_verify_token": "ChileNoruega.2026"
+          },
+          "body": {},
+          "webhookUrl": "http://localhost:5678/webhook/whatsapp-webhook",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "0743aab7-be4b-4a95-9b1d-fe72b5df968d",
+  "meta": {
+    "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
+  },
+  "id": "rwLQswOuIhx3BbVCOjf97",
+  "tags": []
+}
