@@ -3,7 +3,7 @@
 
 function n8nUrl(path) {
   return process.env['N8N_WPP_' + path.replace(/-/g, '_').toUpperCase() + '_URL']
-    || (process.env.N8N_WEBHOOK_URL || '').replace(/\/$/, '') + '/' + path
+    || (process.env.N8N_WPP_WEBHOOK_URL || process.env.N8N_WEBHOOK_URL || '').replace(/\/$/, '') + '/' + path
 }
 
 async function parseBody(req) {
@@ -18,6 +18,9 @@ async function parseBody(req) {
 
 export default async function handler(req, res) {
   const auth = req.headers.authorization || ''
+
+  try { console.log('whatsapp-link-start handler invoked, method=', req.method) } catch (e) {}
+
 
   if (req.method === 'GET') {
     const url = n8nUrl('wpp-status')

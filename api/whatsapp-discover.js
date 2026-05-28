@@ -5,12 +5,22 @@ const _placeholder = null
 
 function n8nUrl(path) {
   return process.env['N8N_WPP_' + path.replace(/-/g, '_').toUpperCase() + '_URL']
-    || (process.env.N8N_WEBHOOK_URL || '').replace(/\/$/, '') + '/' + path
+    || (process.env.N8N_WPP_WEBHOOK_URL || process.env.N8N_WEBHOOK_URL || '').replace(/\/$/, '') + '/' + path
 }
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ message: 'Method Not Allowed' })
   const url = n8nUrl('wpp-discover')
+  try {
+    console.log('whatsapp-discover proxy target:', url)
+  } catch (e) {}
+  // allow quick inspection without proxying
+  try {
+    const params = new URL('http://localhost' + (req.url || '')).searchParams
+    if (params.get('inspect') === '1') {
+      return res.status(200).json({ n8n_url: url, has_N8N_WPP_WEBHOOK_URL: !!process.env.N8N_WPP_WEBHOOK_URL, has_N8N_WEBHOOK_URL: !!process.env.N8N_WEBHOOK_URL })
+    }
+  } catch (e) {}
   if (!url.startsWith('http')) return res.status(500).json({ message: 'N8N_WPP_DISCOVER_URL not configured' })
   try {
     const r = await fetch(url, {
