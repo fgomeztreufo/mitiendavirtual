@@ -52,7 +52,19 @@ export default function WhatsAppView({ session, onUpdate }: WhatsAppViewProps) {
   useEffect(() => { loadConnection() }, [session])
 
   async function loadConnection() {
-    const authToken = await getAuthToken(session)
+    // Try to obtain the Supabase session JWT with a short retry loop
+    let authToken = await getAuthToken(session)
+    let tries = 0
+    while (!authToken && tries < 6) {
+      // small backoff to wait for supabase client/session restore
+      // (covers race conditions during initial page load)
+      // total wait up to ~1.5s
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((r) => setTimeout(r, 250))
+      // eslint-disable-next-line no-await-in-loop
+      authToken = await getAuthToken(session)
+      tries += 1
+    }
     if (!authToken) { setLoadingStatus(false); return }
     setLoadingStatus(true)
     try {
