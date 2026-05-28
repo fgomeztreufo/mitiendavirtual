@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import Swal from 'sweetalert2'
 import { Session } from '@supabase/supabase-js'
+import { supabase } from '../supabaseClient'
 
 interface WhatsAppViewProps {
   session?: Session
@@ -26,8 +27,16 @@ interface DiscoveredNumber {
   quality_rating: string
 }
 
-function getAuthToken(session?: Session) {
-  return (session as any)?.access_token || (session as any)?.accessToken || ''
+async function getAuthToken(session?: Session) {
+  // Prefer session passed as prop, otherwise ask the supabase client for the current session
+  const maybe = (session as any)?.access_token || (session as any)?.accessToken
+  if (maybe) return maybe
+  try {
+    const { data } = await supabase.auth.getSession()
+    return (data as any)?.session?.access_token || ''
+  } catch (e) {
+    return ''
+  }
 }
 
 export default function WhatsAppView({ session, onUpdate }: WhatsAppViewProps) {
@@ -43,7 +52,7 @@ export default function WhatsAppView({ session, onUpdate }: WhatsAppViewProps) {
   useEffect(() => { loadConnection() }, [session])
 
   async function loadConnection() {
-    const authToken = getAuthToken(session)
+    const authToken = await getAuthToken(session)
     if (!authToken) { setLoadingStatus(false); return }
     setLoadingStatus(true)
     try {
@@ -98,7 +107,7 @@ export default function WhatsAppView({ session, onUpdate }: WhatsAppViewProps) {
       Swal.fire('Selecciona un número', 'Elige el número que quieres vincular.', 'warning')
       return
     }
-    const authToken = getAuthToken(session)
+    const authToken = await getAuthToken(session)
     setSaving(true)
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
@@ -143,7 +152,7 @@ export default function WhatsAppView({ session, onUpdate }: WhatsAppViewProps) {
       cancelButtonText: 'Cancelar'
     })
     if (!confirm.isConfirmed) return
-    const authToken = getAuthToken(session)
+    const authToken = await getAuthToken(session)
     setSaving(true)
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
