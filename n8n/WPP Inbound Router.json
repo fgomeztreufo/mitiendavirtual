@@ -28,7 +28,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{$env.SUPABASE_URL.replace(/\\/$/, '')}}/rest/v1/whatsapp_connections?phone_number_id=eq.{{$json._phone_number_id}}&active=eq.true&select=id,user_id,instance_id,phone_number_id,waba_id,access_token&limit=1",
+          "url": "={{$env.SUPABASE_URL.replace(/\\/$/, '')}}/rest/v1/whatsapp_connections?phone_number_id=eq.{{$json._phone_number_id}}&active=eq.true&select=id,user_id,instance_id,phone_number_id,waba_id,access_token,display_phone_number&limit=1",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -49,13 +49,47 @@
     },
     {
       "parameters": {
-        "functionCode": "const prev = $node['Parsear mensaje'].json;\nconst resp = items[0].json;\nlet rows = [];\nif (Array.isArray(resp)) rows = resp;\nelse if (resp && Array.isArray(resp.body)) rows = resp.body;\n\nif (!rows || rows.length === 0) {\n  items[0].json = { _routed: false, _reason: 'no_connection', ...prev };\n  return items;\n}\nconst conn = rows[0];\nitems[0].json = {\n  _routed: true,\n  _user_id: conn.user_id,\n  _instance_id: conn.instance_id,\n  _access_token: conn.access_token,\n  _phone_number_id: prev._phone_number_id,\n  _from: prev._from,\n  _message_text: prev._message_text,\n  _message_id: prev._message_id,\n  _waba_id: prev._waba_id,\n  _raw: prev._raw\n};\nreturn items;"
+        "functionCode": "const prev = $node['Parsear mensaje'].json;\nconst resp = items[0].json;\nlet rows = [];\nif (Array.isArray(resp)) rows = resp;\nelse if (resp && Array.isArray(resp.body)) rows = resp.body;\n\nif (!rows || rows.length === 0) {\n  items[0].json = { _routed: false, _reason: 'no_connection', ...prev };\n  return items;\n}\nconst conn = rows[0];\nitems[0].json = {\n  _routed: true,\n  _user_id: conn.user_id,\n  _instance_id: conn.instance_id,\n  _access_token: conn.access_token,\n  _phone_number_id: prev._phone_number_id,\n  _from: prev._from,\n  _message_text: prev._message_text,\n  _message_id: prev._message_id,\n  _waba_id: prev._waba_id,\n  _display_phone_number: conn.display_phone_number || null,\n  _raw: prev._raw\n};\nreturn items;"
       },
       "id": "wpp-enrich-0001",
       "name": "Enriquecer contexto",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
       "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = items[0].json || {};\n// normalize numbers: remove non-digits\nconst businessRaw = (data._display_phone_number || data.display_phone_number || '').toString();\nconst businessNumber = businessRaw.replace(/\\D/g, '');\nconst fromNumber = (data._from || '').toString().replace(/\\D/g, '');\nif (businessNumber && fromNumber && businessNumber === fromNumber) {\n  // echo branch -> output 0\n  return [[{ json: data }], []];\n}\n// normal inbound -> output 1\nreturn [[], [{ json: data }]];"
+      },
+      "id": "wpp-is-echo-0001",
+      "name": "Check Echo",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{$env.OPENAI_API_KEY}}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"model\":\"gpt-4o-mini\",\"messages\":[{\"role\":\"system\",\"content\":\"Eres un asistente conciso y amable en español que ayuda a los clientes de una tienda online. Responde brevemente y evita solicitar datos sensibles.\"},{\"role\":\"user\",\"content\":\"{{$json._message_text}}\"}],\"max_tokens\":250,\"temperature\":0.2}"
+      },
+      "id": "wpp-llm-0001",
+      "name": "LLM: generar respuesta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [950, 300],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -72,7 +106,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\"messaging_product\":\"whatsapp\",\"to\":\"{{$json._from}}\",\"text\":{\"body\":\"Hola! Soy el asistente de tu tienda. ¿En qué te puedo ayudar?\"}}"
+        "jsonBody": "={\"messaging_product\":\"whatsapp\",\"to\":\"{{$json._from}}\",\"text\":{\"body\":\"{{$node['LLM: generar respuesta'].json.choices && $node['LLM: generar respuesta'].json.choices[0] && $node['LLM: generar respuesta'].json.choices[0].message ? $node['LLM: generar respuesta'].json.choices[0].message.content : 'Hola! Soy el asistente de tu tienda. ¿En qué te puedo ayudar?'}}\"}}"
       },
       "id": "wpp-portero-reply-0001",
       "name": "Portero: responder (GraphAPI)",
@@ -97,7 +131,9 @@
     "Recibir Inbound WPP": { "main": [ [ { "node": "Parsear mensaje", "type": "main", "index": 0 } ] ] },
     "Parsear mensaje": { "main": [ [ { "node": "Buscar conexion (Supabase)", "type": "main", "index": 0 } ] ] },
     "Buscar conexion (Supabase)": { "main": [ [ { "node": "Enriquecer contexto", "type": "main", "index": 0 } ] ] },
-    "Enriquecer contexto": { "main": [ [ { "node": "Portero: responder (GraphAPI)", "type": "main", "index": 0 }, { "node": "Responder a Meta", "type": "main", "index": 0 } ] ] },
+    "Enriquecer contexto": { "main": [ [ { "node": "Check Echo", "type": "main", "index": 0 } ] ] },
+    "Check Echo": { "main": [ [ { "node": "Responder a Meta", "type": "main", "index": 0 } ], [ { "node": "LLM: generar respuesta", "type": "main", "index": 0 } ] ] },
+    "LLM: generar respuesta": { "main": [ [ { "node": "Portero: responder (GraphAPI)", "type": "main", "index": 0 } ] ] },
     "Portero: responder (GraphAPI)": { "main": [ [ { "node": "Responder a Meta", "type": "main", "index": 0 } ] ] }
   },
   "active": false,

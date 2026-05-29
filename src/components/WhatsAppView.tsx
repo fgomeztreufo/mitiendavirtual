@@ -1,4 +1,3 @@
-// src/components/WhatsAppView.tsx
 import { useState, useEffect } from 'react'
 import Swal from 'sweetalert2'
 import { Session } from '@supabase/supabase-js'
@@ -18,17 +17,7 @@ interface WaConnection {
   created_at: string
 }
 
-interface DiscoveredNumber {
-  phone_number_id: string
-  waba_id: string
-  waba_name: string
-  display_phone_number: string
-  verified_name: string
-  quality_rating: string
-}
-
 async function getAuthToken(session?: Session) {
-  // Prefer session passed as prop, otherwise ask the supabase client for the current session
   const maybe = (session as any)?.access_token || (session as any)?.accessToken
   if (maybe) return maybe
   try {
@@ -40,11 +29,7 @@ async function getAuthToken(session?: Session) {
 }
 
 export default function WhatsAppView({ session, onUpdate }: WhatsAppViewProps) {
-  const [metaToken, setMetaToken] = useState('')
-  const [showToken, setShowToken] = useState(false)
-  const [discovering, setDiscovering] = useState(false)
-  const [discovered, setDiscovered] = useState<DiscoveredNumber[]>([])
-  const [selected, setSelected] = useState<DiscoveredNumber | null>(null)
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [saving, setSaving] = useState(false)
   const [connection, setConnection] = useState<WaConnection | null>(null)
   const [loadingStatus, setLoadingStatus] = useState(true)
@@ -52,16 +37,10 @@ export default function WhatsAppView({ session, onUpdate }: WhatsAppViewProps) {
   useEffect(() => { loadConnection() }, [session])
 
   async function loadConnection() {
-    // Try to obtain the Supabase session JWT with a short retry loop
     let authToken = await getAuthToken(session)
     let tries = 0
     while (!authToken && tries < 6) {
-      // small backoff to wait for supabase client/session restore
-      // (covers race conditions during initial page load)
-      // total wait up to ~1.5s
-      // eslint-disable-next-line no-await-in-loop
       await new Promise((r) => setTimeout(r, 250))
-      // eslint-disable-next-line no-await-in-loop
       authToken = await getAuthToken(session)
       tries += 1
     }
@@ -76,74 +55,53 @@ export default function WhatsAppView({ session, onUpdate }: WhatsAppViewProps) {
         if (data?.connection) setConnection(data.connection)
       }
     } catch (err) {
-      console.warn('No se pudo cargar estado WhatsApp', err)
+      console.warn('No se pudo cargar el estado de WhatsApp', err)
     } finally {
       setLoadingStatus(false)
     }
   }
 
-  async function discoverNumbers() {
-    if (!metaToken.trim()) {
-      Swal.fire('Campo requerido', 'Pega el Access Token de Meta para continuar.', 'warning')
+  async function saveConnection(e: React.FormEvent) {
+    e.preventDefault()
+    
+    // Limpiamos espacios y caracteres extraños del número para estandarizarlo
+    const cleanPhone = phoneNumber.replace(/[\s\-()]/g, '')
+    if (!cleanPhone) {
+      Swal.fire('Campo requerido', 'Por favor ingresa el número de teléfono.', 'warning')
       return
     }
-    setDiscovering(true)
-    setDiscovered([])
-    setSelected(null)
-    try {
-      const res = await fetch('/api/whatsapp-discover', {
-        headers: { Authorization: `Bearer ${metaToken.trim()}` }
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        Swal.fire('Error', data.message || 'Token inválido o sin permisos de WhatsApp Business.', 'error')
-        return
-      }
-      const nums: DiscoveredNumber[] = data.numbers || []
-      if (nums.length === 0) {
-        Swal.fire('Sin números', 'No se encontraron números WhatsApp Business asociados a este token.', 'info')
-        return
-      }
-      setDiscovered(nums)
-      if (nums.length === 1) setSelected(nums[0])
-    } catch (err) {
-      console.error(err)
-      Swal.fire('Error', 'Error al consultar la API de Meta.', 'error')
-    } finally {
-      setDiscovering(false)
-    }
-  }
 
-  async function saveConnection() {
-    if (!selected) {
-      Swal.fire('Selecciona un número', 'Elige el número que quieres vincular.', 'warning')
-      return
-    }
     const authToken = await getAuthToken(session)
     setSaving(true)
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
       if (authToken) headers.Authorization = `Bearer ${authToken}`
+      
+      // Enviamos solo el número. n8n se encargará de buscar sus IDs en Meta
       const body = {
-        phone_number_id: selected.phone_number_id,
-        business_account_id: selected.waba_id,
-        display_phone_number: selected.display_phone_number,
-        access_token: metaToken.trim()
+        display_phone_number: cleanPhone
       }
-      const res = await fetch('/api/whatsapp-link-start', { method: 'POST', headers, body: JSON.stringify(body) })
+
+      const res = await fetch('/api/whatsapp-link-start', { 
+        method: 'POST', 
+        headers, 
+        body: JSON.stringify(body) 
+      })
+
+      const data = await res.json().catch(() => ({}))
+
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        Swal.fire('Error', err.message || 'No se pudo guardar.', 'error')
+        Swal.fire('Error de vinculación', data.message || 'No encontramos ese número registrado en nuestra cuenta de Meta.', 'error')
         return
       }
+
       Swal.fire({
-        title: '¡Vinculado!',
-        html: `<p>El número <strong>${selected.display_phone_number}</strong> quedó conectado.<br/>El Portero ya puede responder mensajes.</p>`,
+        title: '¡WhatsApp Vinculado!',
+        html: `<p>Hemos detectado y configurado tu número <strong>${data.display_phone_number || cleanPhone}</strong> de forma automática.<br/>El Portero IA ya está activo.</p>`,
         icon: 'success'
       })
-      setMetaToken('')
-      setDiscovered([])
-      setSelected(null)
+
+      setPhoneNumber('')
       await loadConnection()
       onUpdate?.()
     } catch (err) {
@@ -157,13 +115,14 @@ export default function WhatsAppView({ session, onUpdate }: WhatsAppViewProps) {
   async function deactivateConnection() {
     const confirm = await Swal.fire({
       title: '¿Desvincular número?',
-      text: 'El Portero dejará de responder mensajes de este número.',
+      text: 'El Portero IA dejará de responder mensajes en este número de forma inmediata.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, desvincular',
       cancelButtonText: 'Cancelar'
     })
     if (!confirm.isConfirmed) return
+    
     const authToken = await getAuthToken(session)
     setSaving(true)
     try {
@@ -174,11 +133,11 @@ export default function WhatsAppView({ session, onUpdate }: WhatsAppViewProps) {
         body: JSON.stringify({ phone_number_id: connection?.phone_number_id, active: false })
       })
       if (res.ok) {
-        Swal.fire('Desvinculado', 'Número desactivado.', 'success')
+        Swal.fire('Desvinculado', 'Número desactivado correctamente.', 'success')
         setConnection(null)
         onUpdate?.()
       } else {
-        Swal.fire('Error', 'No se pudo desvincular.', 'error')
+        Swal.fire('Error', 'No se pudo desvincular el número.', 'error')
       }
     } catch (err) {
       console.error(err)
@@ -198,7 +157,7 @@ export default function WhatsAppView({ session, onUpdate }: WhatsAppViewProps) {
         </div>
         <div>
           <h3 className="text-lg font-bold">WhatsApp Business</h3>
-          <p className="text-sm text-gray-400">Conecta tu cuenta de WhatsApp Business. Solo necesitas el token de acceso — nosotros detectamos el número automáticamente.</p>
+          <p className="text-sm text-gray-400">Activa el bot de Inteligencia Artificial ingresando el número telefónico de tu tienda.</p>
         </div>
       </div>
 
@@ -210,115 +169,53 @@ export default function WhatsAppView({ session, onUpdate }: WhatsAppViewProps) {
           <span className="w-2.5 h-2.5 rounded-full bg-green-400 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-green-300">
-              {connection.display_phone_number || 'Número vinculado'}
+              {connection.display_phone_number || 'Número activo'}
             </p>
-            <p className="text-xs text-gray-500 truncate">ID: {connection.phone_number_id}</p>
+            <p className="text-xs text-gray-500 truncate">Canal IA inicializado correctamente</p>
           </div>
           <button onClick={() => void deactivateConnection()} disabled={saving}
-            className="text-xs text-red-400 hover:text-red-300 shrink-0">
-            Desvincular
+            className="text-xs text-red-400 hover:text-red-300 shrink-0 font-medium">
+            Desvincular canal
           </button>
         </div>
       ) : (
         <div className="mb-5 flex items-center gap-2 p-3 rounded-xl bg-gray-800/60 border border-gray-700/40">
           <span className="w-2.5 h-2.5 rounded-full bg-gray-500 shrink-0" />
-          <span className="text-sm text-gray-400">Sin número vinculado</span>
+          <span className="text-sm text-gray-400">Sin WhatsApp activo en esta tienda</span>
         </div>
       )}
 
-      {/* Paso 1: Access Token */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          Token de acceso de Meta
-        </label>
-        <p className="text-xs text-gray-500 mb-2">
-          Encuéntralo en{' '}
-          <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener noreferrer"
-            className="text-green-400 hover:underline">
-            developers.facebook.com
-          </a>
-          {' '}→ tu app → WhatsApp → API Setup → "Temporary access token"
-        </p>
-        <div className="flex gap-2">
-          <div className="relative flex-1">
+      {/* Formulario de un solo campo */}
+      {!connection && (
+        <form onSubmit={(e) => { void saveConnection(e) }} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Número de Teléfono WhatsApp
+            </label>
+            <p className="text-xs text-gray-500 mb-2">
+              Ingresa el número con el código de país (ej: 56912345678). Debe estar previamente asignado a la plataforma.
+            </p>
             <input
-              type={showToken ? 'text' : 'password'}
-              value={metaToken}
-              onChange={(e) => { setMetaToken(e.target.value); setDiscovered([]); setSelected(null) }}
-              placeholder="EAAxxxxxxxxxxxxxxx..."
-              className="w-full bg-black border border-gray-800 rounded-xl p-2 pr-10 text-sm focus:border-green-700 outline-none"
+              type="text"
+              required
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="Ej: 56912345678"
+              className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm focus:border-green-700 outline-none text-white font-medium"
             />
-            <button type="button" onClick={() => setShowToken(v => !v)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-xs">
-              {showToken ? 'Ocultar' : 'Ver'}
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="w-full py-2.5 px-5 bg-green-600 hover:bg-green-500 disabled:opacity-40 rounded-xl text-white text-sm font-medium transition-colors"
+            >
+              {saving ? 'Buscando y vinculando...' : 'Vincular y Activar Portero IA'}
             </button>
           </div>
-          <button onClick={() => void discoverNumbers()} disabled={discovering || !metaToken.trim()}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 rounded-xl text-sm text-white whitespace-nowrap">
-            {discovering ? 'Buscando...' : 'Buscar números'}
-          </button>
-        </div>
-      </div>
-
-      {/* Paso 2: Seleccionar número */}
-      {discovered.length > 0 && (
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Números encontrados — elige el que quieres vincular
-          </label>
-          <div className="flex flex-col gap-2">
-            {discovered.map(num => (
-              <button key={num.phone_number_id}
-                onClick={() => setSelected(num)}
-                className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-colors ${
-                  selected?.phone_number_id === num.phone_number_id
-                    ? 'border-green-600 bg-green-900/20'
-                    : 'border-gray-700 bg-gray-800/40 hover:border-gray-600'
-                }`}>
-                <span className={`w-4 h-4 rounded-full border-2 shrink-0 ${
-                  selected?.phone_number_id === num.phone_number_id
-                    ? 'border-green-500 bg-green-500'
-                    : 'border-gray-600'
-                }`} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">
-                    {num.display_phone_number}
-                    {num.verified_name && <span className="text-gray-400 font-normal ml-2">· {num.verified_name}</span>}
-                  </p>
-                  {num.waba_name && <p className="text-xs text-gray-500">Cuenta: {num.waba_name}</p>}
-                </div>
-                {num.quality_rating && (
-                  <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
-                    num.quality_rating === 'GREEN' ? 'bg-green-900/40 text-green-400' :
-                    num.quality_rating === 'YELLOW' ? 'bg-yellow-900/40 text-yellow-400' :
-                    'bg-red-900/40 text-red-400'
-                  }`}>
-                    {num.quality_rating}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
+        </form>
       )}
-
-      {/* Botón vincular */}
-      {(discovered.length > 0 || connection) && (
-        <div className="flex gap-3 mt-2">
-          {discovered.length > 0 && (
-            <button onClick={() => void saveConnection()} disabled={saving || !selected}
-              className="py-2 px-5 bg-green-600 hover:bg-green-500 disabled:opacity-40 rounded-xl text-white text-sm font-medium">
-              {saving ? 'Guardando...' : connection ? 'Actualizar número' : `Vincular ${selected?.display_phone_number || 'número'}`}
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Webhook info */}
-      <div className="mt-6 p-3 rounded-xl bg-gray-800/50 border border-gray-700/40 text-xs text-gray-500">
-        <span className="font-medium text-gray-400">Webhook activo en Meta:</span>{' '}
-        <code className="text-green-400">https://webhook.mitiendavirtual.cl/webhook/whatsapp-webhook</code>
-      </div>
     </div>
   )
 }

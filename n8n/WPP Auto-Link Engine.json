@@ -1,0 +1,243 @@
+{
+  "name": "Mitendavirtual.cl - WPP Auto-Link Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-link-start",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "e3a89047-9b2c-4b68-98f9-c6062b88fb69",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [260, 360]
+    },
+    {
+      "parameters": {
+        "url": "https://graph.facebook.com/v20.0/me/whatsapp_business_accounts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "cb1c7dfd-bf51-40be-bd75-802ba98e1e07",
+      "name": "Meta - Get WABAs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 360],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_META_MASTER_TOKEN_CREDENTIAL_ID",
+          "name": "Meta Master Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const wabas = $input.first().json.data || [];\nreturn wabas.map(w => ({ json: w }));"
+      },
+      "id": "b3f3da39-d341-4876-9040-cfc97805175b",
+      "name": "Split WABAs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [700, 360]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v20.0/{{ $json.id }}/phone_numbers",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "27f1bc44-3bf2-4fb3-b459-25f09623e107",
+      "name": "Meta - Get Phone Numbers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, 360],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_META_MASTER_TOKEN_CREDENTIAL_ID",
+          "name": "Meta Master Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawTarget = $('Webhook').item.json.display_phone_number || '';\nconst targetPhone = rawTarget.replace(/\\D/g, '');\nconst userId = $('Webhook').item.json.user_id || ''; \n\nlet matched = null;\n\nfor (const item of $input.all()) {\n  // Obtenemos el ID de la cuenta WABA de origen usando el pairedItem incorporado de n8n\n  const wabaId = item.pairedItem.json.id;\n  const phoneNumbers = item.json.data || [];\n  \n  for (const phone of phoneNumbers) {\n    const cleanDisplay = phone.display_phone_number.replace(/\\D/g, '');\n    \n    // Comparamos si coinciden los extremos de las cadenas telefónicas\n    if (cleanDisplay.endsWith(targetPhone) || targetPhone.endsWith(cleanDisplay)) {\n      matched = {\n        user_id: userId,\n        phone_number_id: phone.id,\n        waba_id: wabaId,\n        display_phone_number: phone.display_phone_number,\n        active: true\n      };\n      break;\n    }\n  }\n  if (matched) break;\n}\n\nreturn [ { json: matched ? { found: true, ...matched } : { found: false } } ];"
+      },
+      "id": "5fa2328d-3f0e-4361-ad7b-04473859345b",
+      "name": "Code - Match Phone",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1140, 360]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "type": "mix"
+          },
+          "conditions": [
+            {
+              "id": "bc7f6e2e-2e09-4bf7-bb30-4e20986756fd",
+              "leftValue": "={{ $json.found }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c16ab711-2092-4948-a00d-ebf72c4e97a3",
+      "name": "If Found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1360, 360]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "supabaseUrl": "YOUR_SUPABASE_URL",
+        "table": "whatsapp_connections",
+        "columns": "user_id,phone_number_id,waba_id,display_phone_number,active",
+        "options": {}
+      },
+      "id": "fa938b29-e822-441d-af22-0d5bc032c1c7",
+      "name": "Supabase - Save Connection",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1600, 240],
+      "credentials": {
+        "supabaseApi": {
+          "id": "YOUR_SUPABASE_CREDENTIALS_ID",
+          "name": "Supabase Prod"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"display_phone_number\": \"{{ $('Code - Match Phone').item.json.display_phone_number }}\",\n  \"phone_number_id\": \"{{ $('Code - Match Phone').item.json.phone_number_id }}\"\n}",
+        "options": {}
+      },
+      "id": "4cb3da2e-8d29-455a-bd54-582ffb14e5bb",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1840, 240]
+    },
+    {
+      "parameters": {
+        "responseCode": 404,
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"El número telefónico no se encuentra registrado bajo ninguna cuenta comercial de Meta vinculada a nuestra plataforma.\"\n}",
+        "options": {}
+      },
+      "id": "b3e218fd-d940-4cae-9274-124cfb92d6e4",
+      "name": "Respond 404 Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1600, 480]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Meta - Get WABAs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta - Get WABAs": {
+      "main": [
+        [
+          {
+            "node": "Split WABAs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split WABAs": {
+      "main": [
+        [
+          {
+            "node": "Meta - Get Phone Numbers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta - Get Phone Numbers": {
+      "main": [
+        [
+          {
+            "node": "Code - Match Phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Match Phone": {
+      "main": [
+        [
+          {
+            "node": "If Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Found": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Save Connection",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 404 Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Save Connection": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "wpp-autolink-engine",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
