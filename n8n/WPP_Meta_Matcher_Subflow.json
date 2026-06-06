@@ -1,0 +1,215 @@
+{
+  "name": "WPP Link Start - Production Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wpp-link-start",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "main-wh-post",
+      "name": "Webhook POST",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL.replace(/\\/$/, '') }}/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Webhook POST').item.json.headers.authorization.replace('Bearer ', '').trim() }}"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "main-sb-auth",
+      "name": "Validar Usuario (Supabase)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [320, 300]
+    },
+    {
+      "parameters": {
+        "workflowId": "CAMBIA_ESTE_TEXTO_POR_EL_ID_DE_TU_SUB_FLOW",
+        "options": {
+          "waitForResults": true
+        },
+        "mode": "each",
+        "payloadSource": "custom",
+        "payloadJson": "={\n  \"targetPhone\": \"{{ $('Webhook POST').item.json.body.display_phone_number.replace(/\\D/g, '') }}\",\n  \"userId\": \"{{ $json.id }}\"\n}"
+      },
+      "id": "main-run-subflow",
+      "name": "Invocar Subflow Meta",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [540, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "type": "mix"
+          },
+          "conditions": [
+            {
+              "id": "check-match-found",
+              "leftValue": "={{ $json.phone_number_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "main-if-found",
+      "name": "Validar Coincidencia Meta",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [760, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL.replace(/\\/$/, '') }}/rest/v1/whatsapp_connections",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"user_id\": \"{{ $('Invocar Subflow Meta').item.json.userId }}\",\n  \"display_phone_number\": \"{{ $('Invocar Subflow Meta').item.json.display_phone_number }}\",\n  \"phone_number_id\": \"{{ $('Invocar Subflow Meta').item.json.phone_number_id }}\",\n  \"waba_id\": \"{{ $('Invocar Subflow Meta').item.json.waba_id }}\",\n  \"active\": true,\n  \"updated_at\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {}
+      },
+      "id": "main-sb-upsert",
+      "name": "Persistir en Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [980, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"ok\": true,\n  \"success\": true,\n  \"display_phone_number\": \"{{ $json[0].display_phone_number }}\",\n  \"connection\": {\n    \"id\": \"{{ $json[0].id }}\",\n    \"phone_number_id\": \"{{ $json[0].phone_number_id }}\",\n    \"active\": {{ $json[0].active }}\n  }\n}",
+        "options": {}
+      },
+      "id": "main-resp-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1200, 200]
+    },
+    {
+      "parameters": {
+        "responseCode": 404,
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"El identificador telefónico especificado no se encuentra registrado bajo ninguna cuenta comercial de Meta vinculada a nuestra infraestructura de IA.\"\n}",
+        "options": {}
+      },
+      "id": "main-resp-404",
+      "name": "Respond 404 Not Found",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [980, 420]
+    }
+  ],
+  "connections": {
+    "Webhook POST": {
+      "main": [
+        [
+          {
+            "node": "Validar Usuario (Supabase)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Usuario (Supabase)": {
+      "main": [
+        [
+          {
+            "node": "Invocar Subflow Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invocar Subflow Meta": {
+      "main": [
+        [
+          {
+            "node": "Validar Coincidencia Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Coincidencia Meta": {
+      "main": [
+        [
+          {
+            "node": "Persistir en Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 404 Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Persistir en Supabase": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -17,14 +17,31 @@ async function parseBody(req) {
 }
 
 export default async function handler(req, res) {
+  // 1. CONFIGURACIÓN DE CABECERAS CORS
+  const allowedOrigins = ['http://localhost:5173', 'https://www.mitiendavirtual.cl', 'https://mitiendavirtual.cl'];
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else if (!origin) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+  // 2. MANEJO DEL PREFLIGHT (OPTIONS)
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   const auth = req.headers.authorization || ''
 
-  try { console.log('whatsapp-link-start handler invoked, method=', req.method) } catch (e) {}
-
-
+  // Flujo GET: Consulta estado de conexión existente
   if (req.method === 'GET') {
     const url = n8nUrl('wpp-status')
-    if (!url.startsWith('http')) return res.status(500).json({ message: 'N8N_WPP_STATUS_URL not configured' })
+    if (!url.startsWith('http')) return res.status(500).json({ message: 'N8N_WPP_STATUS_URL no configurada.' })
     try {
       const r = await fetch(url, { method: 'GET', headers: auth ? { Authorization: auth } : {} })
       const text = await r.text()
@@ -34,9 +51,10 @@ export default async function handler(req, res) {
     }
   }
 
+  // Flujo POST: Registro / Modificación de número de negocio
   if (req.method === 'POST') {
     const url = n8nUrl('wpp-link-start')
-    if (!url.startsWith('http')) return res.status(500).json({ message: 'N8N_WPP_LINK_START_URL not configured' })
+    if (!url.startsWith('http')) return res.status(500).json({ message: 'N8N_WPP_LINK_START_URL no configurada.' })
     const body = await parseBody(req)
     try {
       const headers = { 'Content-Type': 'application/json' }
