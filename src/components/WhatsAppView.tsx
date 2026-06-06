@@ -58,7 +58,11 @@ export default function WhatsAppConnector() {
       config_id: CONFIG_ID,
       response_type: 'code',
       override_default_response_type: true, // <--- ESTA ES LA LÍNEA CLAVE
-      override_permissions: true
+      override_permissions: true,
+      extras: {
+        feature: 'whatsapp_embedded_signup', // Declarar explícitamente el flujo de WhatsApp
+        version: 2
+      }
     });
   };
 
