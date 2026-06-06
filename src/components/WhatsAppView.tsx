@@ -72,7 +72,7 @@ export default function WhatsAppView({ session, onUpdate }: WhatsAppViewProps) {
 
     (window as any).fbAsyncInit = function() {
       (window as any).FB.init({
-        appId: '139769478805069', // Tu ID de aplicación de Meta
+        appId: '1397698478805069', // Tu ID de aplicación de Meta
         cookie: true,
         xfbml: true,
         version: 'v20.0'
