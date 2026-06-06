@@ -57,7 +57,8 @@ export default function WhatsAppConnector() {
     }, {
       config_id: CONFIG_ID,
       response_type: 'code',
-      override_permissions: true
+      override_permissions: true,
+      auth_type: 'rerequest' // Fuerza a que se pidan solo los permisos del config_id
     });
   };
 
