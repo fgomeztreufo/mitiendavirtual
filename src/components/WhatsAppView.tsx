@@ -72,7 +72,7 @@ export default function WhatsAppView({ session, onUpdate }: WhatsAppViewProps) {
 
     (window as any).fbAsyncInit = function() {
       (window as any).FB.init({
-        appId: '1397698478805069', // Tu ID de aplicación de Meta
+        appId: '1710544543478147', // Tu ID de aplicación de Meta
         cookie: true,
         xfbml: true,
         version: 'v20.0'
@@ -111,7 +111,7 @@ export default function WhatsAppView({ session, onUpdate }: WhatsAppViewProps) {
         console.log('El usuario canceló el login o no autorizó la app.')
       }
     }, {
-      config_id: 'TU_CONFIG_ID_DE_EMBEDDED_SIGNUP', // REEMPLAZAR con el ID que obtengas en Meta Developers
+      config_id: '1710544543478147', // REEMPLAZAR con el ID que obtengas en Meta Developers
       response_type: 'code',
       override_permissions: true
     })
