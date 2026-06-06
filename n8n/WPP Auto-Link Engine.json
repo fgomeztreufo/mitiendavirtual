@@ -1,76 +1,50 @@
 {
-  "name": "Mitendavirtual.cl - WPP Auto-Link Engine",
+  "name": "WPP Link Start - Auto Detect Mode",
   "nodes": [
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "whatsapp-link-start",
+        "path": "wpp-link-start",
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "e3a89047-9b2c-4b68-98f9-c6062b88fb69",
-      "name": "Webhook",
+      "id": "wpp-ls-wh-auto",
+      "name": "Webhook POST",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1.1,
-      "position": [260, 360]
+      "typeVersion": 1,
+      "position": [100, 300]
     },
     {
       "parameters": {
-        "url": "https://graph.facebook.com/v20.0/me/whatsapp_business_accounts",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL.replace(/\\/$/, '') }}/auth/v1/user",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Webhook POST').item.json.headers.authorization.replace('Bearer ', '').trim() }}"
+            }
+          ]
+        },
         "options": {}
       },
-      "id": "cb1c7dfd-bf51-40be-bd75-802ba98e1e07",
-      "name": "Meta - Get WABAs",
+      "id": "wpp-ls-auth-supabase",
+      "name": "Validar Usuario (Supabase)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [480, 360],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "YOUR_META_MASTER_TOKEN_CREDENTIAL_ID",
-          "name": "Meta Master Token"
-        }
-      }
+      "position": [320, 300]
     },
     {
       "parameters": {
-        "jsCode": "const wabas = $input.first().json.data || [];\nreturn wabas.map(w => ({ json: w }));"
+        "jsCode": "const META_TOKEN = 'TU_TOKEN_MAESTRO_DE_META_AQUI';\n\nconst rawTarget = $('Webhook POST').item.json.body.display_phone_number || '';\nconst targetPhone = rawTarget.replace(/\\D/g, '');\nconst userId = $('Validar Usuario (Supabase)').item.json.id || '';\n\nif (!targetPhone) {\n  return [{ json: { found: false, error: 'No se proporcionó un teléfono válido.' } }];\n}\n\ntry {\n  const wabaRes = await fetch('https://graph.facebook.com/v20.0/me/whatsapp_business_accounts', {\n    headers: { 'Authorization': `Bearer ${META_TOKEN}` }\n  });\n  const wabaData = await wabaRes.json();\n  const wabas = wabaData.data || [];\n\n  let matched = null;\n\n  for (const waba of wabas) {\n    const phoneRes = await fetch(`https://graph.facebook.com/v20.0/${waba.id}/phone_numbers`, {\n      headers: { 'Authorization': `Bearer ${META_TOKEN}` }\n    });\n    const phoneData = await phoneRes.json();\n    const phoneNumbers = phoneData.data || [];\n\n    for (const phone of phoneNumbers) {\n      if (!phone.display_phone_number) continue;\n      const cleanDisplay = phone.display_phone_number.replace(/\\D/g, '');\n\n      if (cleanDisplay.endsWith(targetPhone) || targetPhone.endsWith(cleanDisplay)) {\n        matched = {\n          user_id: userId,\n          phone_number_id: phone.id,\n          waba_id: waba.id,\n          display_phone_number: phone.display_phone_number,\n          active: true\n        };\n        break;\n      }\n    }\n    if (matched) break;\n  }\n\n  return [{ json: matched ? { found: true, ...matched } : { found: false } }];\n} catch (error) {\n  return [{ json: { found: false, error: error.message } }];\n}"
       },
-      "id": "b3f3da39-d341-4876-9040-cfc97805175b",
-      "name": "Split WABAs",
+      "id": "wpp-ls-meta-match",
+      "name": "Buscar y Match en Meta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
-      "position": [700, 360]
-    },
-    {
-      "parameters": {
-        "url": "=https://graph.facebook.com/v20.0/{{ $json.id }}/phone_numbers",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "options": {}
-      },
-      "id": "27f1bc44-3bf2-4fb3-b459-25f09623e107",
-      "name": "Meta - Get Phone Numbers",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [920, 360],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "YOUR_META_MASTER_TOKEN_CREDENTIAL_ID",
-          "name": "Meta Master Token"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const rawTarget = $('Webhook').item.json.display_phone_number || '';\nconst targetPhone = rawTarget.replace(/\\D/g, '');\nconst userId = $('Webhook').item.json.user_id || ''; \n\nlet matched = null;\n\nfor (const item of $input.all()) {\n  // Obtenemos el ID de la cuenta WABA de origen usando el pairedItem incorporado de n8n\n  const wabaId = item.pairedItem.json.id;\n  const phoneNumbers = item.json.data || [];\n  \n  for (const phone of phoneNumbers) {\n    const cleanDisplay = phone.display_phone_number.replace(/\\D/g, '');\n    \n    // Comparamos si coinciden los extremos de las cadenas telefónicas\n    if (cleanDisplay.endsWith(targetPhone) || targetPhone.endsWith(cleanDisplay)) {\n      matched = {\n        user_id: userId,\n        phone_number_id: phone.id,\n        waba_id: wabaId,\n        display_phone_number: phone.display_phone_number,\n        active: true\n      };\n      break;\n    }\n  }\n  if (matched) break;\n}\n\nreturn [ { json: matched ? { found: true, ...matched } : { found: false } } ];"
-      },
-      "id": "5fa2328d-3f0e-4361-ad7b-04473859345b",
-      "name": "Code - Match Phone",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 1,
-      "position": [1140, 360]
+      "position": [540, 300]
     },
     {
       "parameters": {
@@ -82,7 +56,7 @@
           },
           "conditions": [
             {
-              "id": "bc7f6e2e-2e09-4bf7-bb30-4e20986756fd",
+              "id": "check-found-condition",
               "leftValue": "={{ $json.found }}",
               "rightValue": "true",
               "operator": {
@@ -95,11 +69,11 @@
         },
         "options": {}
       },
-      "id": "c16ab711-2092-4948-a00d-ebf72c4e97a3",
+      "id": "wpp-ls-if-found",
       "name": "If Found",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [1360, 360]
+      "position": [760, 300]
     },
     {
       "parameters": {
@@ -109,11 +83,11 @@
         "columns": "user_id,phone_number_id,waba_id,display_phone_number,active",
         "options": {}
       },
-      "id": "fa938b29-e822-441d-af22-0d5bc032c1c7",
+      "id": "wpp-ls-db-save",
       "name": "Supabase - Save Connection",
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [1600, 240],
+      "position": [980, 180],
       "credentials": {
         "supabaseApi": {
           "id": "YOUR_SUPABASE_CREDENTIALS_ID",
@@ -124,14 +98,14 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"success\": true,\n  \"display_phone_number\": \"{{ $('Code - Match Phone').item.json.display_phone_number }}\",\n  \"phone_number_id\": \"{{ $('Code - Match Phone').item.json.phone_number_id }}\"\n}",
+        "responseBody": "={\n  \"ok\": true,\n  \"success\": true,\n  \"display_phone_number\": \"{{ $('Buscar y Match en Meta').item.json.display_phone_number }}\",\n  \"connection\": {\n    \"user_id\": \"{{ $('Buscar y Match en Meta').item.json.user_id }}\",\n    \"phone_number_id\": \"{{ $('Buscar y Match en Meta').item.json.phone_number_id }}\",\n    \"waba_id\": \"{{ $('Buscar y Match en Meta').item.json.waba_id }}\",\n    \"display_phone_number\": \"{{ $('Buscar y Match en Meta').item.json.display_phone_number }}\",\n    \"active\": true\n  }\n}",
         "options": {}
       },
-      "id": "4cb3da2e-8d29-455a-bd54-582ffb14e5bb",
+      "id": "wpp-ls-resp-success",
       "name": "Respond Success",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1840, 240]
+      "position": [1220, 180]
     },
     {
       "parameters": {
@@ -140,59 +114,37 @@
         "responseBody": "{\n  \"success\": false,\n  \"message\": \"El número telefónico no se encuentra registrado bajo ninguna cuenta comercial de Meta vinculada a nuestra plataforma.\"\n}",
         "options": {}
       },
-      "id": "b3e218fd-d940-4cae-9274-124cfb92d6e4",
+      "id": "wpp-ls-resp-fail",
       "name": "Respond 404 Error",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1600, 480]
+      "position": [980, 420]
     }
   ],
   "connections": {
-    "Webhook": {
+    "Webhook POST": {
       "main": [
         [
           {
-            "node": "Meta - Get WABAs",
+            "node": "Validar Usuario (Supabase)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Meta - Get WABAs": {
+    "Validar Usuario (Supabase)": {
       "main": [
         [
           {
-            "node": "Split WABAs",
+            "node": "Buscar y Match en Meta",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Split WABAs": {
-      "main": [
-        [
-          {
-            "node": "Meta - Get Phone Numbers",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Meta - Get Phone Numbers": {
-      "main": [
-        [
-          {
-            "node": "Code - Match Phone",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code - Match Phone": {
+    "Buscar y Match en Meta": {
       "main": [
         [
           {
@@ -235,9 +187,5 @@
   },
   "settings": {
     "executionOrder": "v1"
-  },
-  "id": "wpp-autolink-engine",
-  "meta": {
-    "templateCredsSetupCompleted": true
   }
 }
