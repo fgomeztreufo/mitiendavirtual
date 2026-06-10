@@ -1,6 +1,6 @@
 // Proxy incoming WhatsApp updates to n8n. n8n will handle business logic and linking.
 const WHATSAPP_WEBHOOK_SECRET = process.env.WHATSAPP_WEBHOOK_SECRET || ''
-const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || ''
+const N8N_WEBHOOK_URL = process.env.N8N_WPP_INBOUND_URL || process.env.N8N_WEBHOOK_URL || ''
 
 function parseJsonBody(req) {
   return new Promise((resolve, reject) => {

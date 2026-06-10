@@ -1,5 +1,7 @@
-// Pure proxy → n8n WPP Status (GET) y WPP Link Start (POST).
-// Zero logic here: n8n valida usuario, hace upsert/query en Supabase.
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
 
 function n8nUrl(path) {
   return process.env['N8N_WPP_' + path.replace(/-/g, '_').toUpperCase() + '_URL']
@@ -53,9 +55,25 @@ export default async function handler(req, res) {
 
   // Flujo POST: Registro / Modificación de número de negocio
   if (req.method === 'POST') {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return res.status(500).json({ message: 'SUPABASE_URL o SUPABASE_ANON_KEY no configuradas.' })
+    }
+    const token = auth.replace(/^Bearer\s+/i, '')
+    if (!token) {
+      return res.status(401).json({ message: 'Se requiere autenticación.' })
+    }
+    const sb = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } }
+    })
+    const { data: { user }, error: authError } = await sb.auth.getUser(token)
+    if (authError || !user) {
+      return res.status(401).json({ message: 'Token inválido o sesión expirada.' })
+    }
+
     const url = n8nUrl('wpp-link-start')
     if (!url.startsWith('http')) return res.status(500).json({ message: 'N8N_WPP_LINK_START_URL no configurada.' })
     const body = await parseBody(req)
+    body.user_id = user.id
     try {
       const headers = { 'Content-Type': 'application/json' }
       if (auth) headers.Authorization = auth

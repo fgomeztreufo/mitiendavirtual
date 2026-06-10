@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
+import { supabase } from '../supabaseClient';
 
 // Declaración para evitar errores de TypeScript con el objeto FB global
 declare global {
@@ -66,22 +67,31 @@ export default function WhatsAppConnector() {
     });
   };
 
-  // 3. Simulación de intercambio con tu backend
   const handleCodeExchange = async (code: string) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        Swal.fire('Error', 'Debes iniciar sesión antes de vincular WhatsApp.', 'error');
+        return;
+      }
+
       const response = await fetch('/api/whatsapp-link-start', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
         body: JSON.stringify({ code })
       });
-      
+
       if (response.ok) {
         Swal.fire('¡Éxito!', 'Cuenta vinculada correctamente.', 'success');
       } else {
-        throw new Error('Error al vincular');
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || 'Error al vincular');
       }
-    } catch (error) {
-      Swal.fire('Error', 'No se pudo completar la vinculación.', 'error');
+    } catch (error: any) {
+      Swal.fire('Error', error.message || 'No se pudo completar la vinculación.', 'error');
     }
   };
 
