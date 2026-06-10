@@ -1,0 +1,192 @@
+{
+  "name": "WPP Link Start – MVP (Code Exchange + Discover + Upsert)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wpp-link-start",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "mvp-wh-post",
+      "name": "Webhook POST",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraer code y user_id del body (Vercel ya validó el JWT e inyectó user_id)\nconst body = $input.item.json.body || {};\nconst code = body.code || '';\nconst userId = body.user_id || '';\n\nif (!code || !userId) {\n  return [{ json: { _error: true, message: 'Faltan code o user_id en el body.' } }];\n}\n\nreturn [{ json: { _error: false, code, user_id: userId } }];"
+      },
+      "id": "mvp-extract-params",
+      "name": "Extraer code + user_id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "type": "mix" },
+          "conditions": [
+            {
+              "id": "check-no-error",
+              "leftValue": "={{ $json._error }}",
+              "rightValue": "false",
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "mvp-if-params-ok",
+      "name": "Params OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v25.0/oauth/access_token",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"client_id\": \"{{ $env.META_APP_ID }}\",\n  \"client_secret\": \"{{ $env.META_APP_SECRET }}\",\n  \"code\": \"{{ $('Extraer code + user_id').item.json.code }}\"\n}",
+        "options": { "timeout": 15000 }
+      },
+      "id": "mvp-exchange-token",
+      "name": "Intercambiar code → Token (Meta)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [740, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Leer el access_token devuelto por Meta\nconst resp = $input.item.json;\nconst accessToken = resp.access_token || '';\nconst userId = $('Extraer code + user_id').item.json.user_id;\n\nif (!accessToken) {\n  return [{ json: { _error: true, message: 'Meta no devolvió access_token.', meta_response: resp } }];\n}\n\n// Descubrir WABAs del usuario\nconst GRAPH = 'https://graph.facebook.com/v25.0';\nlet wabas = [];\n\ntry {\n  const wabaRes = await this.helpers.request({\n    method: 'GET',\n    url: GRAPH + '/me/whatsapp_business_accounts',\n    qs: { fields: 'id,name', access_token: accessToken },\n    json: true\n  });\n  if (wabaRes && Array.isArray(wabaRes.data)) wabas = wabaRes.data;\n} catch (e) {\n  // fallback: buscar vía businesses\n  try {\n    const bizRes = await this.helpers.request({\n      method: 'GET',\n      url: GRAPH + '/me/businesses',\n      qs: { access_token: accessToken },\n      json: true\n    });\n    for (const biz of (bizRes.data || [])) {\n      try {\n        const owned = await this.helpers.request({\n          method: 'GET',\n          url: GRAPH + '/' + biz.id + '/owned_whatsapp_business_accounts',\n          qs: { fields: 'id,name', access_token: accessToken },\n          json: true\n        });\n        if (owned && Array.isArray(owned.data)) wabas.push(...owned.data);\n      } catch (innerErr) { /* skip */ }\n    }\n  } catch (bizErr) { /* skip */ }\n}\n\nif (wabas.length === 0) {\n  return [{ json: { _error: true, message: 'No se encontraron cuentas WhatsApp Business asociadas.' } }];\n}\n\n// Descubrir phone numbers del primer WABA\nconst waba = wabas[0];\nlet phones = [];\ntry {\n  const pnRes = await this.helpers.request({\n    method: 'GET',\n    url: GRAPH + '/' + waba.id + '/phone_numbers',\n    qs: { fields: 'id,display_phone_number,verified_name,quality_rating', access_token: accessToken },\n    json: true\n  });\n  if (pnRes && Array.isArray(pnRes.data)) phones = pnRes.data;\n} catch (e) { /* skip */ }\n\nif (phones.length === 0) {\n  return [{ json: { _error: true, message: 'WABA encontrada pero sin números telefónicos.' } }];\n}\n\nconst phone = phones[0];\nreturn [{ json: {\n  _error: false,\n  user_id: userId,\n  access_token: accessToken,\n  waba_id: waba.id,\n  waba_name: waba.name || '',\n  phone_number_id: phone.id,\n  display_phone_number: phone.display_phone_number || '',\n  verified_name: phone.verified_name || ''\n} }];"
+      },
+      "id": "mvp-discover",
+      "name": "Discover WABA + Phone (GraphAPI)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "type": "mix" },
+          "conditions": [
+            {
+              "id": "check-discover-ok",
+              "leftValue": "={{ $json._error }}",
+              "rightValue": "false",
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "mvp-if-discover-ok",
+      "name": "Discover OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1180, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL.replace(/\\/$/, '') }}/rest/v1/whatsapp_connections",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "resolution=merge-duplicates,return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"user_id\": \"{{ $json.user_id }}\",\n  \"phone_number_id\": \"{{ $json.phone_number_id }}\",\n  \"waba_id\": \"{{ $json.waba_id }}\",\n  \"display_phone_number\": \"{{ $json.display_phone_number }}\",\n  \"access_token\": \"{{ $json.access_token }}\",\n  \"active\": true,\n  \"updated_at\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {}
+      },
+      "id": "mvp-upsert",
+      "name": "Upsert whatsapp_connections (Supabase)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 100]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"ok\": true,\n  \"success\": true,\n  \"connection\": {\n    \"phone_number_id\": \"{{ $('Discover WABA + Phone (GraphAPI)').item.json.phone_number_id }}\",\n    \"waba_id\": \"{{ $('Discover WABA + Phone (GraphAPI)').item.json.waba_id }}\",\n    \"display_phone_number\": \"{{ $('Discover WABA + Phone (GraphAPI)').item.json.display_phone_number }}\",\n    \"verified_name\": \"{{ $('Discover WABA + Phone (GraphAPI)').item.json.verified_name }}\",\n    \"active\": true\n  }\n}",
+        "options": {}
+      },
+      "id": "mvp-resp-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1620, 100]
+    },
+    {
+      "parameters": {
+        "responseCode": 400,
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"message\": \"{{ $json.message || 'Faltan parámetros requeridos.' }}\"\n}",
+        "options": {}
+      },
+      "id": "mvp-resp-bad-params",
+      "name": "Respond 400 (params)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [740, 420]
+    },
+    {
+      "parameters": {
+        "responseCode": 502,
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"message\": \"{{ $json.message || 'Error al descubrir cuenta de WhatsApp en Meta.' }}\"\n}",
+        "options": {}
+      },
+      "id": "mvp-resp-discover-fail",
+      "name": "Respond 502 (discover)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1400, 340]
+    }
+  ],
+  "connections": {
+    "Webhook POST": {
+      "main": [[{ "node": "Extraer code + user_id", "type": "main", "index": 0 }]]
+    },
+    "Extraer code + user_id": {
+      "main": [[{ "node": "Params OK?", "type": "main", "index": 0 }]]
+    },
+    "Params OK?": {
+      "main": [
+        [{ "node": "Intercambiar code → Token (Meta)", "type": "main", "index": 0 }],
+        [{ "node": "Respond 400 (params)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Intercambiar code → Token (Meta)": {
+      "main": [[{ "node": "Discover WABA + Phone (GraphAPI)", "type": "main", "index": 0 }]]
+    },
+    "Discover WABA + Phone (GraphAPI)": {
+      "main": [[{ "node": "Discover OK?", "type": "main", "index": 0 }]]
+    },
+    "Discover OK?": {
+      "main": [
+        [{ "node": "Upsert whatsapp_connections (Supabase)", "type": "main", "index": 0 }],
+        [{ "node": "Respond 502 (discover)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Upsert whatsapp_connections (Supabase)": {
+      "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "wpp-link-start-mvp-1",
+  "tags": []
+}

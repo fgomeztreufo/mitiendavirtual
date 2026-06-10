@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { supabase } from '../supabaseClient';
 
-// Declaración para evitar errores de TypeScript con el objeto FB global
 declare global {
   interface Window {
     FB: any;
@@ -10,14 +9,15 @@ declare global {
   }
 }
 
-const CONFIG_ID = '1710544543478147'; // Tu ID de Configuración de Meta
-const APP_ID = '1397698478805069';    // Tu ID de Aplicación
+const APP_ID = '1397698478805069';
+const CONFIG_ID = '1710544543478147';
+
+type ConnectionStatus = 'idle' | 'loading-sdk' | 'sdk-ready' | 'connecting' | 'exchanging' | 'success' | 'error';
 
 export default function WhatsAppConnector() {
-  const [loading, setLoading] = useState(false);
-  const [sdkReady, setSdkReady] = useState(false);
+  const [status, setStatus] = useState<ConnectionStatus>('loading-sdk');
+  const [errorMsg, setErrorMsg] = useState('');
 
-  // 1. Carga inicial del SDK de Meta
   useEffect(() => {
     window.fbAsyncInit = function () {
       window.FB.init({
@@ -26,51 +26,52 @@ export default function WhatsAppConnector() {
         xfbml: true,
         version: 'v25.0'
       });
-      setSdkReady(true);
+      setStatus('sdk-ready');
     };
 
     const scriptId = 'facebook-jssdk';
     if (!document.getElementById(scriptId)) {
       const js = document.createElement('script');
       js.id = scriptId;
-      js.src = "https://connect.facebook.net/en_US/sdk.js";
+      js.src = 'https://connect.facebook.net/en_US/sdk.js';
       document.body.appendChild(js);
-    } else {
-      setSdkReady(true);
+    } else if (window.FB) {
+      setStatus('sdk-ready');
     }
   }, []);
 
-  // 2. Función para disparar el Popup de Meta
   const launchWhatsAppLogin = () => {
     if (!window.FB) return;
 
-    setLoading(true);
+    setStatus('connecting');
+    setErrorMsg('');
+
     window.FB.login((response: any) => {
-      setLoading(false);
       if (response.authResponse) {
         const { code } = response.authResponse;
-        console.log("Código de autorización recibido:", code);
-        // AQUÍ DEBES ENVIAR EL 'code' A TU BACKEND
         handleCodeExchange(code);
       } else {
-        console.log("El usuario canceló el inicio de sesión");
+        setStatus('sdk-ready');
+        Swal.fire('Cancelado', 'No se completó la vinculación con Meta.', 'info');
       }
     }, {
       config_id: CONFIG_ID,
       response_type: 'code',
-      override_default_response_type: true, // <--- ESTA ES LA LÍNEA CLAVE
-      override_permissions: true,
+      override_default_response_type: true,
       extras: {
-        feature: 'whatsapp_embedded_signup', // Declarar explícitamente el flujo de WhatsApp
-        version: 2
+        sessionInfoVersion: '3',
+        version: 'v4'
       }
     });
   };
 
   const handleCodeExchange = async (code: string) => {
+    setStatus('exchanging');
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        setStatus('error');
+        setErrorMsg('Sesión expirada.');
         Swal.fire('Error', 'Debes iniciar sesión antes de vincular WhatsApp.', 'error');
         return;
       }
@@ -85,27 +86,69 @@ export default function WhatsAppConnector() {
       });
 
       if (response.ok) {
-        Swal.fire('¡Éxito!', 'Cuenta vinculada correctamente.', 'success');
+        const data = await response.json().catch(() => ({}));
+        setStatus('success');
+        Swal.fire({
+          icon: 'success',
+          title: '¡Conectado!',
+          text: data.connection?.display_phone_number
+            ? `Número ${data.connection.display_phone_number} vinculado correctamente.`
+            : 'Tu cuenta de WhatsApp fue vinculada correctamente.',
+        });
       } else {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.message || 'Error al vincular');
       }
     } catch (error: any) {
+      setStatus('error');
+      setErrorMsg(error.message || 'Error desconocido');
       Swal.fire('Error', error.message || 'No se pudo completar la vinculación.', 'error');
     }
   };
 
+  const buttonLabel = {
+    'loading-sdk': 'Cargando SDK de Meta...',
+    'sdk-ready': 'Conectar con WhatsApp',
+    'connecting': 'Conectando con Meta...',
+    'exchanging': 'Vinculando cuenta...',
+    'success': '✓ WhatsApp conectado',
+    'error': 'Reintentar conexión',
+    'idle': 'Conectar con WhatsApp',
+  }[status];
+
+  const isDisabled = status === 'loading-sdk' || status === 'connecting' || status === 'exchanging';
+  const isProcessing = status === 'connecting' || status === 'exchanging';
+
   return (
-    <div className="p-6 border rounded-xl shadow-lg bg-white">
-      <h2 className="text-xl font-bold mb-4">Conexión de WhatsApp</h2>
+    <div className="p-6 border rounded-xl shadow-lg bg-white max-w-md">
+      <h2 className="text-xl font-bold mb-2">Conexión de WhatsApp</h2>
+      <p className="text-sm text-gray-500 mb-4">
+        Vincula tu número de WhatsApp Business para que tu asistente IA pueda responder a tus clientes.
+      </p>
+
       <button
-        onClick={launchWhatsAppLogin}
-        disabled={!sdkReady || loading}
-        className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400"
+        onClick={status === 'success' ? undefined : launchWhatsAppLogin}
+        disabled={isDisabled || status === 'success'}
+        className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
+          status === 'success'
+            ? 'bg-green-600 text-white cursor-default'
+            : status === 'error'
+              ? 'bg-red-500 text-white hover:bg-red-600'
+              : 'bg-[#25D366] text-white hover:bg-[#1da851] disabled:bg-gray-400'
+        }`}
       >
-        {loading ? 'Procesando...' : 'Conectar con WhatsApp'}
+        {isProcessing && (
+          <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+        )}
+        {buttonLabel}
       </button>
-      {!sdkReady && <p className="text-sm text-gray-500 mt-2">Cargando SDK de Meta...</p>}
+
+      {status === 'error' && errorMsg && (
+        <p className="text-sm text-red-500 mt-2">{errorMsg}</p>
+      )}
     </div>
   );
 }
