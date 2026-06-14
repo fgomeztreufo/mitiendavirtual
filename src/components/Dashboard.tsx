@@ -36,7 +36,7 @@ export default function Dashboard({ session }: { session: Session }) {
   // Plan access helpers (evaluated after profile loads)
   const planCode = normalizePlanType(profile?.plan_type)
   const hasTelegram = ['basic', 'pro', 'full'].includes(planCode)
-  const hasWhatsApp = true // habilitado para pruebas
+  const hasWhatsApp = ['pro', 'full'].includes(planCode)
 
   // Manejo de alertas por URL (Pagos o Conexiones)
   useEffect(() => {
@@ -120,7 +120,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <MobileNavBtn label="Ventas Capturadas" active={activeTab === 'leads'} onClick={() => { setActiveTab('leads'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Telegram" active={activeTab === 'telegram'} locked={!hasTelegram} lockLabel="Básico+" onClick={() => { if (hasTelegram) { setActiveTab('telegram'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
             {hasTelegram && <MobileNavBtn label="Leads Telegram" active={activeTab === 'telegram-leads'} onClick={() => { setActiveTab('telegram-leads'); setMobileMenuOpen(false); }} />}
-            <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} locked={!hasWhatsApp} lockLabel="Próx." onClick={() => { setActiveTab('plans'); setMobileMenuOpen(false); }} />
+            <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} locked={!hasWhatsApp} lockLabel="Pro+" onClick={() => { setActiveTab('plans'); setMobileMenuOpen(false); }} />
             <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-4 mb-2 tracking-widest">Configuración</p>
             <MobileNavBtn label="Notificaciones" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Configura tu Instagram" active={activeTab === 'instagram'} onClick={() => { setActiveTab('instagram'); setMobileMenuOpen(false); }} />
@@ -200,7 +200,7 @@ export default function Dashboard({ session }: { session: Session }) {
             active={activeTab === 'whatsapp'} 
             onClick={() => hasWhatsApp ? (setActiveTab('whatsapp'), setLegalView(null)) : setActiveTab('plans')} 
             locked={!hasWhatsApp}
-            lockLabel="Próx."
+            lockLabel="Pro+"
           />
 
           <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Configuración</p>
@@ -226,7 +226,7 @@ export default function Dashboard({ session }: { session: Session }) {
           active={activeTab === 'whatsapp'} 
           onClick={() => hasWhatsApp ? (setActiveTab('whatsapp'), setLegalView(null)) : setActiveTab('plans')}
           locked={!hasWhatsApp}
-          lockLabel="Próx."
+          lockLabel="Pro+"
         />
          {/* Botón Conocimiento con submenú */}
         <SidebarBtn 
@@ -301,7 +301,15 @@ export default function Dashboard({ session }: { session: Session }) {
                 onUpdate={getData} 
               />
             )}
-            {activeTab === 'whatsapp' && <WhatsAppView />} 
+            {activeTab === 'whatsapp' && (
+              <WhatsAppView
+                session={session}
+                profile={profile}
+                instance={instance}
+                onUpdate={getData}
+                goToPlans={() => setActiveTab('plans')}
+              />
+            )}
             {activeTab === 'telegram' && (
               <TelegramView
                 session={session}

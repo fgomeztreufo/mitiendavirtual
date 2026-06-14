@@ -1,0 +1,215 @@
+{
+  "info": {
+    "name": "WhatsApp Test — Mi Tienda Virtual",
+    "description": "Colección para simular el número test +1 (555) 645-6502 sin pasar por login de Meta.\n\nVariables requeridas:\n- SUPABASE_URL\n- SUPABASE_ANON_KEY\n- SUPABASE_SERVICE_ROLE_KEY\n- USER_ID (tu user id de Supabase auth)\n- BASE_URL (ej: http://localhost:5173 o https://mitiendavirtual.cl)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "SUPABASE_URL", "value": "", "type": "string" },
+    { "key": "SUPABASE_ANON_KEY", "value": "", "type": "string" },
+    { "key": "SUPABASE_SERVICE_ROLE_KEY", "value": "", "type": "string" },
+    { "key": "USER_ID", "value": "", "type": "string" },
+    { "key": "BASE_URL", "value": "http://localhost:5173", "type": "string" },
+    { "key": "TEST_PHONE", "value": "+1 (555) 645-6502", "type": "string" },
+    { "key": "TEST_PHONE_NUMBER_ID", "value": "test_555_645_6502", "type": "string" },
+    { "key": "TEST_WABA_ID", "value": "test_waba_001", "type": "string" },
+    { "key": "META_ACCESS_TOKEN", "value": "", "type": "string" },
+    { "key": "WHATSAPP_WEBHOOK_SECRET", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Seed — Insertar número test",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{SUPABASE_ANON_KEY}}" },
+          { "key": "Authorization", "value": "Bearer {{SUPABASE_SERVICE_ROLE_KEY}}" },
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Prefer", "value": "resolution=merge-duplicates" }
+        ],
+        "url": {
+          "raw": "{{SUPABASE_URL}}/rest/v1/whatsapp_connections",
+          "host": ["{{SUPABASE_URL}}"],
+          "path": ["rest", "v1", "whatsapp_connections"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"{{USER_ID}}\",\n  \"phone_number_id\": \"{{TEST_PHONE_NUMBER_ID}}\",\n  \"waba_id\": \"{{TEST_WABA_ID}}\",\n  \"display_phone_number\": \"{{TEST_PHONE}}\",\n  \"access_token\": \"TEST_TOKEN_NO_REAL\",\n  \"active\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Check — Ver conexión activa",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "apikey", "value": "{{SUPABASE_ANON_KEY}}" },
+          { "key": "Authorization", "value": "Bearer {{SUPABASE_SERVICE_ROLE_KEY}}" }
+        ],
+        "url": {
+          "raw": "{{SUPABASE_URL}}/rest/v1/whatsapp_connections?user_id=eq.{{USER_ID}}&select=*",
+          "host": ["{{SUPABASE_URL}}"],
+          "path": ["rest", "v1", "whatsapp_connections"],
+          "query": [
+            { "key": "user_id", "value": "eq.{{USER_ID}}" },
+            { "key": "select", "value": "*" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "3. Pausar — Set active=false",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "apikey", "value": "{{SUPABASE_ANON_KEY}}" },
+          { "key": "Authorization", "value": "Bearer {{SUPABASE_SERVICE_ROLE_KEY}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{SUPABASE_URL}}/rest/v1/whatsapp_connections?user_id=eq.{{USER_ID}}&phone_number_id=eq.{{TEST_PHONE_NUMBER_ID}}",
+          "host": ["{{SUPABASE_URL}}"],
+          "path": ["rest", "v1", "whatsapp_connections"],
+          "query": [
+            { "key": "user_id", "value": "eq.{{USER_ID}}" },
+            { "key": "phone_number_id", "value": "eq.{{TEST_PHONE_NUMBER_ID}}" }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"active\": false }"
+        }
+      }
+    },
+    {
+      "name": "4. Reactivar — Set active=true",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "apikey", "value": "{{SUPABASE_ANON_KEY}}" },
+          { "key": "Authorization", "value": "Bearer {{SUPABASE_SERVICE_ROLE_KEY}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{SUPABASE_URL}}/rest/v1/whatsapp_connections?user_id=eq.{{USER_ID}}&phone_number_id=eq.{{TEST_PHONE_NUMBER_ID}}",
+          "host": ["{{SUPABASE_URL}}"],
+          "path": ["rest", "v1", "whatsapp_connections"],
+          "query": [
+            { "key": "user_id", "value": "eq.{{USER_ID}}" },
+            { "key": "phone_number_id", "value": "eq.{{TEST_PHONE_NUMBER_ID}}" }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"active\": true }"
+        }
+      }
+    },
+    {
+      "name": "5. Simular mensaje entrante (Inbound)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-whatsapp-webhook-secret", "value": "{{WHATSAPP_WEBHOOK_SECRET}}" }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/api/whatsapp-webhook",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "whatsapp-webhook"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"object\": \"whatsapp_business_account\",\n  \"entry\": [\n    {\n      \"id\": \"{{TEST_WABA_ID}}\",\n      \"changes\": [\n        {\n          \"value\": {\n            \"messaging_product\": \"whatsapp\",\n            \"metadata\": {\n              \"display_phone_number\": \"15556456502\",\n              \"phone_number_id\": \"{{TEST_PHONE_NUMBER_ID}}\"\n            },\n            \"contacts\": [\n              {\n                \"profile\": { \"name\": \"Test User\" },\n                \"wa_id\": \"56912345678\"\n              }\n            ],\n            \"messages\": [\n              {\n                \"from\": \"56912345678\",\n                \"id\": \"wamid.test123\",\n                \"timestamp\": \"1718300000\",\n                \"text\": { \"body\": \"Hola, quiero saber sobre sus productos\" },\n                \"type\": \"text\"\n              }\n            ]\n          },\n          \"field\": \"messages\"\n        }\n      ]\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "6. Discover — Obtener phone_number_id y waba_id reales",
+      "request": {
+        "description": "Llama a /api/whatsapp-discover que consulta la Graph API de Meta para listar tus WABAs y números. Necesitas un access_token válido de Meta (lo obtienes del login OAuth o desde Meta Business Suite > System Users). Responde con un array de objetos: { phone_number_id, waba_id, display_phone_number, verified_name, quality_rating }.",
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{META_ACCESS_TOKEN}}" }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/api/whatsapp-discover",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "whatsapp-discover"]
+        }
+      }
+    },
+    {
+      "name": "6b. Discover — Inspect config (sin ejecutar)",
+      "request": {
+        "description": "Verifica que la URL de n8n está configurada correctamente sin hacer la llamada real a Graph API.",
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{BASE_URL}}/api/whatsapp-discover?inspect=1",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "whatsapp-discover"],
+          "query": [
+            { "key": "inspect", "value": "1" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "6c. Meta Numbers — Directo a Graph API (sin n8n)",
+      "request": {
+        "description": "Consulta directamente la Graph API de Meta para listar tus WABAs y números de WhatsApp Business.\n\n1. Ve a https://developers.facebook.com/tools/explorer/\n2. Selecciona tu app (1397698478805069)\n3. Genera un User Token con permisos: whatsapp_business_management, whatsapp_business_messaging\n4. Copia el token y pégalo en la variable META_ACCESS_TOKEN\n5. Ejecuta este request\n\nRespuesta: { numbers: [{ phone_number_id, waba_id, display_phone_number, verified_name, quality_rating }], wabas: [...] }",
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{META_ACCESS_TOKEN}}" }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/api/whatsapp-meta-numbers",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "whatsapp-meta-numbers"]
+        }
+      }
+    },
+    {
+      "name": "7. Seed REAL — Insertar número real con datos de Discover",
+      "request": {
+        "description": "Después de ejecutar '6c. Meta Numbers', copia los valores phone_number_id, waba_id y display_phone_number de la respuesta y pégalos aquí. También necesitas el META_ACCESS_TOKEN como access_token para que n8n pueda enviar mensajes.",
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{SUPABASE_ANON_KEY}}" },
+          { "key": "Authorization", "value": "Bearer {{SUPABASE_SERVICE_ROLE_KEY}}" },
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Prefer", "value": "resolution=merge-duplicates" }
+        ],
+        "url": {
+          "raw": "{{SUPABASE_URL}}/rest/v1/whatsapp_connections",
+          "host": ["{{SUPABASE_URL}}"],
+          "path": ["rest", "v1", "whatsapp_connections"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"{{USER_ID}}\",\n  \"phone_number_id\": \"PEGA_AQUI_EL_PHONE_NUMBER_ID\",\n  \"waba_id\": \"PEGA_AQUI_EL_WABA_ID\",\n  \"display_phone_number\": \"PEGA_AQUI_EL_DISPLAY_PHONE\",\n  \"access_token\": \"{{META_ACCESS_TOKEN}}\",\n  \"active\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "8. Cleanup — Eliminar número test",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "apikey", "value": "{{SUPABASE_ANON_KEY}}" },
+          { "key": "Authorization", "value": "Bearer {{SUPABASE_SERVICE_ROLE_KEY}}" }
+        ],
+        "url": {
+          "raw": "{{SUPABASE_URL}}/rest/v1/whatsapp_connections?user_id=eq.{{USER_ID}}&phone_number_id=eq.{{TEST_PHONE_NUMBER_ID}}",
+          "host": ["{{SUPABASE_URL}}"],
+          "path": ["rest", "v1", "whatsapp_connections"],
+          "query": [
+            { "key": "user_id", "value": "eq.{{USER_ID}}" },
+            { "key": "phone_number_id", "value": "eq.{{TEST_PHONE_NUMBER_ID}}" }
+          ]
+        }
+      }
+    }
+  ]
+}
