@@ -11,8 +11,8 @@
     { "key": "USER_ID", "value": "", "type": "string" },
     { "key": "BASE_URL", "value": "http://localhost:5173", "type": "string" },
     { "key": "TEST_PHONE", "value": "+1 (555) 645-6502", "type": "string" },
-    { "key": "TEST_PHONE_NUMBER_ID", "value": "test_555_645_6502", "type": "string" },
-    { "key": "TEST_WABA_ID", "value": "test_waba_001", "type": "string" },
+    { "key": "TEST_PHONE_NUMBER_ID", "value": "1151507884710613", "type": "string" },
+    { "key": "TEST_WABA_ID", "value": "1601129181434629", "type": "string" },
     { "key": "META_ACCESS_TOKEN", "value": "", "type": "string" },
     { "key": "WHATSAPP_WEBHOOK_SECRET", "value": "", "type": "string" }
   ],
@@ -121,6 +121,38 @@
         "body": {
           "mode": "raw",
           "raw": "{\n  \"object\": \"whatsapp_business_account\",\n  \"entry\": [\n    {\n      \"id\": \"{{TEST_WABA_ID}}\",\n      \"changes\": [\n        {\n          \"value\": {\n            \"messaging_product\": \"whatsapp\",\n            \"metadata\": {\n              \"display_phone_number\": \"15556456502\",\n              \"phone_number_id\": \"{{TEST_PHONE_NUMBER_ID}}\"\n            },\n            \"contacts\": [\n              {\n                \"profile\": { \"name\": \"Test User\" },\n                \"wa_id\": \"56912345678\"\n              }\n            ],\n            \"messages\": [\n              {\n                \"from\": \"56912345678\",\n                \"id\": \"wamid.test123\",\n                \"timestamp\": \"1718300000\",\n                \"text\": { \"body\": \"Hola, quiero saber sobre sus productos\" },\n                \"type\": \"text\"\n              }\n            ]\n          },\n          \"field\": \"messages\"\n        }\n      ]\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "5b. Ping n8n directo — Verificar que n8n responde",
+      "request": {
+        "description": "Envía un GET a la URL del webhook de n8n para verificar que es accesible desde internet. Si responde (200, 404, o cualquier cosa), n8n está vivo. Si da timeout o connection refused, la URL no es accesible.",
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://webhook.mitiendavirtual.cl/webhook/whatsapp-webhook",
+          "host": ["https://webhook.mitiendavirtual.cl"],
+          "path": ["webhook", "whatsapp-webhook"]
+        }
+      }
+    },
+    {
+      "name": "5c. Simular inbound DIRECTO a n8n (bypass Vercel)",
+      "request": {
+        "description": "Envía el payload de mensaje entrante DIRECTAMENTE a n8n, sin pasar por Vercel. Si n8n registra una ejecución, el problema está entre Meta → n8n. Si NO registra, el problema es el workflow de n8n.",
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "https://webhook.mitiendavirtual.cl/webhook/whatsapp-webhook",
+          "host": ["https://webhook.mitiendavirtual.cl"],
+          "path": ["webhook", "whatsapp-webhook"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"object\": \"whatsapp_business_account\",\n  \"entry\": [\n    {\n      \"id\": \"1489556665990204\",\n      \"changes\": [\n        {\n          \"value\": {\n            \"messaging_product\": \"whatsapp\",\n            \"metadata\": {\n              \"display_phone_number\": \"56972544458\",\n              \"phone_number_id\": \"1107190652485326\"\n            },\n            \"contacts\": [\n              {\n                \"profile\": { \"name\": \"Test Diagnostico\" },\n                \"wa_id\": \"56900000000\"\n              }\n            ],\n            \"messages\": [\n              {\n                \"from\": \"56900000000\",\n                \"id\": \"wamid.diag_test_001\",\n                \"timestamp\": \"1718400000\",\n                \"text\": { \"body\": \"Mensaje de diagnostico desde Postman\" },\n                \"type\": \"text\"\n              }\n            ]\n          },\n          \"field\": \"messages\"\n        }\n      ]\n    }\n  ]\n}"
         }
       }
     },
