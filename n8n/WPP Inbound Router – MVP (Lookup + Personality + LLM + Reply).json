@@ -1,0 +1,1068 @@
+{
+  "name": "WPP Inbound Router – MVP (Lookup + Personality + LLM + Reply)",
+  "nodes": [
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "path": "whatsapp-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "bc067822-0bc2-4117-a0aa-bf3b103350a1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        21504,
+        11072
+      ],
+      "webhookId": "wb-wpp-inbound-mvp"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.challenge'] }}",
+        "options": {}
+      },
+      "id": "ba9e09ae-6114-465c-96c3-cad601fe9636",
+      "name": "Respond Verify (GET)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        22032,
+        10832
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const body = items[0].json.body || items[0].json || {};\nconst entry = (body.entry || [])[0] || {};\nconst change = (entry.changes || [])[0] || {};\nconst value = change.value || {};\nconst messages = value.messages || [];\nconst msg = messages[0] || {};\nconst text = (msg.text && msg.text.body) || (msg.button && msg.button.text) || (msg.interactive && msg.interactive.button_reply && msg.interactive.button_reply.title) || '';\nconst phoneNumberId = (value.metadata && value.metadata.phone_number_id) || '';\n\nif (!phoneNumberId || !text.trim()) {\n  items[0].json = { _skip: true, _phone_number_id: phoneNumberId, _message_text: '' };\n  return items;\n}\n\nitems[0].json = {\n  _skip: false,\n  _phone_number_id: phoneNumberId,\n  _from: msg.from || '',\n  _message_text: text.trim(),\n  _message_id: msg.id || '',\n  _timestamp: msg.timestamp || '',\n  _waba_id: entry.id || '',\n  _raw: body\n};\nreturn items;"
+      },
+      "id": "2e72c731-c5dd-4a3a-b16a-77f193c3269f",
+      "name": "Parsear mensaje",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        21856,
+        11088
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "has-text",
+              "leftValue": "={{ $json._skip }}",
+              "rightValue": "false",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f432f3c2-1415-4539-98c4-9b3b0255baa3",
+      "name": "Tiene mensaje?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        22144,
+        11088
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SUPABASE_URL.replace(/\\/$/, '') }}/rest/v1/whatsapp_connections?phone_number_id=eq.{{ $json._phone_number_id }}&active=eq.true&select=id,user_id,instance_id,phone_number_id,waba_id,access_token,display_phone_number&limit=1",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "672db744-aa40-4fbe-9eff-1ed78a3a617f",
+      "name": "Buscar conexion (Supabase)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        22352,
+        11200
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "functionCode": "const prev = $node['Parsear mensaje'].json;\nconst resp = items[0].json;\n\nlet rows = [];\nif (Array.isArray(resp)) {\n  rows = resp;\n} else if (resp && Array.isArray(resp.body)) {\n  rows = resp.body;\n} else if (resp && resp.phone_number_id) {\n  rows = [resp];\n} else if (resp && typeof resp === 'object' && Object.keys(resp).length > 0) {\n  rows = [resp];\n}\n\nif (!rows || rows.length === 0) {\n  items[0].json = { _routed: false, _reason: 'no_connection', ...prev };\n  return items;\n}\n\nconst conn = rows[0];\n\n// Filtrar eco (el negocio se envía a sí mismo)\nconst bizNumber = (conn.display_phone_number || '').replace(/\\D/g, '');\nconst fromNumber = (prev._from || '').replace(/\\D/g, '');\nif (bizNumber && fromNumber && bizNumber === fromNumber) {\n  items[0].json = { _routed: false, _reason: 'echo', ...prev };\n  return items;\n}\n\nitems[0].json = {\n  _routed: true,\n  _user_id: conn.user_id,\n  _instance_id: conn.instance_id,\n  _access_token: conn.access_token,\n  _phone_number_id: prev._phone_number_id,\n  _from: prev._from,\n  _message_text: prev._message_text,\n  _message_id: prev._message_id,\n  _waba_id: prev._waba_id,\n  _display_phone_number: conn.display_phone_number || null\n};\nreturn items;\n"
+      },
+      "id": "2882a9ff-f31e-4179-9cfc-da19acb31dc6",
+      "name": "Enriquecer + filtrar eco",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        22576,
+        11200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-routed",
+              "leftValue": "={{ !$json._routed }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e12b95e1-ff79-4b2c-8661-3a019bec64fe",
+      "name": "Conexion encontrada?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        22768,
+        11200
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const msg = $node['Enriquecer + filtrar eco'].json;\nconst p = items[0].json;\n\nlet rows = [];\nif (Array.isArray(p)) {\n  rows = p;\n} else if (p && typeof p === 'object' && Object.keys(p).length > 0) {\n  rows = [p];\n}\n\nconst personality = rows.length > 0 ? rows[0] : {};\nconst systemPrompt = personality.bot_prompt || personality.system_prompt || personality.personality || 'Eres un asistente conciso y amable en español que ayuda a los clientes de una tienda online. Responde brevemente.';\n\nitems[0].json = {\n  ...msg,\n  _system_prompt: systemPrompt,\n  _ai_name: personality.ai_name || null,\n  _ai_tone: personality.ai_tone || null,\n  _biz_name: personality.biz_name || null,\n  _reply_public: personality.reply_public || null\n};\nreturn items;\n"
+      },
+      "id": "d4be47b3-463d-4dc0-9124-5cd0fa45dce4",
+      "name": "Merge personalidad",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        23600,
+        11296
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v25.0/{{ $node['Enriquecer + filtrar eco'].json._phone_number_id }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Buscar conexion (Supabase)').item.json.access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"+{{ $('Webhook').item.json.body.entry[0].changes[0].value.contacts[0].wa_id }}\",\n  \"text\": {\n    \"body\": {{ JSON.stringify($json.output) }}\n  }\n}",
+        "options": {}
+      },
+      "id": "59ece67b-692f-4aca-a211-2511715240f9",
+      "name": "Enviar respuesta (GraphAPI)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        24304,
+        11296
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ok\" }",
+        "options": {}
+      },
+      "id": "24027ca3-1ee2-474c-8895-4f8dce732fa3",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        25120,
+        10912
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "instances",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        23200,
+        11296
+      ],
+      "id": "ee483e80-3a47-4d06-aa50-530987331123",
+      "name": "get instance ia",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "instance_personalities",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "instance_id",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        23408,
+        11296
+      ],
+      "id": "313e771b-b6f9-43b2-bcc9-79d3439ea265",
+      "name": "get personality",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Utiliza esta herramienta EXCLUSIVAMENTE cuando el usuario pida hablar con un humano, persona real o soporte. No la uses para otras cosas.",
+        "workflowId": {
+          "__rl": true,
+          "value": "gVIWY3kFAMV9tbD4X5DmA",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gVIWY3kFAMV9tbD4X5DmA",
+          "cachedResultName": "Tool - Pasar a Humano"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "instagram_id": "=",
+            "user_id": "={{ $('Get Profile').item.json.id }}",
+            "motivo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('motivo', ``, 'string') }}",
+            "chat_id": "={{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].id }}"
+          },
+          "matchingColumns": [
+            "instagram_id"
+          ],
+          "schema": [
+            {
+              "id": "instagram_id",
+              "displayName": "instagram_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "motivo",
+              "displayName": "motivo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        23728,
+        11696
+      ],
+      "id": "2639e768-499b-431c-93e0-3cae0e70baa5",
+      "name": "Call 'Tool - Pasar a Humano'"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Get Profile').item.json.id }}",
+        "contextWindowLength": 7
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        23568,
+        11696
+      ],
+      "id": "178803ec-4e97-4d95-bd4d-2cd79e1aa43d",
+      "name": "Memoria de agente"
+    },
+    {
+      "parameters": {
+        "description": "Usa esta herramienta ÚNICAMENTE cuando el cliente confirme su intención de compra o agendamiento. Esta herramienta guarda el prospecto en la base de datos para que un humano lo contacte. Debes haber intentado obtener el nombre y WhatsApp antes, pero si no los da, usa 'Anónimo' y 'Chat Directo'. Es vital para el proceso de ventas del negocio.\"",
+        "workflowId": {
+          "__rl": true,
+          "value": "0yuSoBP0x8NztpyP1VtGN",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/0yuSoBP0x8NztpyP1VtGN",
+          "cachedResultName": "Cosechador de Oro"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Get Profile').item.json.id }}",
+            "cliente_nombre": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('cliente_nombre', ``, 'string') }}",
+            "whatsapp_contacto": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('whatsapp_contacto', ``, 'string') }}",
+            "intencion_compra": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('intencion_compra', ``, 'string') }}",
+            "resumen_chat": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('resumen_chat', ``, 'string') }}",
+            "valor_estimado": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('valor_estimado', ``, 'string') }}",
+            "sistema": "WhatsApp"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "cliente_nombre",
+              "displayName": "cliente_nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "whatsapp_contacto",
+              "displayName": "whatsapp_contacto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "intencion_compra",
+              "displayName": "intencion_compra",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "resumen_chat",
+              "displayName": "resumen_chat",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "valor_estimado",
+              "displayName": "valor_estimado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sistema",
+              "displayName": "sistema",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        23920,
+        11696
+      ],
+      "id": "e44079e3-a037-4aa9-a73c-75329d442661",
+      "name": "Call 'Cosechador de Oro'"
+    },
+    {
+      "parameters": {
+        "description": "Eres un asistente experto. Tu base de conocimientos específica para la información estática de este negocio se encuentra en la herramienta 'Tool - Buscador Inteligente'.\n\nÚsala EXCLUSIVAMENTE si el usuario pregunta por productos físicos, stock, precios de artículos en venta, dirección, ubicación, políticas de la empresa o preguntas frecuentes generales.\n\nNUNCA utilices esta herramienta si el cliente tiene la intención de agendar, reservar, consultar disponibilidad de citas, pedir horas con un profesional o cancelar turnos. Si el mensaje incluye palabras como \"hora\", \"cita\", \"agendar\" o \"reservar\", debes ignorar esta herramienta por completo y usar 'Tool - Agendador'.\n\nNo inventes información. Si tras buscar no encuentras el dato, usa la herramienta 'Tool - Pasar a Humano'. Tus respuestas deben ser breves y concisas, sin exceder los 1000 caracteres.",
+        "workflowId": {
+          "__rl": true,
+          "value": "CCEahHzGReI4SAKVig2bc",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/CCEahHzGReI4SAKVig2bc",
+          "cachedResultName": "Tool - Buscador Inteligente"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $json._message_text }}",
+            "plan": "={{ $('Get Profile').item.json.plan_type }}",
+            "user_id": "={{ $('Get Profile').item.json.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "plan",
+              "displayName": "plan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        24096,
+        11696
+      ],
+      "id": "66e58a3b-5e0c-4333-9ef5-2a0c78cde9fc",
+      "name": "Call 'Tool Buscador Inteligente'"
+    },
+    {
+      "parameters": {
+        "description": "Úsala cuando el usuario se despida, dé las gracias o la conversación haya llegado a su fin natural. Esta herramienta silencia el bot para este usuario por 1 hora para evitar respuestas redundantes. No genera ninguna respuesta visual para el cliente.",
+        "workflowId": {
+          "__rl": true,
+          "value": "JceNyTPqqG4HwN2qaBCh4",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/JceNyTPqqG4HwN2qaBCh4",
+          "cachedResultName": "El Silenciador"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "instagram_id": "=",
+            "chat_id": "={{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].id }}"
+          },
+          "matchingColumns": [
+            "instagram_id"
+          ],
+          "schema": [
+            {
+              "id": "instagram_id",
+              "displayName": "instagram_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        24256,
+        11696
+      ],
+      "id": "8fd4ace3-d941-42f8-afaa-c4fb0cecc1a9",
+      "name": "Call 'El Silenciador'"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        23408,
+        11696
+      ],
+      "id": "8138fa6b-f386-4de2-9f27-11c8ae80facb",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "x102Fc6eiHRwiPt1",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "profiles",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json._user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        22976,
+        11296
+      ],
+      "id": "94f39680-5b22-46a8-a851-d9238cd8e5da",
+      "name": "Get Profile",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json._message_text }}",
+        "options": {
+          "systemMessage": "={{ $json._system_prompt }}\nFECHA ACTUAL: {{ $now.setZone('America/Santiago').toFormat('yyyy-MM-dd') }}.\nHORA ACTUAL: {{ $now.setZone('America/Santiago').toFormat('HH:mm') }}.\nDIA: {{ $now.setZone('America/Santiago').setLocale('es').toFormat('cccc') }}.\n\n[REGLAS GENERALES]\n- Respuestas breves y directas. MAXIMO 1000 caracteres.\n- SALUDO: Solo en tu PRIMER mensaje. Despues ve directo al grano.\n- AMNESIA TOTAL: Tu unica fuente son las herramientas. Si no devuelven datos, NO inventes.\n- OFF-TOPIC: Solo aplica si el mensaje NO tiene relacion con el negocio ni con un flujo activo. Si estas en medio de un agendamiento, NUNCA trates una respuesta como off-topic.\n\n[HERRAMIENTAS]\n1. 'Call Tool - Agendador': Para agendar, reservar, hora, cita, consultar o cancelar reservas.\n2. 'Call Tool Buscador Inteligente': Para productos, servicios, precios, stock, FAQs.\n\n[PRECIOS]\nMuestra siempre \"$\" sin quitar ceros (14000 = $14.000).\n[FLUJO DE AGENDAMIENTO - BÚSQUEDA DEL TURNO MÁS CERCANO]\nTú tomas el control. Sigue este orden paso a paso y NO lances múltiples herramientas a la vez si no es necesario:\n\n- PASO 1 (Intención): Si el cliente quiere agendar ➔ Ejecuta INMEDIATAMENTE action=\"list_services\". Muestra los servicios y pregunta cuál desea.\n- PASO 2 (Búsqueda de Disponibilidad Inteligente): Una vez identificado el UUID del servicio, analiza lo que pidió el cliente:\n  \n  CASO A - NO PIDIÓ BARBERO ESPECÍFICO: \n  Ejecuta action=\"list_staff\". Internamente (sin preguntarle al cliente), elige al primer barbero de la lista e inmediatamente ejecuta action=\"get_slots\" para la FECHA ACTUAL. \n  \n  CASO B - PIDIÓ UN BARBERO ESPECÍFICO (ej. \"Con Felipe\"):\n  Obtén el UUID de ese barbero ejecutando action=\"list_staff\" y luego ejecuta action=\"get_slots\" para la FECHA ACTUAL.\n\n- PASO 3 (Filtrar y Proponer la Hora): \n  Al recibir los horarios de la herramienta 'get_slots':\n  1. ELIMINA cualquier horario que sea anterior a la HORA ACTUAL (Ej: Si son las 15:00, no puedes ofrecer las 14:00).\n  2. Verifica que el bloque (ej. 45 min) calce. \n  3. Si HAY horas válidas para HOY: Ofrece la hora MÁS CERCANA disponible. (Ej: \"Tengo disponibilidad hoy a las 16:30. ¿Te sirve o prefieres más tarde?\").\n  4. Si NO HAY horas válidas para HOY: NO le digas al cliente que no hay. Toma la iniciativa y ejecuta NUEVAMENTE action=\"get_slots\" sumando un día a la fecha (mañana), y así sucesivamente hasta encontrar el primer bloque libre. Luego ofrécelo: \"Lo más pronto que tengo es el [Día] a las [Hora]. ¿Lo reservo?\".\n\n- PASO 4 (Cierre): Cuando el cliente acepte la hora propuesta ➔ Pide su nombre y apellido.\n- PASO 5 (Reserva): Ejecuta action=\"create_booking\" enviando los UUIDs, el TIMESTAMP_EXACTO del horario y el nombre. Confirma la reserva.\n\n[REGLA ANTI-AMNESIA PARA RESPUESTAS CORTAS]\nLos clientes responderán con monosílabos (\"Sí\", \"Hoy\", \"Esa\", \"A las 17\"). Prohibido reiniciar el flujo. Ante una respuesta corta, LEE TU ÚLTIMO MENSAJE para deducir el contexto:\n- Si le ofreciste un servicio y dice \"Sí\" ➔ Asume que lo quiere y ejecuta `list_staff`.\n- Si le ofreciste un profesional y dice \"Sí\" ➔ Asume que lo quiere y ejecuta `get_slots` para HOY.\n- Si le diste una lista de horas y dice \"Sí\" ➔ Asume la primera hora disponible de esa lista y pídele su nombre.\n\n[CAPTURA DE LEADS]\nSi el cliente quiere COMPRAR (no agendar):\n1. Pide Nombre y WhatsApp. Si se niega usa \"Prospecto Anonimo\" y \"Chat Directo\".\n2. Ejecuta 'Call Cosechador de Oro'.\n3. Ejecuta 'Pasar a Humano' con motivo=\"VENTA\" o \"SOPORTE\".\n\n{{ ($('Get Profile').item.json.plan_type || '').toLowerCase() == 'free' ? 'INSTRUCCION FINAL: Agrega al final: \"🤖 Power by MiTiendaVirtual (Plan Free)\"' : '' }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        23856,
+        11296
+      ],
+      "id": "22eb973b-851f-4a3c-8189-4f354977bd91",
+      "name": "Agente WhatsApp",
+      "retryOnFail": false,
+      "waitBetweenTries": 5000,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "description": "=Herramienta obligatoria para gestionar el agendamiento. Úsala para listar servicios, buscar profesionales, consultar horas disponibles, crear o cancelar citas. Todos los datos deben enviarse empaquetados como un JSON dentro del parámetro 'instruccion'.",
+        "workflowId": {
+          "__rl": true,
+          "value": "-pQhRrJKywqLtJwqBlzeE",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/-pQhRrJKywqLtJwqBlzeE",
+          "cachedResultName": "Tool - Agendador"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Get Profile').item.json.id }}",
+            "plan": "={{ $('Get Profile').item.json.plan_type }}",
+            "client_phone": "={{ $('Webhook').item.json.body.entry[0].changes[0].value.messages[0].from }}",
+            "instruccion": "=={{ $fromAI('instruccion', 'OBLIGATORIO: Escribe un STRING que contenga un JSON válido. Estructuras: Servicios -> {\"action\": \"list_services\"} | Staff -> {\"action\": \"list_staff\", \"service_id\": \"UUID\"} | Horas -> {\"action\": \"get_slots\", \"service_id\": \"UUID\", \"staff_id\": \"UUID\", \"date\": \"YYYY-MM-DD\"} | Reservar -> {\"action\": \"create_booking\", \"service_id\": \"UUID\", \"staff_id\": \"UUID\", \"slot_start\": \"TIMESTAMP\", \"client_name\": \"Nombre\"}', 'string') }}",
+            "query": "={{ $('Merge personalidad').item.json._message_text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "plan",
+              "displayName": "plan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "client_phone",
+              "displayName": "client_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "instruccion",
+              "displayName": "instruccion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        24448,
+        11696
+      ],
+      "id": "d717aefe-ebf1-4b26-9bb5-ec81a25ee9be",
+      "name": "Call 'Tool - Agendador'"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "webhook.mitiendavirtual.cl",
+            "user-agent": "facebookexternalua",
+            "content-length": "557",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1",
+            "cf-connecting-ip": "2a03:2880:21ff:40::",
+            "cf-ipcountry": "US",
+            "cf-ray": "a0f713a8cdf6d12f-ATL",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-warp-tag-id": "25fb36c4-be2f-495a-ad47-f72146c5307a",
+            "connection": "keep-alive",
+            "content-type": "application/json",
+            "x-forwarded-for": "2a03:2880:21ff:40::",
+            "x-forwarded-proto": "https",
+            "x-hub-signature": "sha1=cace0c59c7c9be6f7894616de981a2aadfb755b4",
+            "x-hub-signature-256": "sha256=79ae7f9a1cc37d21adf584f11af121b88a19f9cb1914a88a1c2eb58f44995e86"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "object": "whatsapp_business_account",
+            "entry": [
+              {
+                "id": "2342012839982814",
+                "changes": [
+                  {
+                    "value": {
+                      "messaging_product": "whatsapp",
+                      "metadata": {
+                        "display_phone_number": "56972544458",
+                        "phone_number_id": "1172188332643983"
+                      },
+                      "contacts": [
+                        {
+                          "profile": {
+                            "name": "Felipe Gomez"
+                          },
+                          "wa_id": "56954080571",
+                          "user_id": "CL.1232159745493024"
+                        }
+                      ],
+                      "messages": [
+                        {
+                          "from": "56954080571",
+                          "from_user_id": "CL.1232159745493024",
+                          "id": "wamid.HBgLNTY5NTQwODA1NzEVAgASGCBBQzdDMTREQ0M2OUE4OTExRUVDRTQyQ0I1MzMxRDMzNwA=",
+                          "timestamp": "1782087517",
+                          "text": {
+                            "body": "Si"
+                          },
+                          "type": "text"
+                        }
+                      ]
+                    },
+                    "field": "messages"
+                  }
+                ]
+              }
+            ]
+          },
+          "webhookUrl": "http://localhost:5678/webhook/whatsapp-webhook",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0,
+          "input": 1
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond Verify (GET)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parsear mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsear mensaje": {
+      "main": [
+        [
+          {
+            "node": "Tiene mensaje?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tiene mensaje?": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Buscar conexion (Supabase)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar conexion (Supabase)": {
+      "main": [
+        [
+          {
+            "node": "Enriquecer + filtrar eco",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enriquecer + filtrar eco": {
+      "main": [
+        [
+          {
+            "node": "Conexion encontrada?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conexion encontrada?": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge personalidad": {
+      "main": [
+        [
+          {
+            "node": "Agente WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar respuesta (GraphAPI)": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get instance ia": {
+      "main": [
+        [
+          {
+            "node": "get personality",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get personality": {
+      "main": [
+        [
+          {
+            "node": "Merge personalidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Tool - Pasar a Humano'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente WhatsApp",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memoria de agente": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente WhatsApp",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Cosechador de Oro'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente WhatsApp",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Tool Buscador Inteligente'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente WhatsApp",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'El Silenciador'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente WhatsApp",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente WhatsApp",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Profile": {
+      "main": [
+        [
+          {
+            "node": "get instance ia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Enviar respuesta (GraphAPI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Tool - Agendador'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente WhatsApp",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "a847c37a-955b-43e6-9295-7301cc7922e7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
+  },
+  "id": "k_zf4tvuGiwXT3ZEFcpzL",
+  "tags": []
+}

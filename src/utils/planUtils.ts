@@ -41,7 +41,7 @@ export const PLAN_PERMISSIONS: Record<string, string[]> = {
   free: ['email'],
   basic: ['email', 'telegram'],
   pro: ['email', 'telegram', 'whatsapp'],
-  full: ['email', 'telegram', 'whatsapp']
+  full: ['email', 'telegram', 'whatsapp', 'scheduling']
 };
 
 export function planDisplayToCode(display?: string) {
