@@ -87,6 +87,7 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
   const [staffServices, setStaffServices] = useState<StaffService[]>([])
   const [schedules, setSchedules] = useState<Schedule[]>([])
   const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [selectedStaffId, setSelectedStaffId] = useState<string>('')
 
   const planCode = normalizePlanType(profile?.plan_type)
   const userId = session?.user?.id
@@ -202,6 +203,8 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
           staff={staff}
           schedules={schedules}
           onRefresh={loadAll}
+          selectedStaff={selectedStaffId}
+          onSelectStaff={setSelectedStaffId}
         />
       )}
       {subTab === 'appointments' && (
@@ -256,6 +259,40 @@ function ServicesPanel({ services, userId, onRefresh }: { services: Service[]; u
     onRefresh()
   }
 
+  const editService = async (svc: Service) => {
+    const { value: formValues } = await Swal.fire({
+      title: 'Editar Servicio',
+      html: `
+        <input id="swal-name" class="swal2-input" placeholder="Nombre" value="${svc.name.replace(/"/g, '&quot;')}">
+        <input id="swal-desc" class="swal2-input" placeholder="Descripción (opcional)" value="${(svc.description || '').replace(/"/g, '&quot;')}">
+        <input id="swal-duration" class="swal2-input" type="number" placeholder="Duración (minutos)" value="${svc.duration_minutes}">
+        <input id="swal-price" class="swal2-input" type="number" placeholder="Precio CLP (opcional)" value="${svc.price ?? ''}">
+        <input id="swal-buffer" class="swal2-input" type="number" placeholder="Buffer entre citas (min)" value="${svc.buffer_minutes}">
+      `,
+      background: '#1a1a1a', color: '#fff',
+      confirmButtonText: 'Guardar',
+      confirmButtonColor: '#6366f1',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        const name = (document.getElementById('swal-name') as HTMLInputElement).value.trim()
+        if (!name) { Swal.showValidationMessage('El nombre es obligatorio'); return false }
+        return {
+          name,
+          description: (document.getElementById('swal-desc') as HTMLInputElement).value.trim() || null,
+          duration_minutes: parseInt((document.getElementById('swal-duration') as HTMLInputElement).value) || 30,
+          price: parseInt((document.getElementById('swal-price') as HTMLInputElement).value) || null,
+          buffer_minutes: parseInt((document.getElementById('swal-buffer') as HTMLInputElement).value) || 0,
+        }
+      }
+    })
+    if (!formValues) return
+
+    const { error } = await supabase.from('services').update(formValues).eq('id', svc.id)
+    if (error) { Swal.fire('Error', error.message, 'error'); return }
+    onRefresh()
+  }
+
   const toggleActive = async (svc: Service) => {
     await supabase.from('services').update({ is_active: !svc.is_active }).eq('id', svc.id)
     onRefresh()
@@ -297,14 +334,17 @@ function ServicesPanel({ services, userId, onRefresh }: { services: Service[]; u
                 <div className="flex gap-3 mt-1 text-[10px] text-gray-500 uppercase tracking-wider">
                   <span>{svc.duration_minutes} min</span>
                   {svc.price && <span>${svc.price.toLocaleString('es-CL')}</span>}
-                  {svc.buffer_minutes > 0 && <span>+{svc.buffer_minutes} min buffer</span>}
+                  {svc.buffer_minutes > 0 && <span>+{svc.buffer_minutes} min descanso</span>}
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <button onClick={() => editService(svc)} className="text-gray-600 hover:text-indigo-400 transition-colors" title="Editar">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                </button>
                 <button onClick={() => toggleActive(svc)} className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${svc.is_active ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10' : 'border-gray-600 text-gray-500 hover:bg-gray-500/10'}`}>
                   {svc.is_active ? 'Activo' : 'Inactivo'}
                 </button>
-                <button onClick={() => deleteService(svc)} className="text-gray-600 hover:text-red-400 transition-colors">
+                <button onClick={() => deleteService(svc)} className="text-gray-600 hover:text-red-400 transition-colors" title="Eliminar">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                 </button>
               </div>
@@ -473,14 +513,20 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh }: {
 }
 
 /* ==================== SCHEDULE PANEL ==================== */
-function SchedulePanel({ staff, schedules, onRefresh }: {
-  staff: StaffMember[]; schedules: Schedule[]; onRefresh: () => void
+function SchedulePanel({ staff, schedules, onRefresh, selectedStaff, onSelectStaff }: {
+  staff: StaffMember[]; schedules: Schedule[]; onRefresh: () => void; selectedStaff: string; onSelectStaff: (id: string) => void
 }) {
-  const [selectedStaff, setSelectedStaff] = useState<string>(staff[0]?.id || '')
   const activeStaff = staff.filter(s => s.is_active)
+  const current = selectedStaff && activeStaff.some(s => s.id === selectedStaff)
+    ? selectedStaff
+    : activeStaff[0]?.id || ''
+
+  useEffect(() => {
+    if (current !== selectedStaff) onSelectStaff(current)
+  }, [current, selectedStaff, onSelectStaff])
 
   const addBlock = async (dayOfWeek: number) => {
-    if (!selectedStaff) return
+    if (!current) return
 
     const hourOptions = Array.from({ length: 24 }, (_, h) => {
       const hh = String(h).padStart(2, '0')
@@ -535,7 +581,7 @@ function SchedulePanel({ staff, schedules, onRefresh }: {
     if (!formValues) return
 
     const { error } = await supabase.from('schedules').insert({
-      staff_id: selectedStaff,
+      staff_id: current,
       day_of_week: dayOfWeek,
       ...formValues,
     })
@@ -548,7 +594,7 @@ function SchedulePanel({ staff, schedules, onRefresh }: {
     onRefresh()
   }
 
-  const staffSchedules = schedules.filter(s => s.staff_id === selectedStaff)
+  const staffSchedules = schedules.filter(s => s.staff_id === current)
 
   return (
     <div className="space-y-4">
@@ -561,8 +607,8 @@ function SchedulePanel({ staff, schedules, onRefresh }: {
           <div className="flex items-center gap-3">
             <label className="text-xs text-gray-500 uppercase tracking-wider">Profesional:</label>
             <select
-              value={selectedStaff}
-              onChange={e => setSelectedStaff(e.target.value)}
+              value={current}
+              onChange={e => onSelectStaff(e.target.value)}
               className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500/50"
             >
               {activeStaff.map(s => (
@@ -622,6 +668,24 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
     : appointments.filter(a => a.status === filterStatus)
 
   const updateStatus = async (appt: Appointment, newStatus: string) => {
+    const labels: Record<string, string> = {
+      cancelled: 'cancelar',
+      completed: 'marcar como completada',
+      confirmed: 'confirmar',
+      no_show: 'marcar como no asistió',
+    }
+    const { isConfirmed } = await Swal.fire({
+      title: `¿${labels[newStatus] || newStatus} la cita de ${appt.client_name}?`,
+      text: newStatus === 'cancelled' ? 'Esta acción no se puede deshacer.' : '',
+      icon: newStatus === 'cancelled' ? 'warning' : 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, confirmar',
+      cancelButtonText: 'No, volver',
+      confirmButtonColor: newStatus === 'cancelled' ? '#ef4444' : '#6366f1',
+      background: '#1a1a1a', color: '#fff',
+    })
+    if (!isConfirmed) return
+
     const { error } = await supabase
       .from('appointments')
       .update({
