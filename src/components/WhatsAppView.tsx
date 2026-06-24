@@ -216,7 +216,8 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
       title: '¿Desvincular WhatsApp?',
       html: '<p style="margin-bottom:8px">Se realizarán las siguientes acciones:</p>'
         + '<ul style="text-align:left;font-size:13px;line-height:1.8;list-style:disc;padding-left:20px">'
-        + '<li>Tu número será <b>deregistrado</b> de WhatsApp Cloud API en Meta</li>'
+        + '<li>Tu número será <b>deregistrado</b> de WhatsApp Cloud API</li>'
+        + '<li>Se eliminará el número de tu cuenta de Meta Business</li>'
         + '<li>Se eliminará la suscripción de webhooks</li>'
         + '<li>Tu bot dejará de responder mensajes inmediatamente</li>'
         + '</ul>'

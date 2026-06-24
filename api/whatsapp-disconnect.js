@@ -5,7 +5,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.
 const GRAPH_API = 'https://graph.facebook.com/v25.0'
 
 async function deregisterFromMeta(phoneNumberId, wabaId, accessToken) {
-  const results = { deregister: null, unsubscribe: null }
+  const results = { deregister: null, unsubscribe: null, removeNumber: null }
 
   // 1. Deregister the phone number from Cloud API
   try {
@@ -41,6 +41,27 @@ async function deregisterFromMeta(phoneNumberId, wabaId, accessToken) {
     } catch (err) {
       console.error('Meta unsubscribe error:', err)
       results.unsubscribe = { status: 0, success: false, error: err.message }
+    }
+  }
+
+  // 3. Remove the phone number from the WABA entirely
+  if (wabaId) {
+    try {
+      const removeRes = await fetch(
+        `${GRAPH_API}/${wabaId}/phone_numbers?phone_number_id=${phoneNumberId}`,
+        {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        }
+      )
+      const removeData = await removeRes.json().catch(() => ({}))
+      results.removeNumber = { status: removeRes.status, success: removeRes.ok, data: removeData }
+      if (!removeRes.ok) {
+        console.warn('Meta remove number warning:', removeData)
+      }
+    } catch (err) {
+      console.error('Meta remove number error:', err)
+      results.removeNumber = { status: 0, success: false, error: err.message }
     }
   }
 
