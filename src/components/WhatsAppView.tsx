@@ -214,7 +214,13 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
   const handleDisconnect = async () => {
     const confirm = await Swal.fire({
       title: '¿Desvincular WhatsApp?',
-      text: 'Tu bot dejará de responder mensajes inmediatamente. Podrás vincular un número nuevamente después.',
+      html: '<p style="margin-bottom:8px">Se realizarán las siguientes acciones:</p>'
+        + '<ul style="text-align:left;font-size:13px;line-height:1.8;list-style:disc;padding-left:20px">'
+        + '<li>Tu número será <b>deregistrado</b> de WhatsApp Cloud API en Meta</li>'
+        + '<li>Se eliminará la suscripción de webhooks</li>'
+        + '<li>Tu bot dejará de responder mensajes inmediatamente</li>'
+        + '</ul>'
+        + '<p style="margin-top:10px;font-size:12px;color:#f59e0b">Podrás vincular un número nuevamente después.</p>',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, desvincular',
@@ -246,15 +252,19 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
         throw new Error(data.message || 'No se pudo desvincular.')
       }
 
+      const result = await res.json().catch(() => ({}))
+
+      const metaOk = result.meta?.deregister?.success
       setConnection(null)
       Swal.fire({
-        icon: 'success',
+        icon: metaOk ? 'success' : 'warning',
         title: 'Desvinculado',
-        text: 'Tu cuenta de WhatsApp ha sido desvinculada correctamente.',
-        timer: 3000,
-        showConfirmButton: false,
+        text: metaOk
+          ? 'Tu número fue deregistrado de Meta y desvinculado de la plataforma.'
+          : 'Se desvinculó de la plataforma. Si el deregistro en Meta no se completó, revisa tu cuenta de Meta Business.',
         background: '#1a1a1a',
-        color: '#fff'
+        color: '#fff',
+        confirmButtonColor: '#10B981'
       })
       onUpdate?.()
     } catch (err: any) {
