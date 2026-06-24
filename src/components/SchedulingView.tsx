@@ -59,6 +59,17 @@ interface Schedule {
   is_active: boolean
 }
 
+interface ScheduleOverride {
+  id: string
+  staff_id: string
+  override_date: string
+  is_available: boolean
+  start_time: string | null
+  end_time: string | null
+  reason: string | null
+  created_at: string
+}
+
 interface StaffService {
   id: string
   staff_id: string
@@ -87,6 +98,7 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
   const [staffServices, setStaffServices] = useState<StaffService[]>([])
   const [schedules, setSchedules] = useState<Schedule[]>([])
   const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [overrides, setOverrides] = useState<ScheduleOverride[]>([])
   const [selectedStaffId, setSelectedStaffId] = useState<string>('')
 
   const planCode = normalizePlanType(profile?.plan_type)
@@ -96,7 +108,7 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
     if (!userId) return
     setLoading(true)
     try {
-      const [svcRes, staffRes, ssRes, schedRes, apptRes] = await Promise.all([
+      const [svcRes, staffRes, ssRes, schedRes, apptRes, overRes] = await Promise.all([
         supabase.from('services').select('*').eq('user_id', userId).order('sort_order'),
         supabase.from('staff_members').select('*').eq('user_id', userId).order('sort_order'),
         supabase.from('staff_services').select('*'),
@@ -106,12 +118,16 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
           .eq('user_id', userId)
           .order('starts_at', { ascending: false })
           .limit(50),
+        supabase.from('schedule_overrides').select('*')
+          .gte('override_date', new Date().toISOString().slice(0, 10))
+          .order('override_date'),
       ])
       if (svcRes.data) setServices(svcRes.data)
       if (staffRes.data) setStaff(staffRes.data)
       if (ssRes.data) setStaffServices(ssRes.data)
       if (schedRes.data) setSchedules(schedRes.data)
       if (apptRes.data) setAppointments(apptRes.data)
+      if (overRes.data) setOverrides(overRes.data)
     } catch (err) {
       console.error('Error loading scheduling data:', err)
     } finally {
@@ -202,6 +218,7 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
         <SchedulePanel
           staff={staff}
           schedules={schedules}
+          overrides={overrides}
           onRefresh={loadAll}
           selectedStaff={selectedStaffId}
           onSelectStaff={setSelectedStaffId}
@@ -513,8 +530,8 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh }: {
 }
 
 /* ==================== SCHEDULE PANEL ==================== */
-function SchedulePanel({ staff, schedules, onRefresh, selectedStaff, onSelectStaff }: {
-  staff: StaffMember[]; schedules: Schedule[]; onRefresh: () => void; selectedStaff: string; onSelectStaff: (id: string) => void
+function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, onSelectStaff }: {
+  staff: StaffMember[]; schedules: Schedule[]; overrides: ScheduleOverride[]; onRefresh: () => void; selectedStaff: string; onSelectStaff: (id: string) => void
 }) {
   const activeStaff = staff.filter(s => s.is_active)
   const current = selectedStaff && activeStaff.some(s => s.id === selectedStaff)
@@ -594,7 +611,93 @@ function SchedulePanel({ staff, schedules, onRefresh, selectedStaff, onSelectSta
     onRefresh()
   }
 
+  const formatOverrideDate = (dateStr: string) => {
+    const d = new Date(dateStr + 'T12:00:00')
+    return d.toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric', month: 'short' })
+  }
+
+  const addBlockedDay = async () => {
+    if (!current) return
+    const today = new Date().toISOString().slice(0, 10)
+
+    const { value: formValues } = await Swal.fire({
+      title: 'Bloquear dia',
+      html: `
+        <div style="display:flex;flex-direction:column;gap:16px;padding:12px 0">
+          <div>
+            <label style="display:block;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Fecha</label>
+            <input id="swal-block-date" type="date" min="${today}"
+              style="background:#111;border:1px solid #333;border-radius:8px;color:#fff;padding:10px 12px;font-size:14px;width:100%;cursor:pointer">
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Motivo (opcional)</label>
+            <input id="swal-block-reason" type="text" placeholder="Ej: Vacaciones, emergencia familiar"
+              style="background:#111;border:1px solid #333;border-radius:8px;color:#fff;padding:10px 12px;font-size:14px;width:100%">
+          </div>
+        </div>
+      `,
+      background: '#1a1a1a', color: '#fff',
+      confirmButtonText: 'Bloquear',
+      confirmButtonColor: '#ef4444',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        const date = (document.getElementById('swal-block-date') as HTMLInputElement).value
+        const reason = (document.getElementById('swal-block-reason') as HTMLInputElement).value.trim()
+        if (!date) { Swal.showValidationMessage('Selecciona una fecha'); return false }
+        if (date < today) { Swal.showValidationMessage('No puedes bloquear una fecha pasada'); return false }
+        return { override_date: date, reason: reason || null }
+      }
+    })
+    if (!formValues) return
+
+    const { error } = await supabase.from('schedule_overrides').insert({
+      staff_id: current,
+      is_available: false,
+      start_time: null,
+      end_time: null,
+      ...formValues,
+    })
+    if (error) {
+      if (error.code === '23505') {
+        Swal.fire({ icon: 'warning', title: 'Dia ya bloqueado', text: 'Ese dia ya esta bloqueado para este profesional.', background: '#1a1a1a', color: '#fff' })
+      } else {
+        Swal.fire({ icon: 'error', title: 'Error', text: error.message, background: '#1a1a1a', color: '#fff' })
+      }
+      return
+    }
+    onRefresh()
+  }
+
+  const deleteBlockedDay = async (override: ScheduleOverride) => {
+    const dateStr = formatOverrideDate(override.override_date)
+    const { isConfirmed } = await Swal.fire({
+      title: `Desbloquear ${dateStr}?`,
+      text: override.reason ? `Motivo: ${override.reason}` : 'Este dia volvera a estar disponible para agendar.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Si, desbloquear',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#6366f1',
+      background: '#1a1a1a', color: '#fff',
+    })
+    if (!isConfirmed) return
+
+    await supabase.from('schedule_overrides').delete().eq('id', override.id)
+    onRefresh()
+  }
+
   const staffSchedules = schedules.filter(s => s.staff_id === current)
+
+  const blockedDays = overrides
+    .filter(o =>
+      o.staff_id === current &&
+      !o.is_available &&
+      o.start_time === null &&
+      o.end_time === null &&
+      o.reason !== 'google_calendar_sync'
+    )
+    .sort((a, b) => a.override_date.localeCompare(b.override_date))
 
   return (
     <div className="space-y-4">
@@ -617,9 +720,12 @@ function SchedulePanel({ staff, schedules, onRefresh, selectedStaff, onSelectSta
             </select>
           </div>
 
+          {/* Weekly schedule grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {[1, 2, 3, 4, 5, 6, 0].map(day => {
-              const dayBlocks = staffSchedules.filter(s => s.day_of_week === day)
+              const dayBlocks = staffSchedules
+                .filter(s => s.day_of_week === day)
+                .sort((a, b) => a.start_time.localeCompare(b.start_time))
               return (
                 <div key={day} className="rounded-xl bg-white/[0.03] border border-white/5 p-3">
                   <div className="flex items-center justify-between mb-2">
@@ -635,14 +741,26 @@ function SchedulePanel({ staff, schedules, onRefresh, selectedStaff, onSelectSta
                     <p className="text-[10px] text-gray-600 italic">Sin horario</p>
                   ) : (
                     <div className="space-y-1">
-                      {dayBlocks.map(block => (
-                        <div key={block.id} className="flex items-center justify-between bg-indigo-500/10 rounded-lg px-2 py-1">
-                          <span className="text-xs text-indigo-300 font-mono">
-                            {block.start_time.slice(0, 5)} - {block.end_time.slice(0, 5)}
-                          </span>
-                          <button onClick={() => deleteBlock(block.id)} className="text-gray-600 hover:text-red-400">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                          </button>
+                      {dayBlocks.map((block, idx) => (
+                        <div key={block.id}>
+                          <div className="flex items-center justify-between bg-indigo-500/10 rounded-lg px-2 py-1">
+                            <span className="text-xs text-indigo-300 font-mono">
+                              {block.start_time.slice(0, 5)} - {block.end_time.slice(0, 5)}
+                            </span>
+                            <button onClick={() => deleteBlock(block.id)} className="text-gray-600 hover:text-red-400">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                          </div>
+                          {idx < dayBlocks.length - 1 && block.end_time.slice(0, 5) < dayBlocks[idx + 1].start_time.slice(0, 5) && (
+                            <div className="flex items-center justify-center gap-1 bg-amber-500/10 rounded-lg px-2 py-0.5 my-0.5 border border-dashed border-amber-500/20">
+                              <svg className="w-3 h-3 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <span className="text-[10px] text-amber-400 font-mono">
+                                Descanso {block.end_time.slice(0, 5)} - {dayBlocks[idx + 1].start_time.slice(0, 5)}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -650,6 +768,64 @@ function SchedulePanel({ staff, schedules, onRefresh, selectedStaff, onSelectSta
                 </div>
               )
             })}
+          </div>
+
+          <p className="text-[10px] text-gray-600 italic">
+            Tip: Para configurar hora de colacion, agrega dos bloques en el mismo dia (ej: 09:00-13:00 y 14:00-18:00).
+          </p>
+
+          {/* Blocked days section */}
+          <div className="mt-2">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h4 className="text-sm font-bold text-white">
+                  Dias bloqueados
+                  {blockedDays.length > 0 && (
+                    <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400">
+                      {blockedDays.length}
+                    </span>
+                  )}
+                </h4>
+                <p className="text-[10px] text-gray-500">
+                  Bloquea dias completos por vacaciones, emergencias o feriados.
+                </p>
+              </div>
+              <button
+                onClick={addBlockedDay}
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30 transition-all"
+              >
+                + Bloquear dia
+              </button>
+            </div>
+
+            {blockedDays.length === 0 ? (
+              <div className="rounded-xl bg-white/[0.03] border border-white/5 p-6 text-center">
+                <p className="text-[10px] text-gray-600 italic">
+                  No hay dias bloqueados. Los clientes pueden agendar cualquier dia con horario configurado.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {blockedDays.map(override => (
+                  <div key={override.id} className="flex items-center justify-between bg-red-500/10 rounded-xl px-3 py-2 border border-red-500/20">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-red-500/20 flex items-center justify-center">
+                        <svg className="w-3 h-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-red-300">{formatOverrideDate(override.override_date)}</p>
+                        {override.reason && <p className="text-[10px] text-gray-500">{override.reason}</p>}
+                      </div>
+                    </div>
+                    <button onClick={() => deleteBlockedDay(override)} className="text-gray-600 hover:text-red-400 transition-colors">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </>
       )}
