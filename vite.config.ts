@@ -16,4 +16,8 @@ export default defineConfig({
       },
     },
   },
+  // Aquí agregamos la configuración para evitar la advertencia en Vercel
+  build: {
+    chunkSizeWarningLimit: 1000,
+  },
 });
