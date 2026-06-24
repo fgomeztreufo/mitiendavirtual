@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || ''
 const GRAPH_API = 'https://graph.facebook.com/v25.0'
 
 async function deregisterFromMeta(phoneNumberId, wabaId, accessToken) {
@@ -65,8 +65,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' })
   }
 
-  if (!supabaseUrl || !supabaseServiceKey) {
-    return res.status(500).json({ message: 'Configuración de servidor incompleta.' })
+  const missing = []
+  if (!supabaseUrl) missing.push('SUPABASE_URL')
+  if (!supabaseServiceKey) missing.push('SUPABASE_SERVICE_ROLE_KEY')
+  if (missing.length) {
+    return res.status(500).json({ message: `Configuración de servidor incompleta: ${missing.join(', ')}` })
   }
 
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
