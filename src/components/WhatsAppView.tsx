@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../supabaseClient'
 import Swal from 'sweetalert2'
 import { normalizePlanType } from '../utils/planUtils'
@@ -100,10 +100,27 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
     }
   }, [])
 
+  const sessionInfoRef = useRef<any>(null)
+
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event.origin !== 'https://www.facebook.com' && event.origin !== 'https://web.facebook.com') return
+      try {
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data
+        if (data.type === 'WA_EMBEDDED_SIGNUP') {
+          sessionInfoRef.current = data.data
+        }
+      } catch (_) {}
+    }
+    window.addEventListener('message', handler)
+    return () => window.removeEventListener('message', handler)
+  }, [])
+
   const launchWhatsAppLogin = () => {
     if (!window.FB) return
     setSdkStatus('connecting')
     setErrorMsg('')
+    sessionInfoRef.current = null
 
     window.FB.login((response: any) => {
       if (response.authResponse) {
@@ -131,13 +148,19 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
         return
       }
 
+      const sessionInfo = sessionInfoRef.current || {}
+
       const response = await fetch('/api/whatsapp-link-start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentSession.access_token}`
         },
-        body: JSON.stringify({ code })
+        body: JSON.stringify({
+          code,
+          waba_id: sessionInfo.waba_id || sessionInfo.wabaId || null,
+          phone_number_id: sessionInfo.phone_number_id || sessionInfo.phoneNumberId || null
+        })
       })
 
       if (response.ok) {
