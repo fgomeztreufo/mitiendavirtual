@@ -542,6 +542,76 @@
         7376,
         8464
       ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://mitiendavirtual.cl/api/google-calendar?action=event",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-gcal-sync-secret",
+              "value": "={{ $env.GCAL_SYNC_SECRET }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ appointment_id: $json.appointment ? $json.appointment.id : '', action: 'create' }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "gcal-sync-booking",
+      "name": "Sync Booking to GCal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        9248,
+        8672
+      ],
+      "continueOnFail": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://mitiendavirtual.cl/api/google-calendar?action=event",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-gcal-sync-secret",
+              "value": "={{ $env.GCAL_SYNC_SECRET }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ appointment_id: $json.appointment_id || '', action: 'delete' }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "gcal-delete-event",
+      "name": "Delete GCal Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        9248,
+        8864
+      ],
+      "continueOnFail": true,
+      "alwaysOutputData": true
     }
   ],
   "pinData": {
@@ -664,6 +734,17 @@
       "main": [
         [
           {
+            "node": "Sync Booking to GCal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync Booking to GCal": {
+      "main": [
+        [
+          {
             "node": "Respuesta",
             "type": "main",
             "index": 0
@@ -672,6 +753,17 @@
       ]
     },
     "Format Cancel": {
+      "main": [
+        [
+          {
+            "node": "Delete GCal Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete GCal Event": {
       "main": [
         [
           {

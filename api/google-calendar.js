@@ -33,7 +33,7 @@ function verifyState(state) {
   if (sig !== expected) return null
   try {
     const payload = JSON.parse(Buffer.from(data, 'base64url').toString())
-    if (Date.now() - payload.ts > 5 * 60 * 1000) return null
+    if (Date.now() - payload.ts > 10 * 60 * 1000) return null
     return payload
   } catch { return null }
 }
@@ -146,11 +146,12 @@ async function handleCallback(req, res) {
       if (uiRes.ok) email = (await uiRes.json()).email || ''
     } catch {}
 
-    await storeCredential(payload.user_id, 'google_calendar', 'refresh_token', tokens.refresh_token)
-    await storeCredential(payload.user_id, 'google_calendar', 'access_token', tokens.access_token)
-    await storeCredential(payload.user_id, 'google_calendar', 'token_metadata', JSON.stringify({
+    const r1 = await storeCredential(payload.user_id, 'google_calendar', 'refresh_token', tokens.refresh_token)
+    const r2 = await storeCredential(payload.user_id, 'google_calendar', 'access_token', tokens.access_token)
+    const r3 = await storeCredential(payload.user_id, 'google_calendar', 'token_metadata', JSON.stringify({
       email, expires_at: Date.now() + (tokens.expires_in || 3600) * 1000, scope: tokens.scope || '',
     }))
+    console.log('Store credentials results:', { r1, r2, r3, user_id: payload.user_id, email })
 
     return res.redirect(302, `${SITE_URL}/dashboard?gcal=connected`)
   } catch (err) {
