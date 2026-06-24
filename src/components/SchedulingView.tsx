@@ -870,7 +870,7 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
   const checkConnection = useCallback(async () => {
     if (!token) return
     try {
-      const res = await fetch('/api/google-calendar-auth', {
+      const res = await fetch('/api/google-calendar', {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (res.ok) {
@@ -886,7 +886,7 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
 
   const loadCalendars = async () => {
     try {
-      const res = await fetch('/api/google-calendar-list', {
+      const res = await fetch('/api/google-calendar?action=list', {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (res.ok) {
@@ -925,7 +925,7 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
 
   const startOAuth = async () => {
     try {
-      const res = await fetch('/api/google-calendar-auth', {
+      const res = await fetch('/api/google-calendar', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -954,7 +954,7 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
     })
     if (!isConfirmed) return
 
-    await fetch('/api/google-calendar-auth', {
+    await fetch('/api/google-calendar', {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -967,7 +967,7 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
   const assignCalendar = async (staffId: string, calendarId: string) => {
     setAssigning(staffId)
     try {
-      await fetch('/api/google-calendar-assign', {
+      await fetch('/api/google-calendar?action=assign', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
