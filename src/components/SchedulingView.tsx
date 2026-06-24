@@ -217,7 +217,7 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
         />
       )}
       {subTab === 'calendar' && (
-        <GoogleCalendarPanel staff={staff} />
+        <GoogleCalendarPanel staff={staff} session={session} onRefresh={loadAll} />
       )}
     </div>
   )
@@ -856,55 +856,258 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
 }
 
 /* ==================== GOOGLE CALENDAR PANEL ==================== */
-function GoogleCalendarPanel({ staff }: { staff: StaffMember[] }) {
-  return (
-    <div className="space-y-4">
-      <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-8 text-center space-y-4">
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-blue-500/10 flex items-center justify-center">
-          <svg className="w-8 h-8 text-blue-400" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19.5 3.5h-2V2h-1v1.5h-9V2h-1v1.5h-2C3.67 3.5 3 4.17 3 5v14c0 .83.67 1.5 1.5 1.5h15c.83 0 1.5-.67 1.5-1.5V5c0-.83-.67-1.5-1.5-1.5zm0 15.5h-15V8.5h15V19z" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-bold text-white">Google Calendar</h3>
-        <p className="text-sm text-gray-400 max-w-md mx-auto">
-          Conecta Google Calendar para sincronizar automáticamente la disponibilidad de tus profesionales.
-          Los horarios ocupados en Google Calendar se bloquearán en el sistema de agendamiento.
-        </p>
-        <button
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition-all"
-          onClick={() => {
-            Swal.fire({
-              icon: 'info',
-              title: 'Próximamente',
-              text: 'La integración con Google Calendar se activará pronto. Por ahora, configura los horarios manualmente en la pestaña "Horarios".',
-              background: '#1a1a1a',
-              color: '#fff',
-            })
-          }}
-        >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z" /></svg>
-          Conectar Google Calendar
-        </button>
+function GoogleCalendarPanel({ staff, session, onRefresh }: {
+  staff: StaffMember[]; session: Session; onRefresh: () => void
+}) {
+  const [connected, setConnected] = useState(false)
+  const [googleEmail, setGoogleEmail] = useState('')
+  const [calendars, setCalendars] = useState<{ id: string; summary: string; primary: boolean }[]>([])
+  const [loading, setLoading] = useState(true)
+  const [assigning, setAssigning] = useState<string | null>(null)
 
-        {staff.filter(s => s.is_active).length > 0 && (
-          <div className="mt-6 space-y-2">
-            <p className="text-xs text-gray-500 uppercase tracking-wider">Mapeo de calendarios por profesional</p>
-            {staff.filter(s => s.is_active).map(member => (
-              <div key={member.id} className="flex items-center justify-between bg-white/[0.02] rounded-lg p-3 border border-white/5">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-[10px] font-bold text-white">
-                    {member.name.charAt(0)}
+  const token = session?.access_token
+
+  const checkConnection = useCallback(async () => {
+    if (!token) return
+    try {
+      const res = await fetch('/api/google-calendar-auth', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setConnected(data.connected)
+        setGoogleEmail(data.email || '')
+        if (data.connected) loadCalendars()
+      }
+    } catch {} finally {
+      setLoading(false)
+    }
+  }, [token])
+
+  const loadCalendars = async () => {
+    try {
+      const res = await fetch('/api/google-calendar-list', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setCalendars(data.calendars || [])
+      }
+    } catch {}
+  }
+
+  useEffect(() => {
+    checkConnection()
+
+    const params = new URLSearchParams(window.location.search)
+    const gcal = params.get('gcal')
+    if (gcal === 'connected') {
+      Swal.fire({
+        icon: 'success',
+        title: 'Google Calendar conectado',
+        timer: 3000,
+        showConfirmButton: false,
+        background: '#1a1a1a',
+        color: '#fff',
+      })
+      window.history.replaceState({}, '', window.location.pathname)
+    } else if (gcal === 'error') {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al conectar',
+        text: `No se pudo conectar Google Calendar. ${params.get('reason') || ''}`,
+        background: '#1a1a1a',
+        color: '#fff',
+      })
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [checkConnection])
+
+  const startOAuth = async () => {
+    try {
+      const res = await fetch('/api/google-calendar-auth', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        window.location.href = data.url
+      } else {
+        Swal.fire('Error', 'No se pudo iniciar la conexión.', 'error')
+      }
+    } catch {
+      Swal.fire('Error', 'Error de conexión.', 'error')
+    }
+  }
+
+  const disconnect = async () => {
+    const { isConfirmed } = await Swal.fire({
+      title: '¿Desconectar Google Calendar?',
+      text: 'Se eliminarán todas las asignaciones de calendarios y los bloques sincronizados.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      confirmButtonText: 'Desconectar',
+      cancelButtonText: 'Cancelar',
+      background: '#1a1a1a',
+      color: '#fff',
+    })
+    if (!isConfirmed) return
+
+    await fetch('/api/google-calendar-auth', {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    setConnected(false)
+    setGoogleEmail('')
+    setCalendars([])
+    onRefresh()
+  }
+
+  const assignCalendar = async (staffId: string, calendarId: string) => {
+    setAssigning(staffId)
+    try {
+      await fetch('/api/google-calendar-assign', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ staff_id: staffId, calendar_id: calendarId || null }),
+      })
+      onRefresh()
+    } catch {} finally {
+      setAssigning(null)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  const activeStaff = staff.filter(s => s.is_active)
+
+  return (
+    <div className="space-y-6">
+      {/* Estado de conexión */}
+      <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${connected ? 'bg-emerald-500/10' : 'bg-blue-500/10'}`}>
+              <svg className={`w-6 h-6 ${connected ? 'text-emerald-400' : 'text-blue-400'}`} viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.5 3.5h-2V2h-1v1.5h-9V2h-1v1.5h-2C3.67 3.5 3 4.17 3 5v14c0 .83.67 1.5 1.5 1.5h15c.83 0 1.5-.67 1.5-1.5V5c0-.83-.67-1.5-1.5-1.5zm0 15.5h-15V8.5h15V19z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">Google Calendar</h3>
+              {connected ? (
+                <p className="text-xs text-emerald-400">Conectado como {googleEmail}</p>
+              ) : (
+                <p className="text-xs text-gray-500">No conectado</p>
+              )}
+            </div>
+          </div>
+          {connected ? (
+            <button
+              onClick={disconnect}
+              className="px-4 py-2 text-xs font-bold rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all"
+            >
+              Desconectar
+            </button>
+          ) : (
+            <button
+              onClick={startOAuth}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition-all text-xs"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z" /></svg>
+              Conectar
+            </button>
+          )}
+        </div>
+      </div>
+
+      {!connected && (
+        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-8 text-center space-y-3">
+          <p className="text-sm text-gray-400 max-w-md mx-auto">
+            Conecta tu cuenta de Google para sincronizar automáticamente la disponibilidad de tus profesionales.
+            Los horarios ocupados en Google Calendar se bloquearán en el sistema de agendamiento.
+          </p>
+        </div>
+      )}
+
+      {/* Asignación de calendarios */}
+      {connected && activeStaff.length > 0 && (
+        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-6 space-y-4">
+          <div>
+            <h4 className="text-sm font-bold text-white">Asignar calendarios</h4>
+            <p className="text-xs text-gray-500 mt-1">Asigna un calendario de Google a cada profesional para sincronizar su disponibilidad.</p>
+          </div>
+
+          <div className="space-y-3">
+            {activeStaff.map(member => (
+              <div key={member.id} className="flex items-center justify-between gap-4 bg-white/[0.02] rounded-xl p-3 border border-white/5">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                    {member.name.charAt(0).toUpperCase()}
                   </div>
-                  <span className="text-sm text-gray-300">{member.name}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-white truncate">{member.name}</p>
+                    {member.role && <p className="text-[10px] text-gray-500 uppercase tracking-wider">{member.role}</p>}
+                  </div>
                 </div>
-                <span className="text-[10px] text-gray-600 italic">
-                  {member.google_calendar_id ? 'Conectado' : 'Sin conectar'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={member.google_calendar_id || ''}
+                    onChange={e => assignCalendar(member.id, e.target.value)}
+                    disabled={assigning === member.id}
+                    className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500/50 max-w-[200px]"
+                  >
+                    <option value="" className="bg-gray-900">Sin asignar</option>
+                    {calendars.map(cal => (
+                      <option key={cal.id} value={cal.id} className="bg-gray-900">
+                        {cal.summary}{cal.primary ? ' (Principal)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  {assigning === member.id && (
+                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  )}
+                  {member.google_calendar_id && assigning !== member.id && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      Sincronizado
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Info de sincronización */}
+      {connected && (
+        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-6 space-y-3">
+          <h4 className="text-sm font-bold text-white">Sincronización</h4>
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0 mt-0.5">
+              <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400">
+                La disponibilidad se sincroniza automáticamente cada 15 minutos.
+                Los eventos en Google Calendar bloquearán automáticamente los horarios correspondientes.
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                Las citas creadas desde el dashboard o WhatsApp se agregarán automáticamente a Google Calendar.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

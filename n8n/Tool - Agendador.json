@@ -31,7 +31,7 @@
     },
     {
       "parameters": {
-        "functionCode": "const services = items[0].json;\nconst arr = Array.isArray(services) ? services : (services.body ? JSON.parse(services.body) : [services]);\n\nif (!arr.length || (arr.length === 1 && !arr[0].id)) {\n  return [{ json: { result: 'Este negocio no tiene servicios configurados aún.' } }];\n}\n\nconst lines = arr.map((s, i) => {\n  let line = (i + 1) + '. ' + s.name + ' (ID:' + s.id + ') - ' + s.duration_minutes + ' min';\n  if (s.price) line += ' - $' + Number(s.price).toLocaleString('es-CL');\n  if (s.description) line += ' — ' + s.description;\n  return line;\n});\n\nreturn [{ json: { result: 'Servicios disponibles:\\n' + lines.join('\\n') } }];"
+        "functionCode": "// 1. Extraemos y unificamos todos los datos sin importar cómo los entregue n8n\nlet arr = [];\n\nif (items.length === 1 && Array.isArray(items[0].json)) {\n  // Caso A: n8n metió todo el array dentro del primer item\n  arr = items[0].json;\n} else if (items.length === 1 && items[0].json.body && Array.isArray(items[0].json.body)) {\n  // Caso B: Viene envuelto en una propiedad 'body'\n  arr = items[0].json.body;\n} else {\n  // Caso C (El tuyo): n8n dividió los resultados en múltiples items\n  arr = items.map(item => item.json);\n}\n\n// 2. Filtramos para asegurarnos de que tengan un ID válido\nconst validServices = arr.filter(s => s && s.id);\n\nif (validServices.length === 0) {\n  return [{ json: { result: 'Este negocio no tiene servicios configurados aún.' } }];\n}\n\n// 3. Armamos la lista de texto\nconst lines = validServices.map((s, i) => {\n  let line = (i + 1) + '. ' + s.name + ' (ID:' + s.id + ') - ' + s.duration_minutes + ' min';\n  if (s.price) line += ' - $' + Number(s.price).toLocaleString('es-CL');\n  if (s.description) line += ' — ' + s.description;\n  return line;\n});\n\n// 4. Retornamos todo empacado en un solo item para que el Agente lo lea\nreturn [{ json: { result: 'Servicios disponibles:\\n' + lines.join('\\n') } }];"
       },
       "id": "a2bee200-aa5f-4c80-a90e-f0352716555a",
       "name": "Format Services",
@@ -73,7 +73,7 @@
     },
     {
       "parameters": {
-        "functionCode": "const data = items[0].json;\nconst arr = Array.isArray(data) ? data : [data];\n\nconst staffList = arr.map(item => {\n  if (item.staff_members) return item.staff_members;\n  return item;\n}).filter(s => s && s.id);\n\nif (!staffList.length) {\n  return [{ json: { result: 'No hay profesionales disponibles para este servicio.' } }];\n}\n\nconst lines = staffList.map((s, i) => {\n  let line = (i + 1) + '. ' + s.name + ' (ID:' + s.id + ')';\n  if (s.role) line += ' - ' + s.role;\n  return line;\n});\n\nreturn [{ json: { result: 'Profesionales disponibles:\\n' + lines.join('\\n') } }];"
+        "functionCode": "// 1. Recolectar TODOS los items que envía n8n, no solo el primero\nlet arr = [];\nif (items.length === 1 && Array.isArray(items[0].json)) {\n  arr = items[0].json;\n} else {\n  arr = items.map(item => item.json);\n}\n\n// 2. Extraer la información de los barberos\nconst staffList = arr.map(item => {\n  if (item.staff_members) return item.staff_members;\n  return item;\n}).filter(s => s && s.id);\n\n// 3. Validar si hay resultados\nif (!staffList.length) {\n  return [{ json: { result: 'No hay profesionales disponibles para este servicio.' } }];\n}\n\n// 4. Formatear la lista para el bot\nconst lines = staffList.map((s, i) => {\n  let line = (i + 1) + '. ' + s.name + ' (ID:' + s.id + ')';\n  if (s.role) line += ' - ' + s.role;\n  return line;\n});\n\n// 5. Entregar la respuesta final\nreturn [{ json: { result: 'Profesionales disponibles:\\n' + lines.join('\\n') } }];"
       },
       "id": "783365dd-4fcf-4422-a810-1076574ade71",
       "name": "Format Staff",
@@ -270,19 +270,6 @@
       "position": [
         9024,
         9056
-      ]
-    },
-    {
-      "parameters": {
-        "functionCode": "// === ROUTER REFACTORIZADO Y ANTIBALAS ===\nconst input = items[0].json;\n\nif (!input.user_id || input.user_id.trim() === '') {\n  items[0].json = { error: true, message: 'Error interno: user_id no proporcionado.' };\n  return items;\n}\n\nconst plan = (input.plan || '').toLowerCase();\nif (!plan.includes('full') && !plan.includes('complet')) {\n  items[0].json = { error: true, message: 'El agendamiento no esta disponible en tu plan actual. Actualiza al plan Full.' };\n  return items;\n}\n\nlet instr = {};\nlet raw = (input.instruccion || input.instruction || '').trim();\n\n// 🚨 LIMPIEZA CRÍTICA DE MARKDOWN (Elimina ```json y comillas que rompen el parseo)\nif (raw.includes('```')) {\n  raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim();\n}\n\ntry {\n  if (raw) {\n    instr = JSON.parse(raw);\n  }\n} catch (e) {\n  // Si aun así falla el JSON completo, intentamos rescatar la acción si vino como texto plano\n  instr = { action: raw.toLowerCase() };\n}\n\nconst validActions = ['list_services', 'list_staff', 'get_slots', 'create_booking', 'cancel_booking', 'my_bookings'];\nconst action = (instr.action || '').trim().toLowerCase();\nif (!validActions.includes(action)) {\n  items[0].json = { error: true, message: 'Accion no valida: ' + action };\n  return items;\n}\n\n// Extraer y limpiar campos del JSON\nconst sid = (instr.service_id || '').trim();\nconst stid = (instr.staff_id || '').trim();\nconst dt = (instr.date || '').trim();\nconst ss = (instr.slot_start || '').trim();\nconst aid = (instr.appointment_id || '').trim();\n\n// Validar campos requeridos por accion\nif (action === 'get_slots' && (!sid || !stid || !dt)) {\n  items[0].json = { error: true, message: 'Para ver horarios necesito el servicio, profesional y fecha válida (YYYY-MM-DD).' };\n  return items;\n}\nif (action === 'create_booking' && (!sid || !stid || !ss)) {\n  items[0].json = { error: true, message: 'Para crear la cita necesito el servicio, profesional y horario.' };\n  return items;\n}\nif (action === 'cancel_booking' && !aid) {\n  items[0].json = { error: true, message: 'Para cancelar necesito el ID de la cita.' };\n  return items;\n}\n\nitems[0].json = {\n  error: false,\n  action: action,\n  user_id: input.user_id.trim(),\n  service_id: sid,\n  staff_id: stid,\n  date: dt,\n  slot_start: ss,\n  client_name: (instr.client_name || '').trim(),\n  client_phone: (input.client_phone || '').trim(),\n  appointment_id: aid\n};\n\nreturn items;"
-      },
-      "id": "db525759-7e75-4360-a725-b661129b7b45",
-      "name": "Router1",
-      "type": "n8n-nodes-base.function",
-      "typeVersion": 1,
-      "position": [
-        7456,
-        8112
       ]
     },
     {
@@ -529,6 +516,32 @@
       ],
       "id": "39e0dc16-1157-4666-b122-0b4c9a787bdd",
       "name": "Switch"
+    },
+    {
+      "parameters": {
+        "functionCode": "// === ROUTER REFACTORIZADO Y ANTIBALAS ===\nconst input = items[0].json;\n\nif (!input.user_id || input.user_id.trim() === '') {\n  items[0].json = { error: true, message: 'Error interno: user_id no proporcionado.' };\n  return items;\n}\n\nconst plan = (input.plan || '').toLowerCase();\nif (!plan.includes('full') && !plan.includes('complet')) {\n  items[0].json = { error: true, message: 'El agendamiento no esta disponible en tu plan actual. Actualiza al plan Full.' };\n  return items;\n}\n\nlet instr = {};\nlet raw = (input.instruccion || input.instruction || '').trim();\n\n// 🚨 LIMPIEZA CRÍTICA MÁXIMA (Evitamos RegExp con /.../ para que n8n no rompa el código)\nif (raw) {\n  // Usamos strings simples para que el copiado y pegado sea seguro\n  raw = raw.replaceAll('```json', '').replaceAll('```', '');\n  \n  // Quita signos = al principio y comillas sueltas (mantenemos RegExp seguras en una sola línea)\n  raw = raw.replace(/^=+/, '').replace(/^\"|\"$/g, '').trim();\n}\n\ntry {\n  if (raw) {\n    instr = JSON.parse(raw);\n  }\n} catch (e) {\n  // Si aun así falla el JSON completo, intentamos rescatar la acción si vino como texto plano\n  let fallbackAction = raw.toLowerCase().replace(/[^a-z_]/g, ''); \n  instr = { action: fallbackAction };\n}\n\nconst validActions = ['list_services', 'list_staff', 'get_slots', 'create_booking', 'cancel_booking', 'my_bookings'];\nconst action = (instr.action || '').trim().toLowerCase();\n\nif (!validActions.includes(action)) {\n  items[0].json = { error: true, message: 'Accion no valida: ' + action };\n  return items;\n}\n\n// Extraer y limpiar campos del JSON\nconst sid = (instr.service_id || '').trim();\nconst stid = (instr.staff_id || '').trim();\nconst dt = (instr.date || '').trim();\nconst ss = (instr.slot_start || '').trim();\nconst aid = (instr.appointment_id || '').trim();\n\n// Validar campos requeridos por accion\nif (action === 'get_slots' && (!sid || !stid || !dt)) {\n  items[0].json = { error: true, message: 'Para ver horarios necesito el servicio, profesional y fecha válida (YYYY-MM-DD).' };\n  return items;\n}\nif (action === 'create_booking' && (!sid || !stid || !ss)) {\n  items[0].json = { error: true, message: 'Para crear la cita necesito el servicio, profesional y horario.' };\n  return items;\n}\nif (action === 'cancel_booking' && !aid) {\n  items[0].json = { error: true, message: 'Para cancelar necesito el ID de la cita.' };\n  return items;\n}\n\nitems[0].json = {\n  error: false,\n  action: action,\n  user_id: input.user_id.trim(),\n  service_id: sid,\n  staff_id: stid,\n  date: dt,\n  slot_start: ss,\n  client_name: (instr.client_name || '').trim(),\n  client_phone: (input.client_phone || '').trim(),\n  appointment_id: aid\n};\n\nreturn items;"
+      },
+      "id": "a724ccd2-faf7-4963-8b5e-2f8559b8a0d6",
+      "name": "Router",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        7456,
+        8112
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// === ROUTER REFACTORIZADO Y ANTIBALAS ===\nconst input = items[0].json;\n\nif (!input.user_id || input.user_id.trim() === '') {\n  items[0].json = { error: true, message: 'Error interno: user_id no proporcionado.' };\n  return items;\n}\n\nconst plan = (input.plan || '').toLowerCase();\nif (!plan.includes('full') && !plan.includes('complet')) {\n  items[0].json = { error: true, message: 'El agendamiento no esta disponible en tu plan actual. Actualiza al plan Full.' };\n  return items;\n}\n\nlet instr = {};\nlet raw = (input.instruccion || input.instruction || '').trim();\n\n// 🚨 LIMPIEZA CRÍTICA DE MARKDOWN (Elimina ```json y comillas que rompen el parseo)\nif (raw.includes('```')) {\n  raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim();\n}\n\ntry {\n  if (raw) {\n    instr = JSON.parse(raw);\n  }\n} catch (e) {\n  // Si aun así falla el JSON completo, intentamos rescatar la acción si vino como texto plano\n  instr = { action: raw.toLowerCase() };\n}\n\nconst validActions = ['list_services', 'list_staff', 'get_slots', 'create_booking', 'cancel_booking', 'my_bookings'];\nconst action = (instr.action || '').trim().toLowerCase();\nif (!validActions.includes(action)) {\n  items[0].json = { error: true, message: 'Accion no valida: ' + action };\n  return items;\n}\n\n// Extraer y limpiar campos del JSON\nconst sid = (instr.service_id || '').trim();\nconst stid = (instr.staff_id || '').trim();\nconst dt = (instr.date || '').trim();\nconst ss = (instr.slot_start || '').trim();\nconst aid = (instr.appointment_id || '').trim();\n\n// Validar campos requeridos por accion\nif (action === 'get_slots' && (!sid || !stid || !dt)) {\n  items[0].json = { error: true, message: 'Para ver horarios necesito el servicio, profesional y fecha válida (YYYY-MM-DD).' };\n  return items;\n}\nif (action === 'create_booking' && (!sid || !stid || !ss)) {\n  items[0].json = { error: true, message: 'Para crear la cita necesito el servicio, profesional y horario.' };\n  return items;\n}\nif (action === 'cancel_booking' && !aid) {\n  items[0].json = { error: true, message: 'Para cancelar necesito el ID de la cita.' };\n  return items;\n}\n\nitems[0].json = {\n  error: false,\n  action: action,\n  user_id: input.user_id.trim(),\n  service_id: sid,\n  staff_id: stid,\n  date: dt,\n  slot_start: ss,\n  client_name: (instr.client_name || '').trim(),\n  client_phone: (input.client_phone || '').trim(),\n  appointment_id: aid\n};\n\nreturn items;"
+      },
+      "id": "db525759-7e75-4360-a725-b661129b7b45",
+      "name": "Routerbkp",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        7376,
+        8464
+      ]
     }
   ],
   "pinData": {
@@ -538,8 +551,8 @@
           "user_id": "dcbbe3e4-b3d9-4359-9cea-97446e86351b",
           "plan": "full",
           "client_phone": "56954080571",
-          "instruccion": "{\"action\":\"get_slots\",\"service_id\":\"Corte de pelo\",\"staff_id\":\"Felipe\",\"date\":\"2026-06-21\"}",
-          "query": "corte de pelo"
+          "instruccion": "={\"action\":\"list_staff\",\"service_id\":\"32771ec9-d09c-4fd8-93ca-392d6a793da5\"}",
+          "query": "si que barberos estan disponibles?"
         },
         "pairedItem": {
           "item": 0
@@ -608,17 +621,6 @@
         [
           {
             "node": "Format My Bookings",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Router1": {
-      "main": [
-        [
-          {
-            "node": "Has error?",
             "type": "main",
             "index": 0
           }
@@ -724,7 +726,7 @@
       "main": [
         [
           {
-            "node": "Router1",
+            "node": "Router",
             "type": "main",
             "index": 0
           }
@@ -776,6 +778,22 @@
           }
         ]
       ]
+    },
+    "Routerbkp": {
+      "main": [
+        []
+      ]
+    },
+    "Router": {
+      "main": [
+        [
+          {
+            "node": "Has error?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -785,7 +803,7 @@
     "timeSavedMode": "fixed",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "62a7b78b-01ad-4992-bf86-70f2e5d6542b",
+  "versionId": "2cf9d25f-07e5-4668-80a2-e69e9ae1e51c",
   "meta": {
     "instanceId": "a5516a2a9cf205e273f8d3d2fa2ee6e75611a482072bccca1b3d4b67e92eb589"
   },
