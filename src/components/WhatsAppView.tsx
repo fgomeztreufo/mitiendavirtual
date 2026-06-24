@@ -38,6 +38,7 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
   const [connection, setConnection] = useState<WppConnection | null>(null)
   const [loading, setLoading] = useState(true)
   const [toggling, setToggling] = useState(false)
+  const [disconnecting, setDisconnecting] = useState(false)
   const [sdkStatus, setSdkStatus] = useState<SdkStatus>('loading-sdk')
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -210,6 +211,60 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
     }
   }
 
+  const handleDisconnect = async () => {
+    const confirm = await Swal.fire({
+      title: '¿Desvincular WhatsApp?',
+      text: 'Tu bot dejará de responder mensajes inmediatamente. Podrás vincular un número nuevamente después.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, desvincular',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#EF4444',
+      background: '#1a1a1a',
+      color: '#fff'
+    })
+    if (!confirm.isConfirmed) return
+
+    setDisconnecting(true)
+    try {
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      if (!currentSession) {
+        Swal.fire('Error', 'Sesión expirada. Inicia sesión nuevamente.', 'error')
+        return
+      }
+
+      const res = await fetch('/api/whatsapp-disconnect', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentSession.access_token}`
+        }
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.message || 'No se pudo desvincular.')
+      }
+
+      setConnection(null)
+      Swal.fire({
+        icon: 'success',
+        title: 'Desvinculado',
+        text: 'Tu cuenta de WhatsApp ha sido desvinculada correctamente.',
+        timer: 3000,
+        showConfirmButton: false,
+        background: '#1a1a1a',
+        color: '#fff'
+      })
+      onUpdate?.()
+    } catch (err: any) {
+      console.error('Error al desvincular WhatsApp:', err)
+      Swal.fire('Error', err.message || 'No se pudo desvincular WhatsApp.', 'error')
+    } finally {
+      setDisconnecting(false)
+    }
+  }
+
   // Credits
   const messagesUsed = profile?.messages_used_wpp ?? 0
   const usagePct = planMessagesLimit ? Math.min((messagesUsed / planMessagesLimit) * 100, 100) : 0
@@ -295,21 +350,30 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
           </div>
 
           {connection && (
-            <button
-              onClick={toggleActive}
-              disabled={toggling}
-              className={`w-full py-2 text-xs font-bold rounded-xl border transition-all ${
-                connection.active
-                  ? 'border-amber-500/30 text-amber-400 hover:bg-amber-500/10'
-                  : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
-              }`}
-            >
-              {toggling
-                ? 'Procesando...'
-                : connection.active
-                  ? '⏸ Pausar recepción'
-                  : '▶ Reactivar recepción'}
-            </button>
+            <>
+              <button
+                onClick={toggleActive}
+                disabled={toggling}
+                className={`w-full py-2 text-xs font-bold rounded-xl border transition-all ${
+                  connection.active
+                    ? 'border-amber-500/30 text-amber-400 hover:bg-amber-500/10'
+                    : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
+                }`}
+              >
+                {toggling
+                  ? 'Procesando...'
+                  : connection.active
+                    ? '⏸ Pausar recepción'
+                    : '▶ Reactivar recepción'}
+              </button>
+              <button
+                onClick={handleDisconnect}
+                disabled={disconnecting}
+                className="w-full py-2 text-[10px] font-black text-red-500/50 hover:text-red-500 uppercase tracking-widest transition-all disabled:opacity-40"
+              >
+                {disconnecting ? 'Desvinculando...' : 'Desvincular cuenta'}
+              </button>
+            </>
           )}
         </div>
 
