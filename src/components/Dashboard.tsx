@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
 import { normalizePlanType } from '../utils/planUtils'
+import { FaInstagram, FaTelegram, FaWhatsapp, FaGoogle } from 'react-icons/fa'
 
 // --- VISTAS DE APP ---
 import InstagramView from './InstagramView'
@@ -23,6 +24,7 @@ import TelegramView from './TelegramView'
 import AgentsDashboard from './AgentsDashboard'
 import SchedulingView from './SchedulingView'
 import WhatsAppMessagesView from './WhatsAppMessagesView'
+import WhatsAppLeadsView from './WhatsAppLeadsView'
 
 export default function Dashboard({ session }: { session: Session }) {
   const [profile, setProfile] = useState<any>(null)
@@ -34,6 +36,7 @@ export default function Dashboard({ session }: { session: Session }) {
   const [whatsappMenuOpen, setWhatsappMenuOpen] = useState(false)
   const [legalView, setLegalView] = useState<string | null>(null);
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
+  const [configAgentsOpen, setConfigAgentsOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Plan access helpers (evaluated after profile loads)
@@ -125,6 +128,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <MobileNavBtn label="Telegram" active={activeTab === 'telegram'} locked={!hasTelegram} lockLabel="Básico+" onClick={() => { if (hasTelegram) { setActiveTab('telegram'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
             {hasTelegram && <MobileNavBtn label="Leads Telegram" active={activeTab === 'telegram-leads'} onClick={() => { setActiveTab('telegram-leads'); setMobileMenuOpen(false); }} />}
             <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} locked={!hasWhatsApp} lockLabel="Pro+" onClick={() => { if (hasWhatsApp) { setActiveTab('whatsapp'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
+            {hasWhatsApp && <MobileNavBtn label="Leads WhatsApp" active={activeTab === 'wpp-leads'} onClick={() => { setActiveTab('wpp-leads'); setMobileMenuOpen(false); }} />}
             <MobileNavBtn label="Agendamiento" active={activeTab === 'scheduling'} locked={!hasScheduling} lockLabel="Full" onClick={() => { if (hasScheduling) { setActiveTab('scheduling'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
             <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-4 mb-2 tracking-widest">Configuración</p>
             <MobileNavBtn label="Notificaciones" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false); }} />
@@ -164,30 +168,32 @@ export default function Dashboard({ session }: { session: Session }) {
           />
 
           <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Canales</p>
-          
-         {/* Instagram — siempre disponible */}
-        <SidebarBtn 
-          label="Instagram" 
-          active={activeTab === 'leads'} 
-          onClick={() => setInstagramMenuOpen(!instagramMenuOpen)} 
-          isParent={true} 
-          isOpen={instagramMenuOpen} 
-        />
-        {instagramMenuOpen && (
-          <div className="ml-4 border-l border-white/5 pl-4 space-y-1">
-            <SidebarSubBtn 
-              label="Ventas Capturadas" 
-              active={activeTab === 'leads'} 
-              onClick={() => setActiveTab('leads')} 
-            />
-          </div>
-        )}
+
+          {/* Instagram — siempre disponible */}
+          <SidebarBtn
+            label="Instagram"
+            icon={<FaInstagram className="text-pink-500" />}
+            active={activeTab === 'leads'}
+            onClick={() => setInstagramMenuOpen(!instagramMenuOpen)}
+            isParent={true}
+            isOpen={instagramMenuOpen}
+          />
+          {instagramMenuOpen && (
+            <div className="ml-4 border-l border-white/5 pl-4 space-y-1">
+              <SidebarSubBtn
+                label="Ventas Capturadas"
+                active={activeTab === 'leads'}
+                onClick={() => setActiveTab('leads')}
+              />
+            </div>
+          )}
 
           {/* Telegram — desde plan Básico */}
-          <SidebarBtn 
+          <SidebarBtn
             label="Telegram"
-            active={activeTab === 'telegram' || activeTab === 'telegram-leads'} 
-            onClick={() => hasTelegram ? setTelegramMenuOpen(!telegramMenuOpen) : setActiveTab('plans')} 
+            icon={<FaTelegram className="text-sky-400" />}
+            active={activeTab === 'telegram-leads'}
+            onClick={() => hasTelegram ? setTelegramMenuOpen(!telegramMenuOpen) : setActiveTab('plans')}
             isParent={hasTelegram}
             isOpen={telegramMenuOpen}
             locked={!hasTelegram}
@@ -203,9 +209,11 @@ export default function Dashboard({ session }: { session: Session }) {
             </div>
           )}
 
+          {/* WhatsApp — desde plan Pro */}
           <SidebarBtn
             label="WhatsApp"
-            active={activeTab === 'whatsapp' || activeTab === 'wpp-messages'}
+            icon={<FaWhatsapp className="text-green-400" />}
+            active={activeTab === 'wpp-messages' || activeTab === 'wpp-leads'}
             onClick={() => hasWhatsApp ? setWhatsappMenuOpen(!whatsappMenuOpen) : setActiveTab('plans')}
             isParent={hasWhatsApp}
             isOpen={whatsappMenuOpen}
@@ -215,6 +223,11 @@ export default function Dashboard({ session }: { session: Session }) {
           {hasWhatsApp && whatsappMenuOpen && (
             <div className="ml-4 border-l border-white/5 pl-4 space-y-1">
               <SidebarSubBtn
+                label="Leads"
+                active={activeTab === 'wpp-leads'}
+                onClick={() => { setActiveTab('wpp-leads'); setLegalView(null) }}
+              />
+              <SidebarSubBtn
                 label="Visor Mensajes"
                 active={activeTab === 'wpp-messages'}
                 onClick={() => { setActiveTab('wpp-messages'); setLegalView(null) }}
@@ -222,82 +235,98 @@ export default function Dashboard({ session }: { session: Session }) {
             </div>
           )}
 
+          {/* Google Calendar — solo plan Full */}
+          <SidebarBtn
+            label="Google Calendar"
+            icon={<FaGoogle className="text-blue-400" />}
+            active={activeTab === 'scheduling'}
+            onClick={() => hasScheduling ? (setActiveTab('scheduling'), setLegalView(null)) : setActiveTab('plans')}
+            locked={!hasScheduling}
+            lockLabel="Full"
+          />
+
           <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Configuración</p>
-        <SidebarBtn
-          label="Notificaciones"
-          active={activeTab === 'notifications'}
-          onClick={() => { setActiveTab('notifications'); setLegalView(null) }}
-          />
-        <SidebarBtn 
-          label="Configura tu Instagram" 
-          active={activeTab === 'instagram'} 
-          onClick={() => setActiveTab('instagram')} 
-        />
-        <SidebarBtn 
-          label="Configura tu Telegram"
-          active={activeTab === 'telegram'} 
-          onClick={() => hasTelegram ? (setActiveTab('telegram'), setLegalView(null)) : setActiveTab('plans')}
-          locked={!hasTelegram}
-          lockLabel="Básico+"
-        />
-        <SidebarBtn
-          label="Configura tu WhatsApp"
-          active={activeTab === 'whatsapp'}
-          onClick={() => hasWhatsApp ? (setActiveTab('whatsapp'), setLegalView(null)) : setActiveTab('plans')}
-          locked={!hasWhatsApp}
-          lockLabel="Pro+"
-        />
-        <SidebarBtn
-          label="Agendamiento"
-          active={activeTab === 'scheduling'}
-          onClick={() => hasScheduling ? (setActiveTab('scheduling'), setLegalView(null)) : setActiveTab('plans')}
-          locked={!hasScheduling}
-          lockLabel="Full"
-        />
-         {/* Entrenamiento IA — sección destacada */}
-        <div className="mt-4 mb-2 mx-1 rounded-xl bg-gradient-to-r from-purple-600/10 to-indigo-600/10 border border-purple-500/20 overflow-hidden">
-          <button
-            onClick={() => setKnowledgeOpen(!knowledgeOpen)}
-            className={`w-full flex items-center gap-2.5 p-3 text-sm transition-all duration-200 ${
-              activeTab === 'faqs' || activeTab === 'knowlower'
-                ? 'text-purple-300'
-                : 'text-gray-300 hover:text-purple-300'
-            }`}
-          >
-            <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-xs shadow-[0_2px_8px_rgba(139,92,246,0.3)]">🧠</span>
-            <span className="font-bold text-xs uppercase tracking-wider">Entrenamiento IA</span>
-            <svg className={`w-4 h-4 ml-auto transition-transform duration-200 ${knowledgeOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
-          </button>
-          {knowledgeOpen && (
-            <div className="px-3 pb-3 space-y-1 border-t border-purple-500/10">
-              <button onClick={() => setActiveTab('faqs')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'faqs' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
-                FAQs / Base Conocimiento
-              </button>
-              <button onClick={() => setActiveTab('knowlower')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'knowlower' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
-                Cerebro IA
-              </button>
-            </div>
-          )}
-        </div>
 
-          <SidebarBtn 
-            label="Catálogo" 
-            active={activeTab === 'catalog' || activeTab === 'inventory'} 
-            onClick={() => setCatalogOpen(!catalogOpen)} 
-            isParent={true} 
-            isOpen={catalogOpen} 
-          />
-          {catalogOpen && (
-            <div className="ml-4 border-l border-white/5 pl-4 space-y-1">
-              <SidebarSubBtn label="Subir Producto" active={activeTab === 'catalog'} onClick={() => setActiveTab('catalog')} />
-              <SidebarSubBtn label="Inventario" active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} />
-            </div>
-          )}
+          {/* Configura Agentes — submenu estilo destacado */}
+          <div className="mb-2 mx-1 rounded-xl bg-gradient-to-r from-indigo-600/10 to-sky-600/10 border border-indigo-500/20 overflow-hidden">
+            <button
+              onClick={() => setConfigAgentsOpen(!configAgentsOpen)}
+              className={`w-full flex items-center gap-2.5 p-3 text-sm transition-all duration-200 ${
+                activeTab === 'instagram' || activeTab === 'telegram' || activeTab === 'whatsapp'
+                  ? 'text-indigo-300'
+                  : 'text-gray-300 hover:text-indigo-300'
+              }`}
+            >
+              <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center text-white text-xs shadow-[0_2px_8px_rgba(99,102,241,0.3)]">⚙️</span>
+              <span className="font-bold text-xs uppercase tracking-wider">Configura Agentes</span>
+              <svg className={`w-4 h-4 ml-auto transition-transform duration-200 ${configAgentsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            {configAgentsOpen && (
+              <div className="px-3 pb-3 space-y-1 border-t border-indigo-500/10">
+                <button onClick={() => setActiveTab('instagram')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'instagram' ? 'text-indigo-300 bg-indigo-500/10' : 'text-gray-500 hover:text-indigo-300 hover:bg-indigo-500/5'}`}>
+                  <FaInstagram className="text-pink-500 text-sm" /> Instagram
+                </button>
+                <button onClick={() => hasTelegram ? setActiveTab('telegram') : setActiveTab('plans')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${!hasTelegram ? 'text-gray-600' : activeTab === 'telegram' ? 'text-indigo-300 bg-indigo-500/10' : 'text-gray-500 hover:text-indigo-300 hover:bg-indigo-500/5'}`}>
+                  <FaTelegram className={`text-sm ${hasTelegram ? 'text-sky-400' : 'opacity-30'}`} /> Telegram
+                  {!hasTelegram && <span className="ml-auto text-[9px] text-gray-600 font-bold">Básico+</span>}
+                </button>
+                <button onClick={() => hasWhatsApp ? setActiveTab('whatsapp') : setActiveTab('plans')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${!hasWhatsApp ? 'text-gray-600' : activeTab === 'whatsapp' ? 'text-indigo-300 bg-indigo-500/10' : 'text-gray-500 hover:text-indigo-300 hover:bg-indigo-500/5'}`}>
+                  <FaWhatsapp className={`text-sm ${hasWhatsApp ? 'text-green-400' : 'opacity-30'}`} /> WhatsApp
+                  {!hasWhatsApp && <span className="ml-auto text-[9px] text-gray-600 font-bold">Pro+</span>}
+                </button>
+              </div>
+            )}
+          </div>
 
-          <SidebarBtn 
-            label="Planes / Saldo" 
-            active={activeTab === 'plans'} 
-            onClick={() => setActiveTab('plans')} 
+          <SidebarBtn
+            label="Agendamiento"
+            active={activeTab === 'scheduling'}
+            onClick={() => hasScheduling ? (setActiveTab('scheduling'), setLegalView(null)) : setActiveTab('plans')}
+            locked={!hasScheduling}
+            lockLabel="Full"
+          />
+          <SidebarBtn
+            label="Notificaciones"
+            active={activeTab === 'notifications'}
+            onClick={() => { setActiveTab('notifications'); setLegalView(null) }}
+          />
+
+          {/* Entrenamiento IA — sección destacada con Catálogo incluido */}
+          <div className="mt-4 mb-2 mx-1 rounded-xl bg-gradient-to-r from-purple-600/10 to-indigo-600/10 border border-purple-500/20 overflow-hidden">
+            <button
+              onClick={() => setKnowledgeOpen(!knowledgeOpen)}
+              className={`w-full flex items-center gap-2.5 p-3 text-sm transition-all duration-200 ${
+                activeTab === 'faqs' || activeTab === 'knowlower' || activeTab === 'catalog' || activeTab === 'inventory'
+                  ? 'text-purple-300'
+                  : 'text-gray-300 hover:text-purple-300'
+              }`}
+            >
+              <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-xs shadow-[0_2px_8px_rgba(139,92,246,0.3)]">🧠</span>
+              <span className="font-bold text-xs uppercase tracking-wider">Entrenamiento IA</span>
+              <svg className={`w-4 h-4 ml-auto transition-transform duration-200 ${knowledgeOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            {knowledgeOpen && (
+              <div className="px-3 pb-3 space-y-1 border-t border-purple-500/10">
+                <button onClick={() => setActiveTab('faqs')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'faqs' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
+                  FAQs / Base Conocimiento
+                </button>
+                <button onClick={() => setActiveTab('knowlower')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'knowlower' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
+                  Cerebro IA
+                </button>
+                <button onClick={() => setActiveTab('catalog')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'catalog' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
+                  Subir Producto
+                </button>
+                <button onClick={() => setActiveTab('inventory')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'inventory' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
+                  Inventario
+                </button>
+              </div>
+            )}
+          </div>
+
+          <SidebarBtn
+            label="Planes / Saldo"
+            active={activeTab === 'plans'}
+            onClick={() => setActiveTab('plans')}
           />
         </nav>
 
@@ -349,6 +378,7 @@ export default function Dashboard({ session }: { session: Session }) {
                 goToPlans={() => setActiveTab('plans')}
               />
             )}
+            {activeTab === 'wpp-leads' && <WhatsAppLeadsView userId={session.user.id} />}
             {activeTab === 'wpp-messages' && (
               <WhatsAppMessagesView session={session} />
             )}
@@ -412,10 +442,10 @@ export default function Dashboard({ session }: { session: Session }) {
 }
 
 // Auxiliares del Sidebar
-const SidebarBtn = ({ label, active, onClick, isParent, isOpen, locked, lockLabel }: any) => (
+const SidebarBtn = ({ label, icon, active, onClick, isParent, isOpen, locked, lockLabel }: any) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center p-3 rounded-xl text-sm transition-all duration-200 ${
+    className={`w-full flex items-center gap-2 p-3 rounded-xl text-sm transition-all duration-200 ${
       locked
         ? 'text-gray-600 hover:bg-white/[0.02] cursor-pointer'
         : active
@@ -423,6 +453,7 @@ const SidebarBtn = ({ label, active, onClick, isParent, isOpen, locked, lockLabe
         : 'text-gray-400 hover:bg-white/[0.03] hover:text-gray-200'
     }`}
   >
+    {icon && <span className="text-base shrink-0">{icon}</span>}
     <span className="font-medium">{label}</span>
     {locked ? (
       <span className="ml-auto flex items-center gap-1">
