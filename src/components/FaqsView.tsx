@@ -66,7 +66,7 @@ export default function FaqsView({ session }: FaqsViewProps) {
   return (
     <div className="space-y-6">
       <header>
-        <h2 className="text-3xl font-bold text-white">Preguntas Frecuentes (FAQ)</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-white">Preguntas Frecuentes (FAQ)</h2>
         <p className="text-gray-400">Entrena a tu IA subiendo un archivo .txt con el formato Pregunta | Respuesta.</p>
       </header>
 

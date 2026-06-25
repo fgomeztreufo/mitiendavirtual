@@ -655,13 +655,13 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
                   {/* QR para compartir — bot propio */}
                   <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700">
                     <p className="text-sm text-gray-300 mb-2 font-medium">Comparte tu bot con clientes</p>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
                       <img
                         src={'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent('https://t.me/' + ownBotInfo.bot_username)}
                         alt="QR Bot propio"
-                        className="w-32 h-32 rounded-lg bg-white p-1"
+                        className="w-28 h-28 sm:w-32 sm:h-32 shrink-0 rounded-lg bg-white p-1"
                       />
-                      <div className="text-xs text-gray-400 space-y-1">
+                      <div className="text-xs text-gray-400 space-y-1 text-center sm:text-left">
                         <p>Link directo:</p>
                         <a href={`https://t.me/${ownBotInfo.bot_username}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline break-all">
                           t.me/{ownBotInfo.bot_username}
@@ -678,7 +678,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
               ) : (
                 <>
                   {/* Selector de tipo de bot */}
-                  <div className="mb-4 flex gap-2">
+                  <div className="mb-4 flex flex-col sm:flex-row gap-2">
                     <button type="button" onClick={() => {
                       setBotChoice('platform')
                     }} className={`py-2 px-4 rounded-xl text-sm ${botChoice === 'platform' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300'}`}>
@@ -691,8 +691,8 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
 
                   {botChoice === 'own' ? (
                     <div className="space-y-3">
-                      <div className="flex gap-3">
-                        <input value={botToken} onChange={(e) => setBotToken(e.target.value)} placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" className="flex-1 bg-black border border-gray-800 rounded-xl p-3 text-white outline-none text-sm" />
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <input value={botToken} onChange={(e) => setBotToken(e.target.value)} placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" className="flex-1 bg-black border border-gray-800 rounded-xl p-3 text-white outline-none text-sm min-w-0" />
                         <button onClick={() => saveBotToken()} disabled={savingToken} className="py-2 px-4 bg-emerald-600 text-white rounded-xl text-sm whitespace-nowrap">{savingToken ? 'Conectando...' : 'Conectar bot'}</button>
                       </div>
                       <p className="text-xs text-gray-500">Obtén el token desde <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">@BotFather</a> en Telegram → /newbot o /mybot → API Token.</p>
@@ -700,12 +700,12 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
                   ) : (
                     <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700">
                       <p className="text-sm text-gray-300 mb-2 font-medium">QR del bot de plataforma</p>
-                        <div className="flex items-center gap-4">
-                          <div className="relative w-32 h-32">
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                          <div className="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0">
                             <img
                               src={platformDeepLink ? 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(platformDeepLink) : 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent('https://t.me/mi_tienda_virtual_bot')}
                               alt="QR Bot MiTiendaVirtual"
-                              className="w-32 h-32 rounded-lg bg-white p-1"
+                              className="w-28 h-28 sm:w-32 sm:h-32 rounded-lg bg-white p-1"
                             />
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                               <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow z-30">
@@ -738,9 +738,9 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
                               </button>
                             </div>
                             <p className="mt-2">El enlace usa start params para identificar tu tienda automáticamente.</p>
-                            <div className="mt-2 flex gap-2">
+                            <div className="mt-2 flex flex-wrap gap-2">
                               <button onClick={() => void bindPlatformBot()} className="py-1 px-3 rounded text-xs bg-indigo-600 text-white">
-                                Compartir enlace con token
+                                Compartir enlace
                               </button>
                               <button onClick={() => void regeneratePlatformToken()} disabled={platformLinkLoading} className="py-1 px-3 rounded text-xs bg-gray-700 text-white">
                                 {platformLinkLoading ? 'Generando...' : 'Regenerar token'}

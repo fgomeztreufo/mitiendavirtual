@@ -129,7 +129,7 @@ export default function PlansView({ session, profile }: PlansViewProps) {
     return (
         <div className="animate-fade-in-up p-4 max-w-7xl mx-auto">
             <div className="text-center mb-16">
-                <h1 className="text-3xl md:text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
                     Elige el motor de tu crecimiento 🚀
                 </h1>
                 <p className="text-gray-400 max-w-2xl mx-auto text-base">

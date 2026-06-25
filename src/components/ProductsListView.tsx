@@ -287,9 +287,9 @@ export default function ProductsListView({ session, onUpdate }: any) {
       )}
 
       {/* HEADER */}
-      <div className="flex justify-between items-center bg-[#111827] p-6 rounded-[2rem] border border-gray-800">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 bg-[#111827] p-4 sm:p-6 rounded-[2rem] border border-gray-800">
         <h1 className="text-xl font-black text-white italic uppercase tracking-tighter">Mantenedor</h1>
-        <input placeholder="FILTRAR PRODUCTOS..." className="bg-black border border-gray-800 rounded-xl py-2 px-4 text-[10px] font-black uppercase text-white outline-none focus:border-blue-500" onChange={e => setSearchTerm(e.target.value)} />
+        <input placeholder="FILTRAR PRODUCTOS..." className="w-full sm:w-auto bg-black border border-gray-800 rounded-xl py-2 px-4 text-[10px] font-black uppercase text-white outline-none focus:border-blue-500" onChange={e => setSearchTerm(e.target.value)} />
       </div>
 
       {/* TABLA */}
@@ -304,8 +304,8 @@ export default function ProductsListView({ session, onUpdate }: any) {
           <tbody className="divide-y divide-gray-800">
             {currentItems.map((product) => (
               <tr key={product.id} className="hover:bg-blue-600/5 transition-all group">
-                <td className="p-4 flex items-center gap-3">
-                  <img src={product.image_url} className="w-10 h-10 rounded-lg object-cover" />
+                <td className="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+                  <img src={product.image_url} className="w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-lg object-cover" />
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-xs text-white uppercase">{product.name}</span>

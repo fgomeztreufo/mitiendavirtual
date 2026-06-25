@@ -344,26 +344,28 @@ function ServicesPanel({ services, userId, onRefresh }: { services: Service[]; u
       ) : (
         <div className="grid gap-3">
           {services.map(svc => (
-            <div key={svc.id} className={`rounded-xl border p-4 flex items-center justify-between gap-4 ${svc.is_active ? 'bg-white/[0.03] border-white/5' : 'bg-gray-900/40 border-white/5 opacity-60'}`}>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-white truncate">{svc.name}</p>
-                {svc.description && <p className="text-xs text-gray-500 truncate">{svc.description}</p>}
-                <div className="flex gap-3 mt-1 text-[10px] text-gray-500 uppercase tracking-wider">
-                  <span>{svc.duration_minutes} min</span>
-                  {svc.price && <span>${svc.price.toLocaleString('es-CL')}</span>}
-                  {svc.buffer_minutes > 0 && <span>+{svc.buffer_minutes} min descanso</span>}
+            <div key={svc.id} className={`rounded-xl border p-4 ${svc.is_active ? 'bg-white/[0.03] border-white/5' : 'bg-gray-900/40 border-white/5 opacity-60'}`}>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-white truncate">{svc.name}</p>
+                  {svc.description && <p className="text-xs text-gray-500 truncate">{svc.description}</p>}
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[10px] text-gray-500 uppercase tracking-wider">
+                    <span>{svc.duration_minutes} min</span>
+                    {svc.price && <span>${svc.price.toLocaleString('es-CL')}</span>}
+                    {svc.buffer_minutes > 0 && <span>+{svc.buffer_minutes} min descanso</span>}
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => editService(svc)} className="text-gray-600 hover:text-indigo-400 transition-colors" title="Editar">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                </button>
-                <button onClick={() => toggleActive(svc)} className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${svc.is_active ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10' : 'border-gray-600 text-gray-500 hover:bg-gray-500/10'}`}>
-                  {svc.is_active ? 'Activo' : 'Inactivo'}
-                </button>
-                <button onClick={() => deleteService(svc)} className="text-gray-600 hover:text-red-400 transition-colors" title="Eliminar">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => editService(svc)} className="text-gray-600 hover:text-indigo-400 transition-colors" title="Editar">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                  </button>
+                  <button onClick={() => toggleActive(svc)} className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${svc.is_active ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10' : 'border-gray-600 text-gray-500 hover:bg-gray-500/10'}`}>
+                    {svc.is_active ? 'Activo' : 'Inactivo'}
+                  </button>
+                  <button onClick={() => deleteService(svc)} className="text-gray-600 hover:text-red-400 transition-colors" title="Eliminar">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -487,10 +489,10 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh }: {
 
             return (
               <div key={member.id} className={`rounded-xl border p-4 ${member.is_active ? 'bg-white/[0.03] border-white/5' : 'bg-gray-900/40 border-white/5 opacity-60'}`}>
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
+                      <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
                         {member.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -508,7 +510,7 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh }: {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button onClick={() => assignServices(member)} className="text-[10px] font-bold px-2 py-1 rounded-lg border border-purple-500/30 text-purple-400 hover:bg-purple-500/10 transition-all">
                       Servicios
                     </button>
@@ -707,12 +709,12 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
             <label className="text-xs text-gray-500 uppercase tracking-wider">Profesional:</label>
             <select
               value={current}
               onChange={e => onSelectStaff(e.target.value)}
-              className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500/50"
+              className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500/50 w-full sm:w-auto"
             >
               {activeStaff.map(s => (
                 <option key={s.id} value={s.id} className="bg-gray-900">{s.name}</option>
@@ -721,7 +723,7 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
           </div>
 
           {/* Weekly schedule grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {[1, 2, 3, 4, 5, 6, 0].map(day => {
               const dayBlocks = staffSchedules
                 .filter(s => s.day_of_week === day)

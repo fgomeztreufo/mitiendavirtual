@@ -122,7 +122,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <MobileNavBtn label="Ventas Capturadas" active={activeTab === 'leads'} onClick={() => { setActiveTab('leads'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Telegram" active={activeTab === 'telegram'} locked={!hasTelegram} lockLabel="Básico+" onClick={() => { if (hasTelegram) { setActiveTab('telegram'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
             {hasTelegram && <MobileNavBtn label="Leads Telegram" active={activeTab === 'telegram-leads'} onClick={() => { setActiveTab('telegram-leads'); setMobileMenuOpen(false); }} />}
-            <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} locked={!hasWhatsApp} lockLabel="Pro+" onClick={() => { setActiveTab('plans'); setMobileMenuOpen(false); }} />
+            <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} locked={!hasWhatsApp} lockLabel="Pro+" onClick={() => { if (hasWhatsApp) { setActiveTab('whatsapp'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
             <MobileNavBtn label="Agendamiento" active={activeTab === 'scheduling'} locked={!hasScheduling} lockLabel="Full" onClick={() => { if (hasScheduling) { setActiveTab('scheduling'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
             <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-4 mb-2 tracking-widest">Configuración</p>
             <MobileNavBtn label="Notificaciones" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false); }} />

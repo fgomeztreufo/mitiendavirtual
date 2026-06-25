@@ -276,7 +276,7 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-20 animate-fade-in">
       <header>
-        <h1 className="text-3xl font-black text-white italic uppercase tracking-tighter">Hola, {ownerName || 'Emprendedor'} 👋</h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-white italic uppercase tracking-tighter">Hola, {ownerName || 'Emprendedor'} 👋</h1>
         <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Configura la inteligencia de tu instancia</p>
       </header>
 
@@ -284,8 +284,8 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
         <div className="lg:col-span-8 space-y-8">
           
           {/* MAGO DE PERSONALIDAD RAG - Diseño Cápsula Zinc */}
-          <div className="bg-zinc-900/40 border border-zinc-800 rounded-[32px] p-8 shadow-2xl backdrop-blur-md">
-            <h2 className="text-xl font-bold mb-8 text-blue-400 flex items-center gap-2">
+          <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl sm:rounded-[32px] p-4 sm:p-8 shadow-2xl backdrop-blur-md">
+            <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 text-blue-400 flex items-center gap-2">
               <FiCpu className="animate-pulse" /> Definir Personalidad RAG
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -329,7 +329,7 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
           </div>
 
           {/* SECCIÓN DE SEGURIDAD */}
-          <div className="bg-zinc-900/40 border border-zinc-800 rounded-[32px] p-8">
+          <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl sm:rounded-[32px] p-4 sm:p-8">
             <h2 className="text-sm font-black text-zinc-400 uppercase tracking-widest mb-6 flex items-center gap-2">
               <FiShield className="text-emerald-500" /> Seguridad y Filtros
             </h2>
@@ -347,14 +347,14 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
 
           {/* RESPUESTAS Y PROMPT */}
           <div className="space-y-6">
-            <div className="bg-zinc-900/40 border border-zinc-800 rounded-[32px] p-8 shadow-xl">
+            <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl sm:rounded-[32px] p-4 sm:p-8 shadow-xl">
               <label className="text-[10px] font-black text-blue-500 uppercase tracking-widest block mb-4 ml-2 flex items-center gap-2">
                 <FiMessageSquare /> Respuesta en Comentarios
               </label>
               <input value={publicReply} onChange={(e) => setPublicReply(e.target.value)} className="w-full bg-black border border-zinc-800 rounded-2xl p-5 text-white outline-none focus:border-blue-600 transition-all" placeholder="Ej: ¡Hola! Te enviamos info al DM 📩" />
             </div>
 
-            <div className="bg-zinc-900/40 border border-zinc-800 rounded-[32px] p-8 shadow-xl">
+            <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl sm:rounded-[32px] p-4 sm:p-8 shadow-xl">
               <div className="flex items-center mb-4 ml-2">
                 <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Instrucciones del Sistema (Prompt RAG)</label>
                 <HelpBtn title="RAG Activado" text="Estas instrucciones obligan a la IA a buscar productos en tu catálogo antes de responder." />
@@ -370,7 +370,7 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
 
         {/* COLUMNA DERECHA - ESTADÍSTICAS Y PLAN */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-zinc-900/40 border border-zinc-800 rounded-[32px] p-8 backdrop-blur-md shadow-2xl">
+          <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl sm:rounded-[32px] p-4 sm:p-8 backdrop-blur-md shadow-2xl">
             <h3 className="text-[10px] font-black text-zinc-500 uppercase mb-6 tracking-widest text-center italic">Estado del Bot</h3>
             {instance.provider_id ? (
               <div className="space-y-4 text-center">
@@ -397,7 +397,7 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
             )}
           </div>
 
-          <div className="bg-zinc-900/40 border border-zinc-800 rounded-[32px] p-8 shadow-2xl">
+          <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl sm:rounded-[32px] p-4 sm:p-8 shadow-2xl">
             <h3 className="text-[10px] font-black text-zinc-500 uppercase mb-4 text-center tracking-widest">Créditos Mensuales</h3>
             <div className="text-3xl font-black text-white mb-2 text-center italic tracking-tighter uppercase">{planCodeToDisplay(normalizePlanType(profile?.plan_type))}</div>
             <div className="space-y-3">

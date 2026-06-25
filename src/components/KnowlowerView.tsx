@@ -37,7 +37,7 @@ export default function KnowlowerView({ onClose, userId }: KnowlowerViewProps) {
             <div className="h-2 w-2 bg-amber-500 rounded-full animate-pulse"></div>
             <span className="text-[9px] font-black tracking-[0.4em] text-amber-500/80 uppercase">Neural Intelligence</span>
           </div>
-          <h1 className="text-4xl font-black text-white tracking-tighter italic">
+          <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tighter italic">
             CEREBRO <span className="text-zinc-800 not-italic font-thin">IA</span>
           </h1>
         </div>

@@ -62,7 +62,7 @@ export default function TelegramLeadsView({ onClose, userId }: Readonly<{ onClos
       <div className="max-w-7xl mx-auto mb-10">
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h1 className="text-4xl font-black text-white tracking-tighter italic">
+            <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tighter italic">
               PIPELINE <span className="text-zinc-800 not-italic font-thin">Telegram</span>
             </h1>
             <p className="text-zinc-500 text-xs mt-2 uppercase tracking-widest font-bold">

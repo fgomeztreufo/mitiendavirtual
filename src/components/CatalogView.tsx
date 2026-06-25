@@ -132,7 +132,7 @@ export default function CatalogView({ session, profile, onProductAdded,goToPlans
       {/* HEADER DINÁMICO */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-black text-white italic tracking-tighter uppercase">Mi Catálogo</h1>
+          <h1 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter uppercase">Mi Catálogo</h1>
           {planCode === 'full' && (
             <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/50 px-3 py-1 rounded-full text-[10px] font-black flex items-center gap-1 animate-pulse">
               👑 VIP FULL
