@@ -176,18 +176,18 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
       </div>
 
       {/* Sub-tabs */}
-      <div className="flex gap-1 p-1 rounded-xl bg-white/[0.03] border border-white/5">
+      <div className="flex gap-1 p-1 rounded-xl bg-white/[0.03] border border-white/5 overflow-x-auto">
         {([
           { key: 'services', label: 'Servicios' },
           { key: 'staff', label: 'Equipo' },
           { key: 'schedules', label: 'Horarios' },
           { key: 'appointments', label: 'Citas' },
-          { key: 'calendar', label: 'Google Calendar' },
+          { key: 'calendar', label: 'Calendar' },
         ] as { key: SubTab; label: string }[]).map(t => (
           <button
             key={t.key}
             onClick={() => setSubTab(t.key)}
-            className={`flex-1 py-2 px-3 text-xs sm:text-sm font-medium rounded-lg transition-all ${
+            className={`shrink-0 py-2 px-3 text-xs sm:text-sm font-medium rounded-lg transition-all ${
               subTab === t.key
                 ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
                 : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.03]'
@@ -1172,18 +1172,18 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
   return (
     <div className="space-y-6">
       {/* Estado de conexión */}
-      <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${connected ? 'bg-emerald-500/10' : 'bg-blue-500/10'}`}>
-              <svg className={`w-6 h-6 ${connected ? 'text-emerald-400' : 'text-blue-400'}`} viewBox="0 0 24 24" fill="currentColor">
+      <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-xl flex items-center justify-center ${connected ? 'bg-emerald-500/10' : 'bg-blue-500/10'}`}>
+              <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${connected ? 'text-emerald-400' : 'text-blue-400'}`} viewBox="0 0 24 24" fill="currentColor">
                 <path d="M19.5 3.5h-2V2h-1v1.5h-9V2h-1v1.5h-2C3.67 3.5 3 4.17 3 5v14c0 .83.67 1.5 1.5 1.5h15c.83 0 1.5-.67 1.5-1.5V5c0-.83-.67-1.5-1.5-1.5zm0 15.5h-15V8.5h15V19z" />
               </svg>
             </div>
-            <div>
+            <div className="min-w-0">
               <h3 className="text-sm font-bold text-white">Google Calendar</h3>
               {connected ? (
-                <p className="text-xs text-emerald-400">Conectado como {googleEmail}</p>
+                <p className="text-xs text-emerald-400 truncate">Conectado como {googleEmail}</p>
               ) : (
                 <p className="text-xs text-gray-500">No conectado</p>
               )}
@@ -1192,14 +1192,14 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
           {connected ? (
             <button
               onClick={disconnect}
-              className="px-4 py-2 text-xs font-bold rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all"
+              className="px-4 py-2 text-xs font-bold rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all w-fit"
             >
               Desconectar
             </button>
           ) : (
             <button
               onClick={startOAuth}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition-all text-xs"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition-all text-xs w-fit"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z" /></svg>
               Conectar
@@ -1227,39 +1227,37 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
 
           <div className="space-y-3">
             {activeStaff.map(member => (
-              <div key={member.id} className="flex items-center justify-between gap-4 bg-white/[0.02] rounded-xl p-3 border border-white/5">
+              <div key={member.id} className="bg-white/[0.02] rounded-xl p-3 border border-white/5 space-y-2">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
                     {member.name.charAt(0).toUpperCase()}
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold text-white truncate">{member.name}</p>
                     {member.role && <p className="text-[10px] text-gray-500 uppercase tracking-wider">{member.role}</p>}
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={member.google_calendar_id || ''}
-                    onChange={e => assignCalendar(member.id, e.target.value)}
-                    disabled={assigning === member.id}
-                    className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500/50 max-w-[200px]"
-                  >
-                    <option value="" className="bg-gray-900">Sin asignar</option>
-                    {calendars.map(cal => (
-                      <option key={cal.id} value={cal.id} className="bg-gray-900">
-                        {cal.summary}{cal.primary ? ' (Principal)' : ''}
-                      </option>
-                    ))}
-                  </select>
-                  {assigning === member.id && (
-                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                  )}
                   {member.google_calendar_id && assigning !== member.id && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
                       Sincronizado
                     </span>
                   )}
+                  {assigning === member.id && (
+                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin shrink-0" />
+                  )}
                 </div>
+                <select
+                  value={member.google_calendar_id || ''}
+                  onChange={e => assignCalendar(member.id, e.target.value)}
+                  disabled={assigning === member.id}
+                  className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500/50"
+                >
+                  <option value="" className="bg-gray-900">Sin asignar</option>
+                  {calendars.map(cal => (
+                    <option key={cal.id} value={cal.id} className="bg-gray-900">
+                      {cal.summary}{cal.primary ? ' (Principal)' : ''}
+                    </option>
+                  ))}
+                </select>
               </div>
             ))}
           </div>
