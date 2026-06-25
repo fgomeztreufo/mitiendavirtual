@@ -11,7 +11,7 @@ export default function ProductsListView({ session, onUpdate }: any) {
 
   // ESTADOS PARA EDICIÓN
   const [editingProduct, setEditingProduct] = useState<any>(null)
-  const [editData, setEditData] = useState({ name: '', price: '', description: '' })
+  const [editData, setEditData] = useState({ name: '', price: '', description: '', brand: '', category: '' })
   const [editPreviewUrl, setEditPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -22,9 +22,12 @@ export default function ProductsListView({ session, onUpdate }: any) {
   useEffect(() => { fetchProducts() }, [])
 
   useEffect(() => {
-    const results = products.filter(p => 
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.description && p.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    const term = searchTerm.toLowerCase()
+    const results = products.filter(p =>
+      p.name.toLowerCase().includes(term) ||
+      (p.description && p.description.toLowerCase().includes(term)) ||
+      (p.brand && p.brand.toLowerCase().includes(term)) ||
+      (p.category && p.category.toLowerCase().includes(term))
     )
     setFilteredProducts(results)
     setCurrentPage(1)
@@ -53,7 +56,9 @@ export default function ProductsListView({ session, onUpdate }: any) {
     setEditData({
       name: product.name,
       price: product.price.toString(),
-      description: product.description || ''
+      description: product.description || '',
+      brand: product.brand || '',
+      category: product.category || ''
     });
     setEditPreviewUrl(null);
   };
@@ -95,6 +100,8 @@ export default function ProductsListView({ session, onUpdate }: any) {
           name: editData.name,
           price: Number(editData.price),
           description: editData.description,
+          brand: editData.brand,
+          category: editData.category,
           image_url: finalImageUrl
         })
         .eq('id', editingProduct.id)
@@ -274,9 +281,13 @@ export default function ProductsListView({ session, onUpdate }: any) {
                    }}
                  />
                </div>
-               <input className="w-full bg-black border border-gray-800 p-4 rounded-2xl text-white text-sm" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} required />
-               <input type="number" className="w-full bg-black border border-gray-800 p-4 rounded-2xl text-white text-sm" value={editData.price} onChange={e => setEditData({...editData, price: e.target.value})} required />
-               <textarea className="w-full bg-black border border-gray-800 p-4 rounded-2xl text-white text-sm h-24" value={editData.description} onChange={e => setEditData({...editData, description: e.target.value})} />
+               <input placeholder="Nombre" className="w-full bg-black border border-gray-800 p-4 rounded-2xl text-white text-sm" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} required />
+               <input type="number" placeholder="Precio" className="w-full bg-black border border-gray-800 p-4 rounded-2xl text-white text-sm" value={editData.price} onChange={e => setEditData({...editData, price: e.target.value})} required />
+               <div className="grid grid-cols-2 gap-3">
+                 <input placeholder="Marca" className="bg-black border border-gray-800 p-4 rounded-2xl text-white text-sm" value={editData.brand} onChange={e => setEditData({...editData, brand: e.target.value})} />
+                 <input placeholder="Categoría" className="bg-black border border-gray-800 p-4 rounded-2xl text-white text-sm" value={editData.category} onChange={e => setEditData({...editData, category: e.target.value})} />
+               </div>
+               <textarea placeholder="Descripción" className="w-full bg-black border border-gray-800 p-4 rounded-2xl text-white text-sm h-24" value={editData.description} onChange={e => setEditData({...editData, description: e.target.value})} />
                <div className="flex gap-3">
                  <button type="button" onClick={() => setEditingProduct(null)} className="flex-1 text-gray-500 font-bold uppercase text-[10px]">Cancelar</button>
                  <button type="submit" disabled={uploading} className="flex-1 bg-blue-600 py-4 rounded-2xl font-black text-[10px] text-white uppercase">{uploading ? 'Guardando...' : 'Confirmar'}</button>
@@ -316,6 +327,11 @@ export default function ProductsListView({ session, onUpdate }: any) {
                       )}
                     </div>
                     <span className="text-green-500 text-[10px] font-black">${Number(product.price).toLocaleString('es-CL')}</span>
+                    {(product.brand || product.category) && (
+                      <span className="text-[9px] text-gray-500">
+                        {[product.brand, product.category].filter(Boolean).join(' · ')}
+                      </span>
+                    )}
                   </div>
                 </td>
                 <td className="p-4 text-center">
