@@ -191,14 +191,9 @@ export default function PlansView({ session, profile }: PlansViewProps) {
 
                 const planEmoji = code === 'free' ? '🌱' : code === 'pro' ? '💎' : code === 'full' ? '🔥' : '⚡'
 
-                // UI rules requested:
-                // - Mark 'basic' as the most popular
-                // - Block purchase buttons for 'pro' and 'full'
-                // - Show 'PRÓXIMAMENTE' ribbon on 'pro'
                 const mostPopular = 'basic'
-                const isBlocked = code === 'pro' || code === 'full'
-                const buttonLabelComputed = isCurrent ? 'Tu Plan Actual' : isBlocked ? 'Próximamente' : label
-                const isButtonDisabled = isCurrent || isBlocked
+                const buttonLabelComputed = isCurrent ? 'Tu Plan Actual' : label
+                const isButtonDisabled = isCurrent || (code === 'free')
 
                 return (
                     <div key={code} className={`${bgClass} ${borderClass} ${baseClasses}`}>
@@ -206,8 +201,8 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                             <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-indigo-600 text-white text-xs font-bold">MÁS POPULAR</div>
                         )}
 
-                        {(code === 'pro' || code === 'full') && (
-                            <div className="absolute top-2 right-2 transform rotate-12 bg-yellow-400 text-black text-[10px] px-3 py-0.5 rounded-sm font-bold">PRÓXIMAMENTE</div>
+                        {code === 'pro' && (
+                            <div className="absolute -top-3 right-4 px-3 py-1 rounded-full bg-purple-600 text-white text-[10px] font-bold">RECOMENDADO</div>
                         )}
 
                         <h3 className="text-lg font-bold text-white mb-1">{plan.display_name} {planEmoji}</h3>

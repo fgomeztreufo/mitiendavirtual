@@ -31,6 +31,7 @@ export default function Dashboard({ session }: { session: Session }) {
   const [instagramMenuOpen, setInstagramMenuOpen] = useState(false)
   const [catalogOpen, setCatalogOpen] = useState(false)
   const [telegramMenuOpen, setTelegramMenuOpen] = useState(false)
+  const [whatsappMenuOpen, setWhatsappMenuOpen] = useState(false)
   const [legalView, setLegalView] = useState<string | null>(null);
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -146,10 +147,12 @@ export default function Dashboard({ session }: { session: Session }) {
 
       {/* SIDEBAR */}
       <aside className="w-64 bg-[#0a0a0f]/80 backdrop-blur-md border-r border-white/5 flex flex-col hidden md:flex">
-        <div className="p-6 border-b border-white/5">
-             <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center font-bold shadow-[0_4px_12px_rgba(99,102,241,0.3)]">M</div>
-                <span className="font-bold text-lg">MiTienda<span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">Virtual</span></span>
+        <div className="p-6 border-b border-indigo-500/20 bg-gradient-to-r from-indigo-600/10 via-purple-600/10 to-transparent relative overflow-hidden">
+             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-600/5 pointer-events-none" />
+             <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-purple-500/10 blur-2xl pointer-events-none" />
+             <div className="flex items-center gap-3 relative z-10">
+                <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center font-bold text-white shadow-[0_4px_16px_rgba(99,102,241,0.4)] ring-2 ring-indigo-400/20">M</div>
+                <span className="font-bold text-lg">MiTienda<span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 to-purple-300">Virtual</span></span>
              </div>
         </div>
 
@@ -202,18 +205,22 @@ export default function Dashboard({ session }: { session: Session }) {
 
           <SidebarBtn
             label="WhatsApp"
-            active={activeTab === 'whatsapp'}
-            onClick={() => hasWhatsApp ? (setActiveTab('whatsapp'), setLegalView(null)) : setActiveTab('plans')}
+            active={activeTab === 'whatsapp' || activeTab === 'wpp-messages'}
+            onClick={() => hasWhatsApp ? setWhatsappMenuOpen(!whatsappMenuOpen) : setActiveTab('plans')}
+            isParent={hasWhatsApp}
+            isOpen={whatsappMenuOpen}
             locked={!hasWhatsApp}
             lockLabel="Pro+"
           />
-          <SidebarBtn
-            label="Visor WhatsApp"
-            active={activeTab === 'wpp-messages'}
-            onClick={() => hasWhatsApp ? (setActiveTab('wpp-messages'), setLegalView(null)) : setActiveTab('plans')}
-            locked={!hasWhatsApp}
-            lockLabel="Pro+"
-          />
+          {hasWhatsApp && whatsappMenuOpen && (
+            <div className="ml-4 border-l border-white/5 pl-4 space-y-1">
+              <SidebarSubBtn
+                label="Visor Mensajes"
+                active={activeTab === 'wpp-messages'}
+                onClick={() => { setActiveTab('wpp-messages'); setLegalView(null) }}
+              />
+            </div>
+          )}
 
           <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Configuración</p>
         <SidebarBtn
@@ -247,28 +254,31 @@ export default function Dashboard({ session }: { session: Session }) {
           locked={!hasScheduling}
           lockLabel="Full"
         />
-         {/* Botón Conocimiento con submenú */}
-        <SidebarBtn 
-          label="Faqs / Base Conocimiento" 
-          active={activeTab === 'faqs' || activeTab === 'knowlower'} 
-          onClick={() => setKnowledgeOpen(!knowledgeOpen)} 
-          isParent={true} 
-          isOpen={knowledgeOpen} 
-        />
-        {knowledgeOpen && (
-          <div className="ml-4 border-l border-white/5 pl-4 space-y-1">
-            <SidebarSubBtn 
-                label="Cargar" 
-                active={activeTab === 'faqs'} 
-                onClick={() => setActiveTab('faqs')} 
-              />
-            <SidebarSubBtn 
-              label="Cerebro IA" 
-              active={activeTab === 'knowlower'} 
-              onClick={() => setActiveTab('knowlower')} 
-            />
-          </div>
-        )}
+         {/* Entrenamiento IA — sección destacada */}
+        <div className="mt-4 mb-2 mx-1 rounded-xl bg-gradient-to-r from-purple-600/10 to-indigo-600/10 border border-purple-500/20 overflow-hidden">
+          <button
+            onClick={() => setKnowledgeOpen(!knowledgeOpen)}
+            className={`w-full flex items-center gap-2.5 p-3 text-sm transition-all duration-200 ${
+              activeTab === 'faqs' || activeTab === 'knowlower'
+                ? 'text-purple-300'
+                : 'text-gray-300 hover:text-purple-300'
+            }`}
+          >
+            <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-xs shadow-[0_2px_8px_rgba(139,92,246,0.3)]">🧠</span>
+            <span className="font-bold text-xs uppercase tracking-wider">Entrenamiento IA</span>
+            <svg className={`w-4 h-4 ml-auto transition-transform duration-200 ${knowledgeOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+          {knowledgeOpen && (
+            <div className="px-3 pb-3 space-y-1 border-t border-purple-500/10">
+              <button onClick={() => setActiveTab('faqs')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'faqs' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
+                FAQs / Base Conocimiento
+              </button>
+              <button onClick={() => setActiveTab('knowlower')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'knowlower' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
+                Cerebro IA
+              </button>
+            </div>
+          )}
+        </div>
 
           <SidebarBtn 
             label="Catálogo" 

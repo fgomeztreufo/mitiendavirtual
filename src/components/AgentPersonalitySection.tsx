@@ -74,13 +74,31 @@ export default function AgentPersonalitySection({ instanceId, channel, channelCo
         .eq('is_active', true)
         .maybeSingle()
 
-      if (!error && data?.personality_config) {
+      const hasConfig = !error && data?.personality_config &&
+        Object.keys(data.personality_config as object).length > 0
+
+      if (hasConfig) {
         const loaded = {
           ...DEFAULT_CONFIG,
           ...(data.personality_config as Partial<PersonalityConfig>),
         }
         setConfig(loaded)
         setSavedConfig(loaded)
+      } else {
+        const { data: legacy } = await supabase
+          .from('instance_personalities')
+          .select('ai_name, biz_name')
+          .eq('instance_id', instanceId)
+          .maybeSingle()
+
+        if (legacy) {
+          const preloaded = {
+            ...DEFAULT_CONFIG,
+            ai_name: legacy.ai_name || legacy.biz_name || '',
+          }
+          setConfig(preloaded)
+          setSavedConfig(preloaded)
+        }
       }
     } catch (_) { /* silent */ }
     finally { setLoading(false) }

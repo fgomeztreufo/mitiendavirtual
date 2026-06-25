@@ -18,6 +18,10 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
   const [personalityLoaded, setPersonalityLoaded] = useState(false)
   const [personalityName, setPersonalityName] = useState('')
 
+  const [activationKeyword, setActivationKeyword] = useState('')
+  const [antispamEnabled, setAntispamEnabled] = useState(false)
+  const [savingIgSettings, setSavingIgSettings] = useState(false)
+
   const planCode = normalizePlanType(profile?.plan_type)
   const [planMessagesLimit, setPlanMessagesLimit] = useState<number | null>(null)
 
@@ -71,13 +75,15 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
     try {
       const { data } = await supabase
         .from('instance_personalities')
-        .select('biz_name, ai_name')
+        .select('biz_name, ai_name, activation_keyword, antispam_enabled')
         .eq('instance_id', instance.id)
         .single()
 
       if (data) {
         setPersonalityLoaded(true)
         setPersonalityName(data.ai_name || data.biz_name || '')
+        setActivationKeyword(data.activation_keyword || '')
+        setAntispamEnabled(data.antispam_enabled ?? false)
       }
     } catch (_) { /* loading */ }
   }
@@ -320,6 +326,76 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
           channel="instagram"
           channelColor="from-[#833AB4]/10 to-[#E1306C]/10"
         />
+      )}
+
+      {/* INSTAGRAM SETTINGS — Antispam + Palabra Clave */}
+      {isConnected && personalityLoaded && (
+        <div className="rounded-2xl bg-white/[0.03] border border-white/5 overflow-hidden">
+          <div className="px-6 py-4 border-b border-white/5 bg-gradient-to-r from-[#833AB4]/10 to-[#E1306C]/10">
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Configuración de Comentarios</h3>
+            <p className="text-[10px] text-gray-400 mt-0.5">Controla cómo responde el bot a los comentarios de Instagram</p>
+          </div>
+          <div className="p-6 space-y-5">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                Palabra clave de activación
+              </label>
+              <input
+                className="bg-black border border-gray-800 p-3 rounded-xl text-white text-sm outline-none focus:border-pink-500 transition-all"
+                value={activationKeyword}
+                onChange={e => setActivationKeyword(e.target.value)}
+                placeholder="Ej: INFO, PRECIO, QUIERO"
+                maxLength={50}
+              />
+              <p className="text-[9px] text-gray-600">El bot solo responderá comentarios que contengan esta palabra. Déjalo vacío para responder a todos.</p>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-black/40 rounded-xl border border-gray-800">
+              <div>
+                <p className="text-sm text-white font-semibold">Antispam</p>
+                <p className="text-[10px] text-gray-500">Evita que el bot responda múltiples veces al mismo usuario en un comentario</p>
+              </div>
+              <button
+                onClick={() => setAntispamEnabled(!antispamEnabled)}
+                className={`w-12 h-6 rounded-full transition-all relative ${antispamEnabled ? 'bg-pink-600' : 'bg-gray-700'}`}
+              >
+                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all ${antispamEnabled ? 'left-6' : 'left-0.5'}`} />
+              </button>
+            </div>
+
+            <button
+              onClick={async () => {
+                setSavingIgSettings(true)
+                try {
+                  const { error } = await supabase
+                    .from('instance_personalities')
+                    .update({
+                      activation_keyword: activationKeyword.trim(),
+                      antispam_enabled: antispamEnabled,
+                    })
+                    .eq('instance_id', instance.id)
+                  if (error) throw error
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'Configuración guardada',
+                    background: '#111827',
+                    color: '#fff',
+                    timer: 2000,
+                    showConfirmButton: false,
+                  })
+                } catch (err: any) {
+                  Swal.fire('Error', err.message, 'error')
+                } finally {
+                  setSavingIgSettings(false)
+                }
+              }}
+              disabled={savingIgSettings}
+              className="w-full py-3 rounded-xl font-black uppercase tracking-widest text-[10px] bg-pink-600 hover:bg-pink-500 text-white transition-all hover:scale-[1.01]"
+            >
+              {savingIgSettings ? 'Guardando...' : 'Guardar Configuración'}
+            </button>
+          </div>
+        </div>
       )}
 
       {/* LIMIT REACHED BLOCK */}
