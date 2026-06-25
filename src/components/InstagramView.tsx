@@ -20,6 +20,7 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
 
   const [activationKeyword, setActivationKeyword] = useState('')
   const [antispamEnabled, setAntispamEnabled] = useState(false)
+  const [replyPublic, setReplyPublic] = useState('')
   const [savingIgSettings, setSavingIgSettings] = useState(false)
 
   const planCode = normalizePlanType(profile?.plan_type)
@@ -75,17 +76,18 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
     try {
       const { data } = await supabase
         .from('instance_personalities')
-        .select('biz_name, ai_name, activation_keyword, antispam_enabled')
+        .select('biz_name, ai_name, activation_keyword, antispam_enabled, reply_public')
         .eq('instance_id', instance.id)
         .single()
 
       if (data) {
-        setPersonalityLoaded(true)
         setPersonalityName(data.ai_name || data.biz_name || '')
         setActivationKeyword(data.activation_keyword || '')
         setAntispamEnabled(data.antispam_enabled ?? false)
+        setReplyPublic(data.reply_public || '')
       }
-    } catch (_) { /* loading */ }
+    } catch (_) { /* silent */ }
+    finally { setPersonalityLoaded(true) }
   }
 
   const handleInstagramLogin = async () => {
@@ -350,6 +352,20 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
               <p className="text-[9px] text-gray-600">El bot solo responderá comentarios que contengan esta palabra. Déjalo vacío para responder a todos.</p>
             </div>
 
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                Respuesta pública en comentarios
+              </label>
+              <textarea
+                className="bg-black border border-gray-800 p-3 rounded-xl text-white text-sm outline-none focus:border-pink-500 transition-all h-20 resize-none"
+                value={replyPublic}
+                onChange={e => setReplyPublic(e.target.value)}
+                placeholder="Ej: ¡Hola! Te enviamos toda la info por DM"
+                maxLength={300}
+              />
+              <p className="text-[9px] text-gray-600">Este texto se publica como respuesta visible al comentario. La conversación detallada se envía por DM.</p>
+            </div>
+
             <div className="flex items-center justify-between p-3 bg-black/40 rounded-xl border border-gray-800">
               <div>
                 <p className="text-sm text-white font-semibold">Antispam</p>
@@ -372,6 +388,7 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
                     .update({
                       activation_keyword: activationKeyword.trim(),
                       antispam_enabled: antispamEnabled,
+                      reply_public: replyPublic.trim(),
                     })
                     .eq('instance_id', instance.id)
                   if (error) throw error

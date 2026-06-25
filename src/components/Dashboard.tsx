@@ -163,6 +163,7 @@ export default function Dashboard({ session }: { session: Session }) {
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           <SidebarBtn
             label="Panel de Agentes"
+            icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>}
             active={activeTab === 'home'}
             onClick={() => { setActiveTab('home'); setLegalView(null) }}
           />
@@ -263,14 +264,14 @@ export default function Dashboard({ session }: { session: Session }) {
             </button>
             {configAgentsOpen && (
               <div className="px-3 pb-3 space-y-1 border-t border-indigo-500/10">
-                <button onClick={() => setActiveTab('instagram')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'instagram' ? 'text-indigo-300 bg-indigo-500/10' : 'text-gray-500 hover:text-indigo-300 hover:bg-indigo-500/5'}`}>
+                <button onClick={() => setActiveTab('instagram')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'instagram' ? 'text-pink-400 bg-pink-500/10' : 'text-gray-500 hover:text-pink-400 hover:bg-pink-500/5'}`}>
                   <FaInstagram className="text-pink-500 text-sm" /> Instagram
                 </button>
-                <button onClick={() => hasTelegram ? setActiveTab('telegram') : setActiveTab('plans')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${!hasTelegram ? 'text-gray-600' : activeTab === 'telegram' ? 'text-indigo-300 bg-indigo-500/10' : 'text-gray-500 hover:text-indigo-300 hover:bg-indigo-500/5'}`}>
+                <button onClick={() => hasTelegram ? setActiveTab('telegram') : setActiveTab('plans')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${!hasTelegram ? 'text-gray-600' : activeTab === 'telegram' ? 'text-sky-400 bg-sky-500/10' : 'text-gray-500 hover:text-sky-400 hover:bg-sky-500/5'}`}>
                   <FaTelegram className={`text-sm ${hasTelegram ? 'text-sky-400' : 'opacity-30'}`} /> Telegram
                   {!hasTelegram && <span className="ml-auto text-[9px] text-gray-600 font-bold">Básico+</span>}
                 </button>
-                <button onClick={() => hasWhatsApp ? setActiveTab('whatsapp') : setActiveTab('plans')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${!hasWhatsApp ? 'text-gray-600' : activeTab === 'whatsapp' ? 'text-indigo-300 bg-indigo-500/10' : 'text-gray-500 hover:text-indigo-300 hover:bg-indigo-500/5'}`}>
+                <button onClick={() => hasWhatsApp ? setActiveTab('whatsapp') : setActiveTab('plans')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${!hasWhatsApp ? 'text-gray-600' : activeTab === 'whatsapp' ? 'text-green-400 bg-green-500/10' : 'text-gray-500 hover:text-green-400 hover:bg-green-500/5'}`}>
                   <FaWhatsapp className={`text-sm ${hasWhatsApp ? 'text-green-400' : 'opacity-30'}`} /> WhatsApp
                   {!hasWhatsApp && <span className="ml-auto text-[9px] text-gray-600 font-bold">Pro+</span>}
                 </button>
@@ -279,14 +280,8 @@ export default function Dashboard({ session }: { session: Session }) {
           </div>
 
           <SidebarBtn
-            label="Agendamiento"
-            active={activeTab === 'scheduling'}
-            onClick={() => hasScheduling ? (setActiveTab('scheduling'), setLegalView(null)) : setActiveTab('plans')}
-            locked={!hasScheduling}
-            lockLabel="Full"
-          />
-          <SidebarBtn
             label="Notificaciones"
+            icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>}
             active={activeTab === 'notifications'}
             onClick={() => { setActiveTab('notifications'); setLegalView(null) }}
           />
@@ -325,6 +320,7 @@ export default function Dashboard({ session }: { session: Session }) {
 
           <SidebarBtn
             label="Planes / Saldo"
+            icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
             active={activeTab === 'plans'}
             onClick={() => setActiveTab('plans')}
           />
