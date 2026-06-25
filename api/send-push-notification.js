@@ -1,6 +1,6 @@
-const { initializeApp, cert, getApps } = require('firebase-admin/app');
-const { getMessaging } = require('firebase-admin/messaging');
-const { createClient } = require('@supabase/supabase-js');
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getMessaging } from 'firebase-admin/messaging';
+import { createClient } from '@supabase/supabase-js';
 
 function getFirebaseMessaging() {
   if (getApps().length === 0) {
@@ -15,7 +15,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-push-secret');
@@ -92,4 +92,4 @@ module.exports = async function handler(req, res) {
     console.error('Push notification error:', err.message || err);
     return res.status(500).json({ error: 'Internal server error', detail: err.message });
   }
-};
+}
