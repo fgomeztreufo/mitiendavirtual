@@ -5,7 +5,7 @@ import { supabase } from '../supabaseClient'
 
 export default function CatalogView({ session, profile, onProductAdded,goToPlans }: any) {
   const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({ name: '', price: '', description: '' })
+  const [formData, setFormData] = useState({ name: '', price: '', description: '', brand: '', category: '' })
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
@@ -46,13 +46,25 @@ export default function CatalogView({ session, profile, onProductAdded,goToPlans
   const isFull = currentCount >= limit && planCode !== 'full';
   const percentage = Math.min((currentCount / limit) * 100, 100);
 
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
-      
-      // Limpiar URL previa para evitar fugas de memoria
+
+      if (!ALLOWED_TYPES.includes(selectedFile.type)) {
+        Swal.fire('Formato no soportado', 'Solo se permiten imágenes JPG, PNG o WebP.', 'warning');
+        e.target.value = '';
+        return;
+      }
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        Swal.fire('Imagen muy pesada', 'El archivo no puede superar los 10 MB.', 'warning');
+        e.target.value = '';
+        return;
+      }
+
       if (previewUrl) URL.revokeObjectURL(previewUrl);
-      
       setFile(selectedFile);
       setPreviewUrl(URL.createObjectURL(selectedFile));
     }
@@ -84,7 +96,9 @@ export default function CatalogView({ session, profile, onProductAdded,goToPlans
       data.append('name', formData.name);
       data.append('price', formData.price);
       data.append('description', formData.description);
-      data.append('foto', file); 
+      data.append('brand', formData.brand);
+      data.append('category', formData.category);
+      data.append('foto', file);
       const res = await fetch('https://webhook.mitiendavirtual.cl/webhook/subir-productos', {
         method: 'POST',
         body: data
@@ -102,7 +116,7 @@ export default function CatalogView({ session, profile, onProductAdded,goToPlans
       });
 
       // --- RESETEO TOTAL DEL FORMULARIO ---
-      setFormData({ name: '', price: '', description: '' });
+      setFormData({ name: '', price: '', description: '', brand: '', category: '' });
       setFile(null);
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
@@ -192,6 +206,27 @@ export default function CatalogView({ session, profile, onProductAdded,goToPlans
                   value={formData.price}
                   onChange={(e) => setFormData({...formData, price: e.target.value})}
                   placeholder="9990"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left">
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Marca</label>
+                <input
+                  className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all text-sm"
+                  value={formData.brand}
+                  onChange={(e) => setFormData({...formData, brand: e.target.value})}
+                  placeholder="Ej: Nike, Samsung, Artesanal"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Categoría</label>
+                <input
+                  className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all text-sm"
+                  value={formData.category}
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  placeholder="Ej: Calzado, Electrónica, Alimentos"
                 />
               </div>
             </div>

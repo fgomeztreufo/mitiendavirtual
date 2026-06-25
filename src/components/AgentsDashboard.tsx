@@ -128,8 +128,24 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
 
   const messagesUsed = profile?.messages_used || 0;
   const messagesUsedTelegram = profile?.messages_used_tl || 0;
+  const messagesUsedWpp = profile?.messages_used_wpp || 0;
   const isConnected = !!instance?.provider_id;
+  const [whatsappConnected, setWhatsappConnected] = useState(false);
   const planType = (profile?.plan_type || 'free').toUpperCase();
+
+  useEffect(() => {
+    async function checkWpp() {
+      try {
+        const { count, error } = await supabase
+          .from('whatsapp_connections')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', session.user.id)
+          .eq('active', true);
+        if (!error) setWhatsappConnected((count || 0) > 0);
+      } catch (_) { /* silent */ }
+    }
+    checkWpp();
+  }, [session.user.id]);
 
   const agents = [
     {
@@ -158,10 +174,10 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
     {
       id: 'whatsapp',
       name: 'Agente WhatsApp',
-      status: 'Próximamente',
-      color: 'from-gray-700 to-gray-800',
-      statusColor: 'text-yellow-400',
-      dotColor: 'bg-yellow-400',
+      status: whatsappConnected ? 'Activo' : 'Desconectado',
+      color: whatsappConnected ? 'from-green-500 to-emerald-600' : 'from-gray-700 to-gray-800',
+      statusColor: whatsappConnected ? 'text-green-400' : 'text-red-400',
+      dotColor: whatsappConnected ? 'bg-green-400' : 'bg-red-400',
       icon: (
         <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
@@ -169,13 +185,13 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
         </svg>
       ),
       stats: [
-        { label: 'Mensajes', value: '—' },
+        { label: 'Mensajes respondidos', value: messagesUsedWpp },
         { label: 'Ventas capturadas', value: agentLeadStats.whatsapp.total },
         { label: 'Ventas cerradas', value: agentLeadStats.whatsapp.completed },
         { label: 'Leads hoy', value: agentLeadStats.whatsapp.today },
       ],
       action: () => onNavigate('whatsapp'),
-      actionLabel: 'Ver más',
+      actionLabel: whatsappConnected ? 'Configurar' : 'Conectar',
     },
     {
       id: 'telegram',

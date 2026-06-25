@@ -22,6 +22,7 @@ import NotificationsView from './NotificationsView.tsx'
 import TelegramView from './TelegramView'
 import AgentsDashboard from './AgentsDashboard'
 import SchedulingView from './SchedulingView'
+import WhatsAppMessagesView from './WhatsAppMessagesView'
 
 export default function Dashboard({ session }: { session: Session }) {
   const [profile, setProfile] = useState<any>(null)
@@ -199,11 +200,17 @@ export default function Dashboard({ session }: { session: Session }) {
             </div>
           )}
 
-          {/* WhatsApp — próximamente */}
-          <SidebarBtn 
+          <SidebarBtn
             label="WhatsApp"
-            active={activeTab === 'whatsapp'} 
-            onClick={() => hasWhatsApp ? (setActiveTab('whatsapp'), setLegalView(null)) : setActiveTab('plans')} 
+            active={activeTab === 'whatsapp'}
+            onClick={() => hasWhatsApp ? (setActiveTab('whatsapp'), setLegalView(null)) : setActiveTab('plans')}
+            locked={!hasWhatsApp}
+            lockLabel="Pro+"
+          />
+          <SidebarBtn
+            label="Visor WhatsApp"
+            active={activeTab === 'wpp-messages'}
+            onClick={() => hasWhatsApp ? (setActiveTab('wpp-messages'), setLegalView(null)) : setActiveTab('plans')}
             locked={!hasWhatsApp}
             lockLabel="Pro+"
           />
@@ -306,11 +313,12 @@ export default function Dashboard({ session }: { session: Session }) {
               />
             )}
             {activeTab === 'instagram' && (
-              <InstagramView 
-                session={session} 
-                profile={profile} 
-                instance={instance} 
-                onUpdate={getData} 
+              <InstagramView
+                session={session}
+                profile={profile}
+                instance={instance}
+                onUpdate={getData}
+                goToPlans={() => setActiveTab('plans')}
               />
             )}
             {activeTab === 'whatsapp' && (
@@ -330,6 +338,9 @@ export default function Dashboard({ session }: { session: Session }) {
                 onUpdate={getData}
                 goToPlans={() => setActiveTab('plans')}
               />
+            )}
+            {activeTab === 'wpp-messages' && (
+              <WhatsAppMessagesView session={session} />
             )}
             {activeTab === 'telegram-leads' && <TelegramLeadsView userId={session.user.id} />}
             
