@@ -25,6 +25,19 @@ export function usePushNotifications(userId: string) {
       supported,
       permission: supported ? Notification.permission : 'denied',
     }))
+
+    if (supported && Notification.permission === 'granted') {
+      getFirebaseMessaging().then(messaging => {
+        if (!messaging) return
+        onMessage(messaging, (payload) => {
+          console.log('[Push] Foreground message:', payload)
+          new Notification(payload.notification?.title || 'MiTiendaVirtual', {
+            body: payload.notification?.body || '',
+            icon: '/images/icon-192.png',
+          })
+        })
+      }).catch(() => {})
+    }
   }, [])
 
   const subscribe = useCallback(async (): Promise<boolean> => {
