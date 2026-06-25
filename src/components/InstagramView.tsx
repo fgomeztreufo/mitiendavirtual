@@ -2,84 +2,46 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
-import { FiSave, FiSettings, FiMessageSquare, FiShield, FiCpu } from 'react-icons/fi'
 import { normalizePlanType, planCodeToDisplay } from '../utils/planUtils'
-import { sanitizeInstructions, looksMalicious } from '../utils/sanitizeInstructions'
 
 interface InstagramViewProps {
   session: Session
   profile: any
   instance: any
   onUpdate: () => void
+  goToPlans?: () => void
 }
 
-const HelpBtn = ({ title, text }: { title: string, text: string }) => (
-  <button
-    onClick={() => Swal.fire({
-      title: title,
-      text: text,
-      icon: 'info',
-      confirmButtonText: 'Entendido',
-      confirmButtonColor: '#2563EB',
-      backdrop: `rgba(0,0,0,0.8)`
-    })}
-    className="ml-2 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold text-gray-400 border border-gray-600 rounded-full hover:text-white transition-all cursor-help"
-  >
-    ?
-  </button>
-)
-
-export default function InstagramView({ session, profile, instance, onUpdate }: InstagramViewProps) {
+export default function InstagramView({ session, profile, instance, onUpdate, goToPlans }: InstagramViewProps) {
   const [saving, setSaving] = useState(false)
-  
-  // Estados de Personalidad (Última versión RAG)
-  const [wizName, setWizName] = useState('')
-  const [wizType, setWizType] = useState('')
-  const [wizAiName, setWizAiName] = useState('')
-  const [wizTone, setWizTone] = useState('Amable, cercano y con uso de emojis')
-  const [ownerName, setOwnerName] = useState('')
-  
-  // Estados de Configuración y Seguridad
-  const [botPrompt, setBotPrompt] = useState('')
-  const [publicReply, setPublicReply] = useState('')
-  const [activationKeyword, setActivationKeyword] = useState('')
-  const [antispamEnabled, setAntispamEnabled] = useState(true)
+  const [personalityLoaded, setPersonalityLoaded] = useState(false)
+  const [personalityName, setPersonalityName] = useState('')
 
-  // Límite de mensajes por plan (se lee desde la tabla `plans`)
-  const planCode = normalizePlanType(profile?.plan_type);
-  const [planMessagesLimit, setPlanMessagesLimit] = useState<number | null>(null);
+  const planCode = normalizePlanType(profile?.plan_type)
+  const [planMessagesLimit, setPlanMessagesLimit] = useState<number | null>(null)
+
+  const subscriptionRef = useRef<any>(null)
 
   useEffect(() => {
-    let mounted = true;
+    let mounted = true
     async function loadPlanLimit() {
       try {
         const { data, error } = await supabase
           .from('plans')
           .select('messages_limit')
           .eq('code', planCode)
-          .single();
-        if (!error && mounted) {
-          setPlanMessagesLimit(data?.messages_limit ?? null);
-        }
-      } catch (e) {
-        // silent fallback
-      }
+          .single()
+        if (!error && mounted) setPlanMessagesLimit(data?.messages_limit ?? null)
+      } catch (_) { /* silent */ }
     }
-    if (planCode) loadPlanLimit();
-    return () => { mounted = false };
-  }, [planCode]);
-
-  // Referencia para evitar múltiples suscripciones
-  const subscriptionRef = useRef<any>(null);
+    if (planCode) loadPlanLimit()
+    return () => { mounted = false }
+  }, [planCode])
 
   useEffect(() => {
-    if (instance) fetchConfig();
-    if (profile) {
-      setOwnerName(profile.full_name || '');
-    }
+    if (instance) fetchConfig()
 
-    // SUSCRIPCIÓN REALTIME: actualiza automáticamente si cambia la personalidad
-    if (instance && instance.id && !subscriptionRef.current) {
+    if (instance?.id && !subscriptionRef.current) {
       const channel = supabase
         .channel('realtime-personality-' + instance.id)
         .on(
@@ -90,79 +52,36 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
             table: 'instance_personalities',
             filter: `instance_id=eq.${instance.id}`
           },
-          (payload) => {
-            fetchConfig();
-          }
+          () => { fetchConfig() }
         )
-        .subscribe();
-      subscriptionRef.current = channel;
+        .subscribe()
+      subscriptionRef.current = channel
     }
 
-    // Cleanup: desuscribir al desmontar o cambiar instancia
     return () => {
       if (subscriptionRef.current) {
-        supabase.removeChannel(subscriptionRef.current);
-        subscriptionRef.current = null;
+        supabase.removeChannel(subscriptionRef.current)
+        subscriptionRef.current = null
       }
-    };
-  }, [instance, profile]);
+    }
+  }, [instance])
 
   async function fetchConfig() {
     try {
       const { data } = await supabase
         .from('instance_personalities')
-        .select('*')
+        .select('biz_name, ai_name')
         .eq('instance_id', instance.id)
-        .single();
-      
+        .single()
+
       if (data) {
-        setWizName(data.biz_name || '');
-        setWizType(data.biz_type || '');
-        setWizAiName(data.ai_name || '');
-        setWizTone(data.ai_tone || 'Amable, cercano y con uso de emojis');
-        // Sanitize loaded prompts to avoid showing/using malicious content
-        setBotPrompt(sanitizeInstructions(data.bot_prompt || ''));
-        setPublicReply(sanitizeInstructions(data.reply_public || ''));
-        setActivationKeyword(data.activation_keyword || '');
-        setAntispamEnabled(data.antispam_enabled !== false);
+        setPersonalityLoaded(true)
+        setPersonalityName(data.ai_name || data.biz_name || '')
       }
-    } catch (e) { console.log("Cargando nueva configuración..."); }
-  }
-
-  // --- LÓGICA DEL MAGO ACTUALIZADA PARA RAG (LO ÚLTIMO QUE HICIMOS) ---
-  const handleGenerateMagic = () => {
-    if (!wizName || !wizType) {
-      Swal.fire({ icon: 'warning', title: 'Faltan datos', text: 'Nombre y Rubro son obligatorios.' });
-      return;
-    }
-
-    const template = `
-  NOMBRE DEL AGENTE: ${wizAiName || 'Asistente Virtual'}
-  ROL: Eres el asistente virtual oficial de "${wizName}" (${wizType}).
-  TONO DE VOZ: ${wizTone}.
-### 🗨️ REGLAS DE SALUDO Y MEMORIA:
-1. **RECONOCIMIENTO:** Si el historial o la variable 'cliente_nombre' tiene un valor, salúdalo con confianza: "¡Hola de nuevo, [Nombre]! Qué bueno verte por aquí. ✨".
-2. **PRIMER CONTACTO:** Si no sabes su nombre, preséntate con entusiasmo: "¡Hola! Soy ${wizAiName || 'Luna'}, parte del equipo de ${wizName}. ¡Qué alegría saludarte! 🚀".
-3. **FLUIDEZ:** No repitas tu nombre en cada mensaje, solo en el saludo inicial.
-
-### 👋 REGLAS DE DESPEDIDA Y CIERRE:
-1. **SI LA DUDA FUE RESUELTA:** Despídete siempre con energía: "¡Espero que esta info te sirva! Quedo aquí atenta por si necesitas algo más. ¡Lindo día! 🌈".
-2. **SI HAY INTENCIÓN DE COMPRA:** No te despidas, cierra con una pregunta de acción: "¿Te gustaría que coordinemos el pago ahora o prefieres revisar algo más?".
-3. **CORTESÍA:** Mantén siempre el entusiasmo juvenil que te caracteriza.
-
-  === DATOS DEL DUEÑO ===
-  Nombre: ${ownerName}.
-
-  === REGLAS DE NEGOCIO ===
-  - Eres un empleado real de ${wizName}, no una IA genérica.    
-  `.trim();
-
-    setBotPrompt(template);
-    Swal.fire({ title: '¡ADN RAG Generado!', icon: 'success', timer: 1500, showConfirmButton: false });
+    } catch (_) { /* loading */ }
   }
 
   const handleInstagramLogin = async () => {
-    // Si ya hay cuenta conectada, pedir confirmación antes de reemplazarla
     if (instance?.provider_id) {
       const result = await Swal.fire({
         title: '¿Cambiar cuenta de Instagram?',
@@ -174,253 +93,241 @@ export default function InstagramView({ session, profile, instance, onUpdate }: 
         confirmButtonText: 'Sí, cambiar cuenta',
         cancelButtonText: 'Cancelar',
         backdrop: 'rgba(0,0,0,0.8)'
-      });
-      if (!result.isConfirmed) return;
+      })
+      if (!result.isConfirmed) return
     }
-    const clientId = '1397698478805069'; 
-    const redirectUri = 'https://webhook.mitiendavirtual.cl/webhook/instagram-auth'; 
-    const scopes = 'instagram_basic,instagram_manage_messages,pages_manage_metadata,pages_read_engagement,pages_show_list,business_management,instagram_manage_comments,pages_messaging';
-    window.location.href = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes}&response_type=code&state=${session.user.id}`;
+    const clientId = '1397698478805069'
+    const redirectUri = 'https://webhook.mitiendavirtual.cl/webhook/instagram-auth'
+    const scopes = 'instagram_basic,instagram_manage_messages,pages_manage_metadata,pages_read_engagement,pages_show_list,business_management,instagram_manage_comments,pages_messaging'
+    window.location.href = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes}&response_type=code&state=${session.user.id}`
   }
 
   const handleDisconnectInstagram = async () => {
     const result = await Swal.fire({
       title: '¿Desconectar Instagram?',
-      text: "Tu bot dejará de responder inmediatamente.",
+      text: 'Tu bot dejará de responder inmediatamente.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#EF4444',
       confirmButtonText: 'Sí, desvincular'
-    });
-  
+    })
+
     if (result.isConfirmed) {
       try {
-        setSaving(true);
+        setSaving(true)
         await fetch('https://webhook.mitiendavirtual.cl/webhook/instagram-unsuscribed', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: session.user.id, instagramId: instance.provider_id })
-        });
-        const { error } = await supabase.from('instances').update({ provider_id: null }).eq('id', instance.id);
-        if (error) throw error;
-        Swal.fire('Desconectado', 'La cuenta ha sido desvinculada.', 'success');
-        onUpdate(); 
-      } catch (e: any) {
-        Swal.fire('Error', e.message, 'error');
-      } finally {
-        setSaving(false);
-      }
-    }
-  }
-
-  async function handleSaveBot() {
-    try {
-      setSaving(true);
-      // Sanitize inputs before saving
-      const sanitizedBotPrompt = sanitizeInstructions(botPrompt)
-      const sanitizedPublicReply = sanitizeInstructions(publicReply)
-
-      // If suspicious patterns are detected, ask user before saving
-      if (looksMalicious(botPrompt) || looksMalicious(publicReply)) {
-        const resp = await Swal.fire({
-          icon: 'warning',
-          title: 'Contenido sospechoso detectado',
-          html: 'Se detectaron patrones que parecen comandos o código. ¿Deseas limpiar el contenido y guardar de todos modos? <br/><small class="text-gray-300">(Se eliminarán bloques de código y comandos peligrosos)</small>',
-          showCancelButton: true,
-          confirmButtonText: 'Sí, limpiar y guardar',
-          cancelButtonText: 'Cancelar',
-          confirmButtonColor: '#2563EB'
         })
-        if (!resp.isConfirmed) {
-          setSaving(false)
-          return
-        }
+        const { error } = await supabase.from('instances').update({ provider_id: null }).eq('id', instance.id)
+        if (error) throw error
+        Swal.fire('Desconectado', 'La cuenta ha sido desvinculada.', 'success')
+        onUpdate()
+      } catch (e: any) {
+        Swal.fire('Error', e.message, 'error')
+      } finally {
+        setSaving(false)
       }
-
-      // Guardado unificado en la nueva tabla (usando contenido sanitizado)
-      const { error } = await supabase.from('instance_personalities').upsert({
-        instance_id: instance.id,
-        biz_name: wizName,
-        biz_type: wizType,
-        ai_name: wizAiName,
-        ai_tone: wizTone,
-        bot_prompt: sanitizedBotPrompt,
-        reply_public: sanitizedPublicReply,
-        activation_keyword: activationKeyword,
-        antispam_enabled: antispamEnabled
-      }, { onConflict: 'instance_id' });
-
-      if (error) throw error;
-      
-      Swal.fire({ icon: 'success', title: 'Configuración Guardada', timer: 1500, showConfirmButton: false });
-      onUpdate();
-    } catch (e: any) {
-      Swal.fire('Error', e.message, 'error');
-    } finally {
-      setSaving(false);
     }
   }
 
-  if (!profile || !instance) return <div className="p-10 text-center text-gray-500 animate-pulse uppercase font-black">Cargando...</div>;
+  if (!profile || !instance) return <div className="p-10 text-center text-gray-500 animate-pulse uppercase font-black">Cargando...</div>
 
-  // Cálculos seguros para la barra de uso (resolver límite a partir del plan cargado)
-  const messagesUsed = Number(profile?.messages_used ?? 0);
-  const messagesCapacityMap: Record<string, number | null> = { free: 50, basic: 500, pro: 2000, full: null };
-  const resolvedLimit = planMessagesLimit !== null && planMessagesLimit !== undefined ? planMessagesLimit : (messagesCapacityMap[planCode] ?? 50);
-  const isUnlimited = resolvedLimit === null;
-  const monthlyLimit = isUnlimited ? Infinity : Number(resolvedLimit || 50);
-  const usagePercent = isUnlimited ? 0 : Math.min((messagesUsed / monthlyLimit) * 100, 100);
-  const overLimit = !isUnlimited && messagesUsed > monthlyLimit;
-  const percentLabel = isUnlimited ? 'Ilimitado' : (Number.isFinite(usagePercent) ? `${Math.round(usagePercent)}%` : '0%');
+  // Credits
+  const messagesUsed = Number(profile?.messages_used ?? 0)
+  const messagesLimit: number | null = planMessagesLimit
+  const usagePct = messagesLimit ? Math.min((messagesUsed / messagesLimit) * 100, 100) : 0
+  let barColor = '#E1306C'
+  if (usagePct > 85) barColor = '#ef4444'
+  else if (usagePct > 60) barColor = '#f59e0b'
+  const limitReached = messagesLimit !== null && messagesUsed >= messagesLimit
+
+  // Status
+  const isConnected = !!instance.provider_id
+  let statusCardBg: string
+  let statusDotClass: string
+  let statusTextClass: string
+  let statusLabel: string
+
+  if (limitReached) {
+    statusCardBg = 'bg-red-950/20 border-red-500/30'
+    statusDotClass = 'bg-red-500'
+    statusTextClass = 'text-red-400'
+    statusLabel = 'Bot Pausado'
+  } else if (isConnected) {
+    statusCardBg = 'bg-emerald-900/20 border-emerald-700/30'
+    statusDotClass = 'bg-emerald-400 shadow-[0_0_8px_2px_rgba(52,211,153,0.5)]'
+    statusTextClass = 'text-emerald-400'
+    statusLabel = 'Instagram Conectado'
+  } else {
+    statusCardBg = 'bg-gray-900/60 border-white/5'
+    statusDotClass = 'bg-gray-600'
+    statusTextClass = 'text-gray-500'
+    statusLabel = 'Sin Conexión'
+  }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20 animate-fade-in">
-      <header>
-        <h1 className="text-2xl sm:text-3xl font-black text-white italic uppercase tracking-tighter">Hola, {ownerName || 'Emprendedor'} 👋</h1>
-        <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Configura la inteligencia de tu instancia</p>
-      </header>
+    <div className="max-w-4xl mx-auto space-y-6 p-4">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-bold text-white">Instagram</h2>
+        <p className="text-gray-400 text-sm">Conecta tu cuenta de Instagram para que tu asistente IA responda comentarios y DMs automáticamente.</p>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8 space-y-8">
-          
-          {/* MAGO DE PERSONALIDAD RAG - Diseño Cápsula Zinc */}
-          <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl sm:rounded-[32px] p-4 sm:p-8 shadow-2xl backdrop-blur-md">
-            <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 text-blue-400 flex items-center gap-2">
-              <FiCpu className="animate-pulse" /> Definir Personalidad RAG
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-zinc-500 uppercase ml-2">Nombre del Negocio</label>
-                <input value={wizName} onChange={(e) => setWizName(e.target.value)} className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none transition-all" placeholder="Ej: Zapatillas Pipe" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-zinc-500 uppercase ml-2">Rubro</label>
-                <input value={wizType} onChange={(e) => setWizType(e.target.value)} className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none transition-all" placeholder="Ej: Retail de Calzado" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-serif font-extrabold ml-2 tracking-wide text-customGold drop-shadow-sm uppercase flex items-center gap-2">
-                  Nombre de tu Agente
-                </label>
-                <div className="relative group">
-                  <input
-                    value={wizAiName}
-                    onChange={(e) => setWizAiName(e.target.value)}
-                    className="w-full bg-[#121212] border-2 border-customGold/60 focus:border-customGold transition-all rounded-2xl p-4 text-white font-serif text-lg shadow-[0_2px_16px_rgba(212,175,55,0.10)] outline-none placeholder:text-customGold/40 placeholder:italic placeholder:font-light"
-                    placeholder="Ej: Sofía, Luna, Max..."
-                    maxLength={32}
-                  />
-                  <div className="absolute left-0 top-full mt-2 z-20 hidden group-hover:block w-max min-w-[220px] bg-[#181818] border border-customGold/80 text-customGold text-xs font-medium rounded-xl px-4 py-2 shadow-lg transition-all duration-200">
-                    Este nombre será visible para tus clientes en los mensajes automáticos del bot.
-                  </div>
+      {/* Status Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        {/* CONNECTION STATUS */}
+        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-5 space-y-4 backdrop-blur-sm">
+          <p className="text-[11px] font-bold tracking-[0.18em] text-gray-500 uppercase text-center">Estado del Bot</p>
+          <div className={`rounded-xl p-4 text-center space-y-2 border ${statusCardBg}`}>
+            <div className={`w-3 h-3 rounded-full mx-auto ${statusDotClass}`} />
+            <p className={`text-sm font-extrabold tracking-widest uppercase ${statusTextClass}`}>
+              {statusLabel}
+            </p>
+
+            {isConnected && (
+              <>
+                <div className="h-px bg-white/5 mx-2" />
+                <p className="text-[10px] tracking-widest text-gray-500 uppercase">ID de Cuenta Vinculada</p>
+                <div className="inline-block bg-black/40 rounded-lg px-3 py-1.5">
+                  <span className="text-xs text-white font-mono">{instance.provider_id}</span>
                 </div>
-              </div>
-              <div className="md:col-span-2 space-y-2">
-                <label className="text-[10px] font-black text-zinc-500 uppercase ml-2">Tono de Voz</label>
-                <select value={wizTone} onChange={(e) => setWizTone(e.target.value)} className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white focus:border-blue-500 outline-none appearance-none cursor-pointer">
-                  <option value="Amable, cercano y con uso de emojis">Amable y Cercano (Ideal Instagram)</option>
-                  <option value="Profesional, serio y directo">Profesional y Ejecutivo</option>
-                  <option value="Divertido, juvenil y muy entusiasta">Juvenil y Divertido</option>
-                </select>
-              </div>
-            </div>
-            <button onClick={handleGenerateMagic} className="w-full mt-8 py-5 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest rounded-2xl transition-all shadow-lg shadow-blue-900/40">
-              ✨ Generar ADN de IA con RAG
-            </button>
-          </div>
+              </>
+            )}
 
-          {/* SECCIÓN DE SEGURIDAD */}
-          <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl sm:rounded-[32px] p-4 sm:p-8">
-            <h2 className="text-sm font-black text-zinc-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-              <FiShield className="text-emerald-500" /> Seguridad y Filtros
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-zinc-500 uppercase ml-2">Palabra Clave (Keyword)</label>
-                <input value={activationKeyword} onChange={(e) => setActivationKeyword(e.target.value)} placeholder="Ej: PRECIO" className="w-full bg-black border border-zinc-800 rounded-2xl p-4 text-white outline-none focus:border-emerald-500" />
-              </div>
-              <div className="flex items-center justify-between p-6 bg-black border border-zinc-800 rounded-2xl mt-6">
-                <span className="text-xs font-bold text-white uppercase italic">Anti-Spam</span>
-                <input type="checkbox" checked={antispamEnabled} onChange={(e) => setAntispamEnabled(e.target.checked)} className="w-6 h-6 accent-blue-600 cursor-pointer" />
-              </div>
-            </div>
-          </div>
-
-          {/* RESPUESTAS Y PROMPT */}
-          <div className="space-y-6">
-            <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl sm:rounded-[32px] p-4 sm:p-8 shadow-xl">
-              <label className="text-[10px] font-black text-blue-500 uppercase tracking-widest block mb-4 ml-2 flex items-center gap-2">
-                <FiMessageSquare /> Respuesta en Comentarios
-              </label>
-              <input value={publicReply} onChange={(e) => setPublicReply(e.target.value)} className="w-full bg-black border border-zinc-800 rounded-2xl p-5 text-white outline-none focus:border-blue-600 transition-all" placeholder="Ej: ¡Hola! Te enviamos info al DM 📩" />
-            </div>
-
-            <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl sm:rounded-[32px] p-4 sm:p-8 shadow-xl">
-              <div className="flex items-center mb-4 ml-2">
-                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Instrucciones del Sistema (Prompt RAG)</label>
-                <HelpBtn title="RAG Activado" text="Estas instrucciones obligan a la IA a buscar productos en tu catálogo antes de responder." />
-              </div>
-              <textarea value={botPrompt} onChange={(e) => setBotPrompt(e.target.value)} className="w-full h-48 bg-black border border-zinc-800 rounded-2xl p-6 text-sm text-zinc-400 font-mono outline-none focus:border-blue-500 resize-none" />
-            </div>
-          </div>
-
-          <button onClick={handleSaveBot} disabled={saving} className="w-full py-6 bg-white text-black font-black uppercase tracking-[0.2em] rounded-3xl hover:bg-zinc-200 transition-all flex items-center justify-center gap-3 shadow-2xl">
-            {saving ? 'SINCRONIZANDO...' : <><FiSave className="text-xl" /> GUARDAR CONFIGURACIÓN</>}
-          </button>
-        </div>
-
-        {/* COLUMNA DERECHA - ESTADÍSTICAS Y PLAN */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl sm:rounded-[32px] p-4 sm:p-8 backdrop-blur-md shadow-2xl">
-            <h3 className="text-[10px] font-black text-zinc-500 uppercase mb-6 tracking-widest text-center italic">Estado del Bot</h3>
-            {instance.provider_id ? (
-              <div className="space-y-4 text-center">
-                <div className="p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-[24px] text-emerald-500">
-                  <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse mx-auto mb-2 shadow-[0_0_10px_rgba(16,185,129,0.8)]"></div>
-                  <div className="font-black text-xs uppercase tracking-tighter">Instagram Conectado</div>
-                  {/* --- NUEVO: ID DE CUENTA LOGUEADA --- */}
-                  <div className="mt-4 pt-4 border-t border-emerald-500/10">
-                    <span className="text-[9px] font-black text-zinc-500 uppercase block mb-1">ID de Cuenta Vinculada</span>
-                    <code className="bg-black/50 px-3 py-1 rounded-full text-[11px] font-mono text-emerald-400 border border-emerald-500/20">
-                      {instance.provider_id}
-                    </code>
-                  </div>
-                  {/* ----------------------------------- */}
+            {isConnected && personalityLoaded && personalityName && (
+              <>
+                <div className="h-px bg-white/5 mx-2" />
+                <p className="text-[10px] tracking-widest text-gray-500 uppercase">Agente IA</p>
+                <div className="inline-block bg-black/40 rounded-lg px-3 py-1.5">
+                  <span className="text-xs text-emerald-400 font-mono">{personalityName}</span>
                 </div>
-                <button onClick={handleDisconnectInstagram} className="w-full py-2 text-[10px] font-black text-red-500/50 hover:text-red-500 uppercase transition-all">
-                  Desvincular cuenta
-                </button>
-              </div>
-            ) : (
-              <button onClick={handleInstagramLogin} className="w-full bg-[#1877F2] hover:bg-[#166fe5] py-4 rounded-2xl font-black text-white text-sm transition-all shadow-lg shadow-blue-700/20 uppercase tracking-widest">
-                Conectar Instagram
-              </button>
+              </>
             )}
           </div>
 
-          <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl sm:rounded-[32px] p-4 sm:p-8 shadow-2xl">
-            <h3 className="text-[10px] font-black text-zinc-500 uppercase mb-4 text-center tracking-widest">Créditos Mensuales</h3>
-            <div className="text-3xl font-black text-white mb-2 text-center italic tracking-tighter uppercase">{planCodeToDisplay(normalizePlanType(profile?.plan_type))}</div>
-            <div className="space-y-3">
-              <div className="flex justify-between text-[10px] font-black text-zinc-400 px-1">
-                <span className="uppercase">Uso</span>
-                <span className={`${overLimit ? 'text-red-400' : 'text-zinc-300'}`}>{messagesUsed} / {isUnlimited ? '∞' : monthlyLimit}</span>
-              </div>
-              <div className="w-full bg-zinc-800 h-3 rounded-full overflow-hidden border border-zinc-700">
-                <div
-                  role="progressbar"
-                  aria-label="Porcentaje de uso de créditos mensuales"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={Math.round(usagePercent)}
-                  title={`${percentLabel} usados`}
-                  className={`${overLimit ? 'bg-red-600 shadow-[0_0_10px_rgba(239,68,68,0.45)]' : 'bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.5)]'} h-full transition-all duration-1000`}
-                  style={{ width: `${usagePercent}%` }}
-                />
-              </div>
+          {isConnected && (
+            <button
+              onClick={handleDisconnectInstagram}
+              disabled={saving}
+              className="w-full text-center text-[10px] text-red-400/80 cursor-pointer hover:text-red-400 transition-colors bg-transparent border-0 uppercase tracking-widest"
+            >
+              {saving ? 'Desvinculando...' : 'Desvincular cuenta'}
+            </button>
+          )}
+        </div>
+
+        {/* MONTHLY CREDITS */}
+        <div className={`rounded-2xl bg-white/[0.03] border p-5 space-y-4 backdrop-blur-sm ${limitReached ? 'border-red-500/40' : 'border-white/5'}`}>
+          <p className="text-[11px] font-bold tracking-[0.18em] text-gray-500 uppercase text-center">Créditos Mensuales</p>
+          <div className={`rounded-xl border p-4 text-center space-y-3 ${limitReached ? 'bg-red-950/30 border-red-500/30' : 'bg-gray-900/60 border-white/5'}`}>
+            <p className="text-4xl font-black tracking-tight text-white italic">{planCodeToDisplay(planCode).toUpperCase()}</p>
+            <div className="flex justify-between text-xs text-gray-400 px-1">
+              <span>USO</span>
+              <span className="font-mono text-white">
+                {messagesUsed.toLocaleString('es-CL')} / {messagesLimit ? messagesLimit.toLocaleString('es-CL') : '∞'}
+              </span>
             </div>
+            <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: messagesLimit ? `${usagePct}%` : '100%',
+                  background: messagesLimit ? barColor : '#E1306C',
+                  opacity: messagesLimit ? 1 : 0.4
+                }}
+              />
+            </div>
+            {!messagesLimit && (
+              <p className="text-[10px] text-pink-400/70 italic">Mensajes ilimitados bajo política de uso justo</p>
+            )}
+            {limitReached && (
+              <p className="text-[10px] text-red-400 font-bold tracking-wide uppercase">Límite alcanzado — bot pausado</p>
+            )}
+            {!limitReached && messagesLimit && usagePct > 85 && (
+              <p className="text-[10px] text-amber-400 italic">Cerca del límite — considera actualizar tu plan</p>
+            )}
           </div>
+          {planCode !== 'full' && (
+            <button
+              onClick={() => goToPlans?.()}
+              className="w-full py-2 text-xs font-bold rounded-xl border border-pink-500/30 text-pink-400 hover:bg-pink-500/10 transition-all"
+            >
+              Ver planes →
+            </button>
+          )}
         </div>
       </div>
+
+      {/* CONNECT CARD — shown when no connection exists */}
+      {!isConnected && (
+        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-8 backdrop-blur-sm text-center space-y-6">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[#833AB4] via-[#E1306C] to-[#F77737] bg-opacity-20 flex items-center justify-center">
+            <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-white mb-1">Conecta tu Instagram</h3>
+            <p className="text-sm text-gray-500">Vincula tu cuenta de Instagram Business para responder comentarios y DMs automáticamente.</p>
+          </div>
+          <button
+            onClick={handleInstagramLogin}
+            className="inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-bold text-white transition-all bg-gradient-to-r from-[#833AB4] via-[#E1306C] to-[#F77737] hover:shadow-[0_0_20px_rgba(225,48,108,0.3)]"
+          >
+            Conectar con Instagram
+          </button>
+        </div>
+      )}
+
+      {/* INFO BANNER when connected */}
+      {isConnected && !limitReached && (
+        <div className="p-4 rounded-xl bg-emerald-900/10 border border-emerald-800/30 flex items-start gap-3">
+          <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <p className="text-sm text-emerald-300 font-semibold">Tu asistente IA está activo</p>
+            <p className="text-xs text-emerald-400/60 mt-0.5">Los comentarios y mensajes directos en tu cuenta de Instagram serán respondidos automáticamente por tu bot.</p>
+          </div>
+        </div>
+      )}
+
+      {/* AGENT STATUS when connected */}
+      {isConnected && personalityLoaded && (
+        <div className="p-4 rounded-xl bg-blue-900/10 border border-blue-800/30 flex items-start gap-3">
+          <svg className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <div>
+            <p className="text-sm text-blue-300 font-semibold">Agente IA configurado</p>
+            <p className="text-xs text-blue-400/60 mt-0.5">
+              {personalityName
+                ? `Tu agente "${personalityName}" está entrenado y respondiendo con inteligencia RAG.`
+                : 'Tu agente está configurado y respondiendo con inteligencia RAG.'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* LIMIT REACHED BLOCK */}
+      {limitReached && (
+        <div className="relative rounded-2xl overflow-hidden border border-red-500/40 bg-red-950/20 p-6 text-center space-y-3">
+          <div className="text-3xl">🚫</div>
+          <p className="text-red-400 font-bold text-base">Bot pausado — límite mensual alcanzado</p>
+          <p className="text-gray-400 text-sm max-w-sm mx-auto">
+            Has usado todos tus mensajes de Instagram este mes. El bot no responderá hasta que actualices tu plan.
+          </p>
+          <button
+            onClick={() => goToPlans?.()}
+            className="px-6 py-2 text-sm font-bold rounded-xl bg-pink-600 hover:bg-pink-500 text-white transition-all"
+          >
+            Actualizar plan
+          </button>
+        </div>
+      )}
     </div>
   )
 }
