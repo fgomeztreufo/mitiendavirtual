@@ -15,17 +15,18 @@
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/supabase-js": "^2.90.1",
     "canvas-confetti": "^1.9.4",
+    "dotenv": "^16.0.3",
     "firebase": "^12.0.0",
+    "firebase-admin": "^14.1.0",
     "framer-motion": "^12.29.0",
     "lucide-react": "^0.532.0",
     "pg": "^8.20.0",
+    "playwright": "^1.40.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.6.0",
     "react-router-dom": "^7.13.0",
-    "sweetalert2": "^11.26.17",
-    "dotenv": "^16.0.3",
-    "playwright": "^1.40.0"
+    "sweetalert2": "^11.26.17"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
