@@ -4,6 +4,7 @@ import {
   getDecryptedCredential, deleteCredentials,
   getValidAccessToken, supabaseRest
 } from './_lib/google-tokens.js'
+import { sendPushToUser } from './_lib/push-sender.js'
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
@@ -332,6 +333,15 @@ async function handleEvent(req, res) {
         method: 'PATCH', headers: { ...SB_HEADERS, Prefer: 'return=minimal' },
         body: JSON.stringify({ google_event_id: event.id }),
       })
+
+      const startDate = new Date(appt.starts_at)
+      const dateStr = startDate.toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'America/Santiago' })
+      const timeStr = startDate.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago' })
+      sendPushToUser(userId, {
+        title: 'Nueva cita agendada',
+        body: `${appt.services?.name || 'Cita'} - ${appt.client_name} | ${dateStr} ${timeStr}`,
+      }).catch(err => console.error('Push after appointment:', err.message))
+
       return res.json({ ok: true, google_event_id: event.id })
     }
 

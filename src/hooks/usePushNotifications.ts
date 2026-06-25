@@ -115,15 +115,6 @@ export function usePushNotifications(userId: string) {
 
       setState(prev => ({ ...prev, token: fcmToken }))
 
-      onMessage(messaging, (payload) => {
-        if (Notification.permission === 'granted') {
-          new Notification(payload.notification?.title || 'MiTiendaVirtual', {
-            body: payload.notification?.body || '',
-            icon: '/images/icon-192.png',
-          })
-        }
-      })
-
       return true
     } catch (err) {
       console.error('Push subscription error:', err)

@@ -935,6 +935,23 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
       Swal.fire('Error', error.message, 'error')
       return
     }
+
+    const serviceName = service?.name || 'Cita'
+    const dateStr = startsAt.toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric', month: 'short' })
+    const timeStr = startsAt.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      if (!s?.access_token) return
+      fetch('/api/send-push-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${s.access_token}` },
+        body: JSON.stringify({
+          user_id: userId,
+          title: 'Nueva cita agendada',
+          body: `${serviceName} - ${formValues.clientName} | ${dateStr} ${timeStr}`,
+        }),
+      }).catch(() => {})
+    })
+
     Swal.fire({ icon: 'success', title: 'Cita creada', timer: 2000, showConfirmButton: false, background: '#1a1a1a', color: '#fff' })
     onRefresh()
   }
