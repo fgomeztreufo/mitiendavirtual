@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
 import { normalizePlanType, planCodeToDisplay } from '../utils/planUtils'
+import AgentPersonalitySection from './AgentPersonalitySection'
 
 interface InstagramViewProps {
   session: Session
@@ -310,6 +311,15 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
             </p>
           </div>
         </div>
+      )}
+
+      {/* PERSONALITY SECTION */}
+      {isConnected && instance?.id && (
+        <AgentPersonalitySection
+          instanceId={instance.id}
+          channel="instagram"
+          channelColor="from-[#833AB4]/10 to-[#E1306C]/10"
+        />
       )}
 
       {/* LIMIT REACHED BLOCK */}

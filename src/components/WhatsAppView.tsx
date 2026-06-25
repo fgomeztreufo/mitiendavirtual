@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../supabaseClient'
 import Swal from 'sweetalert2'
 import { normalizePlanType } from '../utils/planUtils'
+import AgentPersonalitySection from './AgentPersonalitySection'
 import { Session } from '@supabase/supabase-js'
 
 declare global {
@@ -508,6 +509,15 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
             <p className="text-xs text-amber-400/60 mt-0.5">Tu número <span className="font-mono">{connection.display_phone_number}</span> está vinculado pero no está respondiendo mensajes. Haz clic en "Reactivar" para volver a recibir.</p>
           </div>
         </div>
+      )}
+
+      {/* PERSONALITY SECTION */}
+      {instance?.id && (
+        <AgentPersonalitySection
+          instanceId={instance.id}
+          channel="whatsapp"
+          channelColor="from-green-500/10 to-emerald-500/10"
+        />
       )}
     </div>
   )

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import Swal from 'sweetalert2'
 import { normalizePlanType } from '../utils/planUtils'
+import AgentPersonalitySection from './AgentPersonalitySection'
 import { Session } from '@supabase/supabase-js'
 
 interface TelegramViewProps {
@@ -773,6 +774,15 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
             </div>
           )}
         </div>
+      )}
+
+      {/* PERSONALITY SECTION */}
+      {instance?.id && (
+        <AgentPersonalitySection
+          instanceId={instance.id}
+          channel="telegram"
+          channelColor="from-blue-500/10 to-cyan-500/10"
+        />
       )}
     </div>
   )
