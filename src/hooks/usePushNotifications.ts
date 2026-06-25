@@ -5,6 +5,24 @@ import { supabase } from '../supabaseClient'
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY || ''
 
+function getDeviceId(): string {
+  let id = localStorage.getItem('mtv_device_id')
+  if (!id) {
+    id = crypto.randomUUID()
+    localStorage.setItem('mtv_device_id', id)
+  }
+  return id
+}
+
+function getDeviceLabel(): string {
+  const ua = navigator.userAgent
+  if (/Android/i.test(ua)) return 'Android'
+  if (/iPhone|iPad/i.test(ua)) return 'iOS'
+  if (/Mac/i.test(ua)) return 'Mac'
+  if (/Windows/i.test(ua)) return 'Windows'
+  return 'Desktop'
+}
+
 interface PushState {
   supported: boolean
   permission: NotificationPermission | 'loading'
@@ -59,6 +77,25 @@ export function usePushNotifications(userId: string) {
 
       if (!fcmToken) return false
 
+      const deviceId = getDeviceId()
+      const deviceLabel = getDeviceLabel()
+
+      const { data: existing } = await supabase
+        .from('user_notification_configs')
+        .select('config')
+        .eq('user_id', userId)
+        .eq('channel_type', 'push')
+        .single()
+
+      const currentDevices: any[] = existing?.config?.devices || []
+      const filtered = currentDevices.filter((d: any) => d.device_id !== deviceId)
+      filtered.push({
+        device_id: deviceId,
+        fcm_token: fcmToken,
+        device_label: deviceLabel,
+        subscribed_at: new Date().toISOString(),
+      })
+
       const { error } = await supabase
         .from('user_notification_configs')
         .upsert({
@@ -66,9 +103,8 @@ export function usePushNotifications(userId: string) {
           channel_type: 'push',
           is_active: true,
           config: {
+            devices: filtered,
             fcm_token: fcmToken,
-            subscribed_at: new Date().toISOString(),
-            user_agent: navigator.userAgent.slice(0, 200),
           },
         }, { onConflict: 'user_id, channel_type' })
 
@@ -97,13 +133,34 @@ export function usePushNotifications(userId: string) {
 
   const unsubscribe = useCallback(async (): Promise<boolean> => {
     try {
-      const { error } = await supabase
+      const deviceId = getDeviceId()
+
+      const { data: existing } = await supabase
         .from('user_notification_configs')
-        .update({ is_active: false, config: {} })
+        .select('config')
         .eq('user_id', userId)
         .eq('channel_type', 'push')
+        .single()
 
-      if (error) return false
+      const currentDevices: any[] = existing?.config?.devices || []
+      const filtered = currentDevices.filter((d: any) => d.device_id !== deviceId)
+
+      if (filtered.length === 0) {
+        const { error } = await supabase
+          .from('user_notification_configs')
+          .update({ is_active: false, config: {} })
+          .eq('user_id', userId)
+          .eq('channel_type', 'push')
+        if (error) return false
+      } else {
+        const { error } = await supabase
+          .from('user_notification_configs')
+          .update({ config: { devices: filtered, fcm_token: filtered[0].fcm_token } })
+          .eq('user_id', userId)
+          .eq('channel_type', 'push')
+        if (error) return false
+      }
+
       setState(prev => ({ ...prev, token: null }))
       return true
     } catch {

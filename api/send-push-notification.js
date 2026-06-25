@@ -45,11 +45,20 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Database error', detail: error.message });
     }
 
-    const tokens = (configs || [])
-      .map(c => c.config?.fcm_token)
-      .filter(Boolean);
+    const tokens = [];
+    for (const c of (configs || [])) {
+      if (c.config?.devices && Array.isArray(c.config.devices)) {
+        for (const d of c.config.devices) {
+          if (d.fcm_token) tokens.push(d.fcm_token);
+        }
+      } else if (c.config?.fcm_token) {
+        tokens.push(c.config.fcm_token);
+      }
+    }
 
-    if (tokens.length === 0) {
+    const uniqueTokens = [...new Set(tokens)];
+
+    if (uniqueTokens.length === 0) {
       return res.status(200).json({ sent: 0, message: 'No active push subscriptions' });
     }
 
@@ -58,8 +67,9 @@ export default async function handler(req, res) {
     let sent = 0;
     let failed = 0;
     const errors = [];
+    const invalidTokens = [];
 
-    for (const token of tokens) {
+    for (const token of uniqueTokens) {
       try {
         await messaging.send({
           token,
@@ -68,6 +78,7 @@ export default async function handler(req, res) {
           webpush: {
             notification: {
               icon: '/images/icon-192.png',
+              badge: '/images/icon-72.png',
               tag: 'mtv-alert',
             },
           },
@@ -75,19 +86,38 @@ export default async function handler(req, res) {
         sent++;
       } catch (err) {
         failed++;
-        errors.push(err.code || err.message);
+        errors.push({ token: token.slice(0, 10) + '...', error: err.code || err.message });
         if (err.code === 'messaging/registration-token-not-registered' ||
             err.code === 'messaging/invalid-registration-token') {
+          invalidTokens.push(token);
+        }
+      }
+    }
+
+    if (invalidTokens.length > 0) {
+      for (const c of (configs || [])) {
+        if (c.config?.devices && Array.isArray(c.config.devices)) {
+          const cleaned = c.config.devices.filter(d => !invalidTokens.includes(d.fcm_token));
           await supabase
             .from('user_notification_configs')
-            .update({ is_active: false, config: {} })
+            .update({
+              config: cleaned.length > 0
+                ? { devices: cleaned, fcm_token: cleaned[0].fcm_token }
+                : {},
+              is_active: cleaned.length > 0,
+            })
             .eq('user_id', user_id)
             .eq('channel_type', 'push');
         }
       }
     }
 
-    return res.status(200).json({ sent, failed, errors: errors.length ? errors : undefined });
+    return res.status(200).json({
+      sent,
+      failed,
+      total_devices: uniqueTokens.length,
+      errors: errors.length ? errors : undefined,
+    });
   } catch (err) {
     console.error('Push notification error:', err.message || err);
     return res.status(500).json({ error: 'Internal server error', detail: err.message });

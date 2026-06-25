@@ -289,8 +289,10 @@ export default function NotificationsView({ session, profile }: any) {
           const connected = channel === 'telegram'
             ? !!(config?.config?.telegram_chat_id || config?.config?.connected_at)
             : channel === 'push'
-            ? !!(config?.config?.fcm_token)
+            ? !!(config?.config?.fcm_token || config?.config?.devices?.length)
             : active;
+
+          const deviceCount = channel === 'push' ? (config?.config?.devices?.length || (config?.config?.fcm_token ? 1 : 0)) : 0;
 
           const toggleOn = channel === 'telegram' ? (connected && active)
             : channel === 'push' ? (connected && active)
@@ -323,7 +325,7 @@ export default function NotificationsView({ session, profile }: any) {
                       )}
                       {channel === 'push' && connected && (
                         <span className="text-[10px] bg-amber-900/30 text-amber-400 px-2 py-0.5 rounded-full border border-amber-800">
-                          Activado
+                          {deviceCount > 1 ? `${deviceCount} dispositivos` : 'Activado'}
                         </span>
                       )}
                       {channel === 'push' && !push.supported && (
