@@ -948,13 +948,13 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-wrap gap-1.5">
           {['all', 'confirmed', 'pending', 'completed', 'cancelled', 'no_show'].map(s => (
             <button
               key={s}
               onClick={() => setFilterStatus(s)}
-              className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${
+              className={`text-[10px] font-bold px-2.5 py-1.5 rounded-lg border transition-all ${
                 filterStatus === s
                   ? 'border-indigo-500/30 text-indigo-300 bg-indigo-500/10'
                   : 'border-white/5 text-gray-500 hover:text-gray-300'
@@ -964,7 +964,7 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
             </button>
           ))}
         </div>
-        <button onClick={createManual} className="px-4 py-2 text-xs font-bold rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition-all">
+        <button onClick={createManual} className="px-4 py-2 text-xs font-bold rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition-all w-fit">
           + Cita manual
         </button>
       </div>
@@ -979,7 +979,7 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
             const st = STATUS_LABELS[appt.status] || { label: appt.status, color: 'text-gray-400' }
             return (
               <div key={appt.id} className="rounded-xl bg-white/[0.03] border border-white/5 p-4">
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-bold text-white">{appt.client_name}</p>
@@ -988,34 +988,34 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
                       </span>
                       <span className="text-[10px] text-gray-600 uppercase">{appt.source}</span>
                     </div>
-                    <div className="flex gap-3 mt-1 text-xs text-gray-400">
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-gray-400">
                       <span>{formatDate(appt.starts_at)}</span>
-                      <span className="font-mono">{formatTime(appt.starts_at)} - {formatTime(appt.ends_at)}</span>
+                      <span className="font-mono">{formatTime(appt.starts_at)} – {formatTime(appt.ends_at)}</span>
                       <span>{appt.staff_members?.name || '—'}</span>
                       <span>{appt.services?.name || '—'}</span>
                     </div>
                     <p className="text-[10px] text-gray-600 font-mono mt-0.5">{appt.client_phone}</p>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1 sm:pt-0">
                     {appt.status === 'confirmed' && (
                       <>
-                        <button onClick={() => updateStatus(appt, 'completed')} className="text-[10px] font-bold px-2 py-1 rounded-lg border border-blue-500/30 text-blue-400 hover:bg-blue-500/10">
+                        <button onClick={() => updateStatus(appt, 'completed')} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-blue-500/30 text-blue-400 hover:bg-blue-500/10">
                           Completar
                         </button>
-                        <button onClick={() => updateStatus(appt, 'cancelled')} className="text-[10px] font-bold px-2 py-1 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10">
+                        <button onClick={() => updateStatus(appt, 'cancelled')} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10">
                           Cancelar
                         </button>
-                        <button onClick={() => updateStatus(appt, 'no_show')} className="text-[10px] font-bold px-2 py-1 rounded-lg border border-gray-500/30 text-gray-400 hover:bg-gray-500/10">
+                        <button onClick={() => updateStatus(appt, 'no_show')} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-gray-500/30 text-gray-400 hover:bg-gray-500/10">
                           No asistió
                         </button>
                       </>
                     )}
                     {appt.status === 'pending' && (
                       <>
-                        <button onClick={() => updateStatus(appt, 'confirmed')} className="text-[10px] font-bold px-2 py-1 rounded-lg border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
+                        <button onClick={() => updateStatus(appt, 'confirmed')} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
                           Confirmar
                         </button>
-                        <button onClick={() => updateStatus(appt, 'cancelled')} className="text-[10px] font-bold px-2 py-1 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10">
+                        <button onClick={() => updateStatus(appt, 'cancelled')} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10">
                           Cancelar
                         </button>
                       </>
