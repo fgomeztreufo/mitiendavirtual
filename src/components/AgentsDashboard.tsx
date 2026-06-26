@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
+import AgentsOfficeScene from './AgentsOfficeScene';
 
 interface UserSession {
   user: {
@@ -292,14 +293,6 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
         </p>
       </div>
 
-      {/* Resumen rápido */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Mensajes IA" value={messagesUsed} icon="💬" />
-        <StatCard label="Leads totales" value={leadsTotal} icon="🎯" />
-        <StatCard label="Ventas cerradas" value={leadsCompleted} icon="✅" />
-        <StatCard label="Leads hoy" value={leadsToday} icon="📈" loading={loading} />
-      </div>
-
       {/* Agentes */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         {agents.map((agent) => (
@@ -353,20 +346,20 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
           </div>
         ))}
       </div>
-    </div>
-  );
-}
 
-function StatCard({ label, value, icon, loading }: Readonly<{ label: string; value: number; icon: string; loading?: boolean }>) {
-  return (
-    <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 flex items-center gap-3">
-      <span className="text-2xl">{icon}</span>
-      <div>
-        <p className="text-lg font-bold text-white tabular-nums">
-          {loading ? <span className="inline-block w-10 h-5 bg-gray-800 rounded animate-pulse" /> : value.toLocaleString('es-CL')}
-        </p>
-        <p className="text-[10px] text-gray-500 uppercase tracking-wider">{label}</p>
-      </div>
+      {/* Office Scene */}
+      <AgentsOfficeScene
+        igActive={isConnected}
+        waActive={whatsappConnected}
+        tgActive={telegramConnected}
+        calActive={calendarConnected}
+        stats={{
+          messages: messagesUsed + messagesUsedTelegram + messagesUsedWpp,
+          leads: leadsTotal,
+          sales: leadsCompleted,
+          appointments: calendarStats.total,
+        }}
+      />
     </div>
   );
 }
