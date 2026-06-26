@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
-import { normalizePlanType } from '../utils/planUtils'
+import { normalizePlanType, isInTrial, trialDaysLeft } from '../utils/planUtils'
 import { FaInstagram, FaTelegram, FaWhatsapp, FaGoogle } from 'react-icons/fa'
 
 // --- VISTAS DE APP ---
@@ -245,6 +245,13 @@ export default function Dashboard({ session }: { session: Session }) {
             locked={!hasScheduling}
             lockLabel="Full"
           />
+
+          {profile && isInTrial(profile) && (
+            <div className="mx-1 mt-4 mb-2 p-2.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30">
+              <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest">Trial {profile.trial_plan?.toUpperCase()}</p>
+              <p className="text-[10px] text-amber-300/70">{trialDaysLeft(profile)} días restantes</p>
+            </div>
+          )}
 
           <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Configuración</p>
 

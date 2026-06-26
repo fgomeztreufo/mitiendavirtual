@@ -43,7 +43,7 @@ export default function CatalogView({ session, profile, onProductAdded,goToPlans
   }, [planCode])
 
   const limit = planLimit ?? capacityMap[planCode] ?? 10;
-  const isFull = currentCount >= limit && planCode !== 'full';
+  const isFull = currentCount >= limit;
   const percentage = Math.min((currentCount / limit) * 100, 100);
 
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -158,7 +158,7 @@ export default function CatalogView({ session, profile, onProductAdded,goToPlans
         <div className={`p-4 rounded-2xl w-full md:w-64 border transition-all ${planCode === 'full' ? 'bg-yellow-500/5 border-yellow-500/30' : 'bg-gray-900 border-gray-800'}`}>
           <div className="flex justify-between text-[10px] font-black mb-2 tracking-widest uppercase">
             <span className="text-gray-500">Capacidad</span>
-            <span className="text-white">{planCode === 'full' ? '∞ ILIMITADO' : `${currentCount} / ${limit}`}</span>
+            <span className="text-white">{`${currentCount} / ${limit.toLocaleString('es-CL')}`}</span>
           </div>
           <div className="h-1.5 w-full bg-black rounded-full overflow-hidden">
             <div 

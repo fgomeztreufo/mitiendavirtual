@@ -632,6 +632,20 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
               style="background:#111;border:1px solid #333;border-radius:8px;color:#fff;padding:10px 12px;font-size:14px;width:100%;cursor:pointer">
           </div>
           <div>
+            <label style="display:block;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Tipo de bloqueo</label>
+            <select id="swal-block-type"
+              style="background:#111;border:1px solid #333;border-radius:8px;color:#fff;padding:10px 12px;font-size:14px;width:100%;cursor:pointer"
+              onchange="document.getElementById('swal-block-time-wrap').style.display = this.value === 'partial' ? 'block' : 'none'">
+              <option value="full">Dia completo</option>
+              <option value="partial">Desde una hora hasta el cierre</option>
+            </select>
+          </div>
+          <div id="swal-block-time-wrap" style="display:none">
+            <label style="display:block;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Bloquear desde</label>
+            <input id="swal-block-start" type="time" value="14:00"
+              style="background:#111;border:1px solid #333;border-radius:8px;color:#fff;padding:10px 12px;font-size:14px;width:100%;cursor:pointer">
+          </div>
+          <div>
             <label style="display:block;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Motivo (opcional)</label>
             <input id="swal-block-reason" type="text" placeholder="Ej: Vacaciones, emergencia familiar"
               style="background:#111;border:1px solid #333;border-radius:8px;color:#fff;padding:10px 12px;font-size:14px;width:100%">
@@ -646,9 +660,16 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
       preConfirm: () => {
         const date = (document.getElementById('swal-block-date') as HTMLInputElement).value
         const reason = (document.getElementById('swal-block-reason') as HTMLInputElement).value.trim()
+        const blockType = (document.getElementById('swal-block-type') as HTMLSelectElement).value
+        const startTime = (document.getElementById('swal-block-start') as HTMLInputElement).value
         if (!date) { Swal.showValidationMessage('Selecciona una fecha'); return false }
         if (date < today) { Swal.showValidationMessage('No puedes bloquear una fecha pasada'); return false }
-        return { override_date: date, reason: reason || null }
+        if (blockType === 'partial' && !startTime) { Swal.showValidationMessage('Selecciona la hora de inicio'); return false }
+        return {
+          override_date: date,
+          reason: reason || null,
+          start_time: blockType === 'partial' ? startTime : null,
+        }
       }
     })
     if (!formValues) return
@@ -656,7 +677,6 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
     const { error } = await supabase.from('schedule_overrides').insert({
       staff_id: current,
       is_available: false,
-      start_time: null,
       end_time: null,
       ...formValues,
     })
@@ -695,7 +715,6 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
     .filter(o =>
       o.staff_id === current &&
       !o.is_available &&
-      o.start_time === null &&
       o.end_time === null &&
       o.reason !== 'google_calendar_sync'
     )
@@ -789,7 +808,7 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
                   )}
                 </h4>
                 <p className="text-[10px] text-gray-500">
-                  Bloquea dias completos por vacaciones, emergencias o feriados.
+                  Bloquea dias completos o desde una hora especifica.
                 </p>
               </div>
               <button
@@ -817,7 +836,12 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
                         </svg>
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-red-300">{formatOverrideDate(override.override_date)}</p>
+                        <p className="text-xs font-bold text-red-300">
+                          {formatOverrideDate(override.override_date)}
+                          {override.start_time && !override.end_time && (
+                            <span className="text-red-400/70 font-normal"> — desde las {override.start_time.slice(0, 5)}</span>
+                          )}
+                        </p>
                         {override.reason && <p className="text-[10px] text-gray-500">{override.reason}</p>}
                       </div>
                     </div>

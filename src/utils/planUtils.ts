@@ -56,3 +56,14 @@ export function planCodeToDisplay(code: string) {
     default: return 'Semilla';
   }
 }
+
+export function isInTrial(profile: any): boolean {
+  if (!profile?.trial_ends_at) return false;
+  return new Date(profile.trial_ends_at) > new Date();
+}
+
+export function trialDaysLeft(profile: any): number {
+  if (!profile?.trial_ends_at) return 0;
+  const diff = new Date(profile.trial_ends_at).getTime() - Date.now();
+  return Math.max(0, Math.ceil(diff / 86400000));
+}

@@ -1,5 +1,5 @@
 import Swal from 'sweetalert2'
-import { planDisplayToCode, normalizePlanType } from '../utils/planUtils'
+import { planDisplayToCode, normalizePlanType, isInTrial, trialDaysLeft } from '../utils/planUtils'
 import { Session } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
 import type { IconType } from 'react-icons'
@@ -137,6 +137,16 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                     Si no renuevas, vuelves al plan inicial sin perder tus datos.
                 </p>
             </div>
+
+            {profile && isInTrial(profile) && (
+              <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-amber-400">Estás probando el plan {(profile as any).trial_plan?.toUpperCase()} gratis</p>
+                  <p className="text-xs text-amber-300/70">Te quedan {trialDaysLeft(profile)} días de prueba</p>
+                </div>
+                <span className="text-2xl">🎁</span>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 items-start">
               {loading && <div className="col-span-full text-center text-gray-400">Cargando planes...</div>}
