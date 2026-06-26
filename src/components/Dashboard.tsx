@@ -139,7 +139,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <MobileNavBtn label="Cerebro IA" active={activeTab === 'knowlower'} onClick={() => { setActiveTab('knowlower'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Subir Producto" active={activeTab === 'catalog'} onClick={() => { setActiveTab('catalog'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Inventario" active={activeTab === 'inventory'} onClick={() => { setActiveTab('inventory'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Planes / Saldo" active={activeTab === 'plans'} onClick={() => { setActiveTab('plans'); setMobileMenuOpen(false); }} />
+            <MobileNavBtn label="Planes" active={activeTab === 'plans'} onClick={() => { setActiveTab('plans'); setMobileMenuOpen(false); }} />
             <div className="pt-3 border-t border-white/5 mt-3">
               <button onClick={() => supabase.auth.signOut()} className="w-full text-left text-red-500 p-3 hover:bg-red-500/10 rounded-xl flex items-center gap-2 transition-colors text-sm">
                 Cerrar Sesión
@@ -248,7 +248,39 @@ export default function Dashboard({ session }: { session: Session }) {
 
           <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Configuración</p>
 
-          {/* Configura Agentes — submenu estilo destacado */}
+          {/* Entrenamiento IA */}
+          <div className="mb-2 mx-1 rounded-xl bg-gradient-to-r from-purple-600/10 to-indigo-600/10 border border-purple-500/20 overflow-hidden">
+            <button
+              onClick={() => setKnowledgeOpen(!knowledgeOpen)}
+              className={`w-full flex items-center gap-2.5 p-3 text-sm transition-all duration-200 ${
+                activeTab === 'faqs' || activeTab === 'knowlower' || activeTab === 'catalog' || activeTab === 'inventory'
+                  ? 'text-purple-300'
+                  : 'text-gray-300 hover:text-purple-300'
+              }`}
+            >
+              <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-xs shadow-[0_2px_8px_rgba(139,92,246,0.3)]">🧠</span>
+              <span className="font-bold text-xs uppercase tracking-wider">Entrenamiento IA</span>
+              <svg className={`w-4 h-4 ml-auto transition-transform duration-200 ${knowledgeOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            {knowledgeOpen && (
+              <div className="px-3 pb-3 space-y-1 border-t border-purple-500/10">
+                <button onClick={() => setActiveTab('faqs')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'faqs' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
+                  FAQs / Base Conocimiento
+                </button>
+                <button onClick={() => setActiveTab('knowlower')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'knowlower' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
+                  Cerebro IA
+                </button>
+                <button onClick={() => setActiveTab('catalog')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'catalog' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
+                  Subir Producto
+                </button>
+                <button onClick={() => setActiveTab('inventory')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'inventory' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
+                  Inventario
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Configura Agentes */}
           <div className="mb-2 mx-1 rounded-xl bg-gradient-to-r from-indigo-600/10 to-sky-600/10 border border-indigo-500/20 overflow-hidden">
             <button
               onClick={() => setConfigAgentsOpen(!configAgentsOpen)}
@@ -286,40 +318,8 @@ export default function Dashboard({ session }: { session: Session }) {
             onClick={() => { setActiveTab('notifications'); setLegalView(null) }}
           />
 
-          {/* Entrenamiento IA — sección destacada con Catálogo incluido */}
-          <div className="mt-4 mb-2 mx-1 rounded-xl bg-gradient-to-r from-purple-600/10 to-indigo-600/10 border border-purple-500/20 overflow-hidden">
-            <button
-              onClick={() => setKnowledgeOpen(!knowledgeOpen)}
-              className={`w-full flex items-center gap-2.5 p-3 text-sm transition-all duration-200 ${
-                activeTab === 'faqs' || activeTab === 'knowlower' || activeTab === 'catalog' || activeTab === 'inventory'
-                  ? 'text-purple-300'
-                  : 'text-gray-300 hover:text-purple-300'
-              }`}
-            >
-              <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-xs shadow-[0_2px_8px_rgba(139,92,246,0.3)]">🧠</span>
-              <span className="font-bold text-xs uppercase tracking-wider">Entrenamiento IA</span>
-              <svg className={`w-4 h-4 ml-auto transition-transform duration-200 ${knowledgeOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
-            </button>
-            {knowledgeOpen && (
-              <div className="px-3 pb-3 space-y-1 border-t border-purple-500/10">
-                <button onClick={() => setActiveTab('faqs')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'faqs' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
-                  FAQs / Base Conocimiento
-                </button>
-                <button onClick={() => setActiveTab('knowlower')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'knowlower' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
-                  Cerebro IA
-                </button>
-                <button onClick={() => setActiveTab('catalog')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'catalog' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
-                  Subir Producto
-                </button>
-                <button onClick={() => setActiveTab('inventory')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'inventory' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
-                  Inventario
-                </button>
-              </div>
-            )}
-          </div>
-
           <SidebarBtn
-            label="Planes / Saldo"
+            label="Planes"
             icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
             active={activeTab === 'plans'}
             onClick={() => setActiveTab('plans')}
