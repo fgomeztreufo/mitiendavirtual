@@ -30,6 +30,12 @@ interface AgentLeadStats {
   today: number;
 }
 
+interface CalendarStats {
+  total: number;
+  confirmed: number;
+  today: number;
+}
+
 export default function AgentsDashboard({ session, profile, instance, onNavigate }: Readonly<AgentsDashboardProps>) {
   const [leadsTotal, setLeadsTotal] = useState(0);
   const [leadsCompleted, setLeadsCompleted] = useState(0);
@@ -40,6 +46,8 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
     telegram: { total: 0, completed: 0, today: 0 },
   });
   const [telegramConnected, setTelegramConnected] = useState(false);
+  const [calendarConnected, setCalendarConnected] = useState(false);
+  const [calendarStats, setCalendarStats] = useState<CalendarStats>({ total: 0, confirmed: 0, today: 0 });
   const [loading, setLoading] = useState(true);
 
   const fetchStats: () => Promise<void> = useCallback(async () => {
@@ -114,6 +122,36 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
       } catch (e) {
         console.error('Unexpected error checking telegram tokens', e);
         setTelegramConnected(false);
+      }
+
+      try {
+        const { data: appts, error: apptError } = await supabase
+          .from('appointments')
+          .select('status, starts_at')
+          .eq('user_id', session.user.id);
+
+        if (!apptError && appts) {
+          const todayStr = new Date().toISOString().split('T')[0];
+          const stats: CalendarStats = { total: appts.length, confirmed: 0, today: 0 };
+          appts.forEach(a => {
+            if (a.status === 'confirmed' || a.status === 'completed') stats.confirmed++;
+            if (typeof a.starts_at === 'string' && a.starts_at >= todayStr) stats.today++;
+          });
+          setCalendarStats(stats);
+        }
+      } catch (e) {
+        console.error('Error fetching appointment stats', e);
+      }
+
+      try {
+        const { count, error: gcalErr } = await supabase
+          .from('staff_members')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', session.user.id)
+          .not('google_calendar_id', 'is', null);
+        if (!gcalErr) setCalendarConnected((count || 0) > 0);
+      } catch (e) {
+        console.error('Error checking google calendar', e);
       }
     } catch (err) {
       console.error('Error fetching stats', err);
@@ -215,6 +253,31 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
       action: () => onNavigate('notifications'),
       actionLabel: 'Configurar',
     },
+    {
+      id: 'google-calendar',
+      name: 'Agente Calendar',
+      status: calendarConnected ? 'Activo' : 'Desconectado',
+      color: calendarConnected ? 'from-blue-500 to-indigo-600' : 'from-gray-700 to-gray-800',
+      statusColor: calendarConnected ? 'text-green-400' : 'text-red-400',
+      dotColor: calendarConnected ? 'bg-green-400' : 'bg-red-400',
+      icon: (
+        <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+          <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      ),
+      stats: [
+        { label: 'Citas generadas', value: calendarStats.total },
+        { label: 'Citas confirmadas', value: calendarStats.confirmed },
+        { label: 'Citas hoy', value: calendarStats.today },
+        { label: 'Calendario', value: calendarConnected ? 'Vinculado' : 'Sin vincular' },
+      ],
+      action: () => onNavigate('google-calendar'),
+      actionLabel: calendarConnected ? 'Configurar' : 'Conectar',
+    },
   ];
 
   return (
@@ -238,7 +301,7 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
       </div>
 
       {/* Agentes */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         {agents.map((agent) => (
           <div
             key={agent.id}
