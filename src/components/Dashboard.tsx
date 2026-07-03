@@ -23,6 +23,7 @@ import NotificationsView from './NotificationsView.tsx'
 import TelegramView from './TelegramView'
 import AgentsDashboard from './AgentsDashboard'
 import SchedulingView from './SchedulingView'
+import ServicesView from './ServicesView'
 import WhatsAppMessagesView from './WhatsAppMessagesView'
 import WhatsAppLeadsView from './WhatsAppLeadsView'
 
@@ -139,6 +140,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <MobileNavBtn label="Cerebro IA" active={activeTab === 'knowlower'} onClick={() => { setActiveTab('knowlower'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Subir Producto" active={activeTab === 'catalog'} onClick={() => { setActiveTab('catalog'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Inventario" active={activeTab === 'inventory'} onClick={() => { setActiveTab('inventory'); setMobileMenuOpen(false); }} />
+            <MobileNavBtn label="Servicios" active={activeTab === 'services'} onClick={() => { setActiveTab('services'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Planes" active={activeTab === 'plans'} onClick={() => { setActiveTab('plans'); setMobileMenuOpen(false); }} />
             <div className="pt-3 border-t border-white/5 mt-3">
               <button onClick={() => supabase.auth.signOut()} className="w-full text-left text-red-500 p-3 hover:bg-red-500/10 rounded-xl flex items-center gap-2 transition-colors text-sm">
@@ -260,7 +262,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <button
               onClick={() => setKnowledgeOpen(!knowledgeOpen)}
               className={`w-full flex items-center gap-2.5 p-3 text-sm transition-all duration-200 ${
-                activeTab === 'faqs' || activeTab === 'knowlower' || activeTab === 'catalog' || activeTab === 'inventory'
+                activeTab === 'faqs' || activeTab === 'knowlower' || activeTab === 'catalog' || activeTab === 'inventory' || activeTab === 'services'
                   ? 'text-purple-300'
                   : 'text-gray-300 hover:text-purple-300'
               }`}
@@ -282,6 +284,9 @@ export default function Dashboard({ session }: { session: Session }) {
                 </button>
                 <button onClick={() => setActiveTab('inventory')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'inventory' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
                   Inventario
+                </button>
+                <button onClick={() => setActiveTab('services')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'services' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
+                  Servicios
                 </button>
               </div>
             )}
@@ -402,6 +407,14 @@ export default function Dashboard({ session }: { session: Session }) {
               />
             )}
             {activeTab === 'inventory' && <ProductsListView session={session} onUpdate={getData} />}
+            {activeTab === 'services' && (
+              <ServicesView
+                session={session}
+                profile={profile}
+                onUpdate={getData}
+                goToPlans={() => setActiveTab('plans')}
+              />
+            )}
             {activeTab === 'scheduling' && (
               <SchedulingView
                 session={session}
