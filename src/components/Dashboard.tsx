@@ -430,10 +430,8 @@ export default function Dashboard({ session }: { session: Session }) {
           </div>
         </div>
 
-          {/* Botón flotante WhatsApp: solo visible para planes Pro / Full (case-insensitive) */}
-          <FloatingWhatsAppButton
-            visible={!!profile && ['pro', 'full'].includes(normalizePlanType(profile?.plan_type))}
-          />
+          {/* Botón flotante WhatsApp: visible para todos los planes */}
+          <FloatingWhatsAppButton visible={!!profile} />
 
         {legalView === 'terms' && <TermsOfService onClose={() => setLegalView(null)} />}
         {legalView === 'privacy' && <PrivacyPolicy onClose={() => setLegalView(null)} />}

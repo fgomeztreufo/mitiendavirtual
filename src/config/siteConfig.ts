@@ -62,7 +62,7 @@ export const siteConfig: SiteConfig = {
   company: {
     name: "Mi Tienda Virtual",
     tagline: "Transformamos tu Negocio con Tiendas Virtuales y automatizaciones de Alto Rendimiento",
-    phone: "+56954080571",
+    phone: "+56945676939",
     whatsappMessage: "Hola! Necesito ayuda con mi tienda virtual y automatización de redes sociales. ¿Podrían contactarme? ¡Gracias!"
   },
   features: {
