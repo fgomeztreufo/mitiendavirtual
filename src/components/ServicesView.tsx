@@ -29,6 +29,7 @@ export default function ServicesView({ session, profile, onUpdate }: ServicesVie
   const [saving, setSaving] = useState(false)
   const [editingService, setEditingService] = useState<Service | null>(null)
   const [formData, setFormData] = useState(EMPTY_FORM)
+  const [showSchedulingConfig, setShowSchedulingConfig] = useState(false)
 
   const userId = session?.user?.id
 
@@ -65,6 +66,9 @@ export default function ServicesView({ session, profile, onUpdate }: ServicesVie
       price: svc.price ? String(svc.price) : '',
       buffer_minutes: String(svc.buffer_minutes),
     })
+    if (svc.duration_minutes > 0 || svc.buffer_minutes > 0) {
+      setShowSchedulingConfig(true)
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -207,30 +211,50 @@ export default function ServicesView({ session, profile, onUpdate }: ServicesVie
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left">
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Duración (minutos)</label>
-                <input
-                  type="number"
-                  required
-                  min="5"
-                  className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all text-sm"
-                  value={formData.duration_minutes}
-                  onChange={e => setFormData({ ...formData, duration_minutes: e.target.value })}
-                  placeholder="30"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Buffer entre citas (min)</label>
-                <input
-                  type="number"
-                  min="0"
-                  className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all text-sm"
-                  value={formData.buffer_minutes}
-                  onChange={e => setFormData({ ...formData, buffer_minutes: e.target.value })}
-                  placeholder="0"
-                />
-              </div>
+            {/* SECCIÓN COLAPSABLE: AGENDA */}
+            <div className="rounded-xl border border-gray-800 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setShowSchedulingConfig(!showSchedulingConfig)}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-white/[0.02] transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">📅</span>
+                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Configuración de Agenda</span>
+                  <span className="text-[9px] text-gray-700 normal-case">(opcional — solo si usas agendamiento)</span>
+                </div>
+                <svg className={`w-4 h-4 text-gray-600 transition-transform duration-200 ${showSchedulingConfig ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {showSchedulingConfig && (
+                <div className="px-4 pb-4 pt-2 border-t border-gray-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Duración (minutos)</label>
+                    <input
+                      type="number"
+                      min="5"
+                      className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all text-sm"
+                      value={formData.duration_minutes}
+                      onChange={e => setFormData({ ...formData, duration_minutes: e.target.value })}
+                      placeholder="30"
+                    />
+                    <span className="text-[9px] text-gray-700">Cuánto dura una sesión de este servicio</span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Buffer entre citas (min)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all text-sm"
+                      value={formData.buffer_minutes}
+                      onChange={e => setFormData({ ...formData, buffer_minutes: e.target.value })}
+                      placeholder="0"
+                    />
+                    <span className="text-[9px] text-gray-700">Tiempo de descanso entre cita y cita</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col gap-2 text-left">
@@ -272,19 +296,21 @@ export default function ServicesView({ session, profile, onUpdate }: ServicesVie
               <div className="space-y-4">
                 <div className="flex justify-end">
                   <div className="bg-indigo-600 text-white text-[9px] px-3 py-2 rounded-2xl rounded-tr-none max-w-[80%]">
-                    ¿Qué servicios tienen? Me interesa <strong>{formData.name || 'agendar una hora'}</strong>
+                    Me interesa <strong>{formData.name || 'conocer sus servicios'}</strong>, ¿cuánto cuesta?
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <div className="w-6 h-6 bg-purple-600 rounded-full flex-shrink-0 flex items-center justify-center text-[10px]">🤖</div>
                   <div className="bg-[#1f2937] text-gray-200 text-[9px] px-3 py-2 rounded-2xl rounded-tl-none space-y-1.5">
-                    <p>¡Hola! Tenemos el servicio de <strong>{formData.name || 'servicio'}</strong>.</p>
+                    <p>¡Hola! Tenemos <strong>{formData.name || 'ese servicio'}</strong> disponible.</p>
                     {formData.price && <p>Valor: <strong>${parseInt(formData.price).toLocaleString('es-CL')}</strong></p>}
-                    <p>Duración: <strong>{formData.duration_minutes || '30'} minutos</strong></p>
-                    {formData.description && (
-                      <p className="text-gray-400 italic">{formData.description.slice(0, 80)}{formData.description.length > 80 ? '...' : ''}</p>
+                    {parseInt(formData.duration_minutes) > 0 && showSchedulingConfig && (
+                      <p>Duración: <strong>{formData.duration_minutes} minutos</strong></p>
                     )}
-                    <p className="text-indigo-300">¿Te gustaría agendar una hora? 📅</p>
+                    {formData.description && (
+                      <p className="text-gray-400 italic">{formData.description.slice(0, 100)}{formData.description.length > 100 ? '...' : ''}</p>
+                    )}
+                    <p className="text-indigo-300">¿Te gustaría más información? 😊</p>
                   </div>
                 </div>
               </div>
