@@ -14,8 +14,8 @@ INSERT INTO public.plans (code, display_name, monthly_price_clp, products_limit,
 VALUES
   ('free', 'Semilla', 0, 10, 50, 'Plan gratuito de inicio'),
   ('basic', 'Básico', 14990, 50, 500, 'Plan ideal para emprendedores'),
-  ('pro', 'Pro', 39990, 500, 2000, 'Plan para crecer con IA'),
-  ('full', 'Full', 59990, 2000, NULL, 'Plan completo con mensajes ilimitados bajo política de uso justo')
+  ('pro', 'Pro', 44990, 500, 2000, 'Plan para crecer con IA'),
+  ('full', 'Full', 79990, 2000, NULL, 'Plan completo con mensajes ilimitados bajo política de uso justo')
 ON CONFLICT (code) DO UPDATE SET
   display_name = EXCLUDED.display_name,
   monthly_price_clp = EXCLUDED.monthly_price_clp,

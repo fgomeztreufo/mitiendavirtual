@@ -25,6 +25,7 @@ const SchedulingView = lazy(() => import('./SchedulingView'))
 const ServicesView = lazy(() => import('./ServicesView'))
 const WhatsAppMessagesView = lazy(() => import('./WhatsAppMessagesView'))
 const WhatsAppLeadsView = lazy(() => import('./WhatsAppLeadsView'))
+const ContabilidadView = lazy(() => import('./ContabilidadView'))
 
 const LazyFallback = () => (
   <div className="flex items-center justify-center h-64">
@@ -50,6 +51,7 @@ export default function Dashboard({ session }: { session: Session }) {
   const hasTelegram = ['basic', 'pro', 'full'].includes(planCode)
   const hasWhatsApp = ['pro', 'full'].includes(planCode)
   const hasScheduling = planCode === 'full'
+  const isAdmin = profile?.is_admin === true
 
   // Manejo de alertas por URL (Pagos o Conexiones)
   useEffect(() => {
@@ -154,6 +156,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <MobileNavBtn label="Inventario" active={activeTab === 'inventory'} onClick={() => { setActiveTab('inventory'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Servicios" active={activeTab === 'services'} onClick={() => { setActiveTab('services'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Planes" active={activeTab === 'plans'} onClick={() => { setActiveTab('plans'); setMobileMenuOpen(false); }} />
+            {isAdmin && <MobileNavBtn label="Contabilidad" active={activeTab === 'contabilidad'} onClick={() => { setActiveTab('contabilidad'); setMobileMenuOpen(false); }} />}
             <div className="pt-3 border-t border-white/5 mt-3">
               <button onClick={() => supabase.auth.signOut()} className="w-full text-left text-red-500 p-3 hover:bg-red-500/10 rounded-xl flex items-center gap-2 transition-colors text-sm">
                 Cerrar Sesión
@@ -348,6 +351,15 @@ export default function Dashboard({ session }: { session: Session }) {
             active={activeTab === 'plans'}
             onClick={() => setActiveTab('plans')}
           />
+
+          {isAdmin && (
+            <SidebarBtn
+              label="Contabilidad"
+              icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
+              active={activeTab === 'contabilidad'}
+              onClick={() => setActiveTab('contabilidad')}
+            />
+          )}
         </nav>
 
         <div className="p-4 border-t border-white/5">
@@ -438,6 +450,7 @@ export default function Dashboard({ session }: { session: Session }) {
               />
             )}
             {activeTab === 'plans' && <PlansView session={session} profile={profile} />}
+            {activeTab === 'contabilidad' && isAdmin && <ContabilidadView session={session} />}
           </Suspense>
         </div>
         
