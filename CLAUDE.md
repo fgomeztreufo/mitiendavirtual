@@ -221,8 +221,8 @@ Secuencialmente numerados `001_` a `028c_`. Continuar la secuencia al agregar nu
 |------|--------|----------------|-----------|-------------|---------|
 | Semilla | `free` | $0 | 10 | 50 | Instagram |
 | Básico | `basic` | $14,990 | 50 | 500 | Instagram + Telegram |
-| Pro | `pro` | $44,990 | 500 | Ilimitados* | Instagram + Telegram + WhatsApp |
-| Full | `full` | $79,990 | 2,000 | Ilimitados* | Todos + Google Calendar + Agendamiento |
+| Pro | `pro` | $44,990 | 500 | 2,000 | Instagram + Telegram + WhatsApp |
+| Full | `full` | $79,990 | 2,000 | 5,000 | Todos + Google Calendar + Agendamiento |
 
 ### Plan Normalization (`planUtils.ts`)
 

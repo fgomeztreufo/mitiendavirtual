@@ -1,4 +1,5 @@
 import React from 'react';
+import { siteConfig } from '../config/siteConfig';
 
 // --- LAYOUT BASE (MODO OVERLAY) ---
 const LegalLayout = ({ title, subtitle, children, onClose }: { title: string, subtitle: string, children: React.ReactNode, onClose: () => void }) => (
@@ -75,13 +76,13 @@ export const TermsOfService = ({ onClose }: { onClose: () => void }) => (
               <td className="px-6 py-4 font-bold text-white uppercase">Pro</td>
               <td className="px-6 py-4">$44.990 CLP</td>
               <td className="px-6 py-4">Hasta 500 productos</td>
-              <td className="px-6 py-4 font-bold text-blue-400 italic">Ilimitados*</td>
+              <td className="px-6 py-4">2.000 mensajes</td>
             </tr>
             <tr className="hover:bg-white/5 transition-colors text-xs font-medium">
               <td className="px-6 py-4 font-bold text-white uppercase">Full</td>
               <td className="px-6 py-4">$79.990 CLP</td>
               <td className="px-6 py-4">Hasta 2.000 productos</td>
-              <td className="px-6 py-4 text-emerald-400 uppercase tracking-tighter italic">Ilimitados*</td>
+              <td className="px-6 py-4">5.000 mensajes</td>
             </tr>
           </tbody>
         </table>
@@ -173,17 +174,21 @@ export const DataDeletion = ({ onClose }: { onClose: () => void }) => (
 );
 
 // --- VISTA: SOPORTE ---
-export const SupportPage = ({ onClose }: { onClose: () => void }) => (
+export const SupportPage = ({ onClose }: { onClose: () => void }) => {
+  const phone = siteConfig.company.phone
+  const formatted = phone.replace(/(\d{2})(\d)(\d{4})(\d{4})/, '+$1 $2 $3 $4')
+  return (
   <LegalLayout title="Soporte" subtitle="Centro de Asistencia" onClose={onClose}>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <a href="mailto:contacto@mitiendavirtual.cl" className="p-8 bg-blue-600/10 border border-blue-500/20 rounded-3xl text-center hover:scale-[1.02] transition-all">
         <h4 className="text-white font-bold text-xl uppercase tracking-tight">Canal de Email</h4>
         <p className="text-blue-400 mt-2 font-mono text-sm">contacto@mitiendavirtual.cl</p>
       </a>
-      <a href="https://wa.me/56954080571" target="_blank" className="p-8 bg-emerald-600/10 border border-emerald-500/20 rounded-3xl text-center hover:scale-[1.02] transition-all">
+      <a href={`https://wa.me/${phone}`} target="_blank" className="p-8 bg-emerald-600/10 border border-emerald-500/20 rounded-3xl text-center hover:scale-[1.02] transition-all">
         <h4 className="text-white font-bold text-xl uppercase tracking-tight">WhatsApp Directo</h4>
-        <p className="text-emerald-400 mt-2 font-mono text-sm">+56 9 5408 0571</p>
+        <p className="text-emerald-400 mt-2 font-mono text-sm">{formatted}</p>
       </a>
     </div>
   </LegalLayout>
-);
+  )
+}

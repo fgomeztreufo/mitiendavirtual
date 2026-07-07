@@ -43,8 +43,8 @@ const CHANNELS = [
 const PLANS = [
   { name: 'Semilla', emoji: '🌱', price: '0', products: '10', messages: '50', highlight: false, cta: 'Empezar Gratis' },
   { name: 'Básico', emoji: '⚡', price: '14.990', products: '50', messages: '500', highlight: true, cta: 'Elegir Básico' },
-  { name: 'Pro',    emoji: '💎', price: '44.990', products: '500', messages: 'Ilimitados*', highlight: false, cta: 'Próximamente', blocked: true },
-  { name: 'Full',   emoji: '🔥', price: '79.990', products: '2.000', messages: 'Ilimitados*', highlight: false, cta: 'Próximamente', blocked: true },
+  { name: 'Pro',    emoji: '💎', price: '44.990', products: '500', messages: '2.000', highlight: false, cta: 'Próximamente', blocked: true },
+  { name: 'Full',   emoji: '🔥', price: '79.990', products: '2.000', messages: '5.000', highlight: false, cta: 'Próximamente', blocked: true },
 ]
 
 /* ─── Component ─── */
