@@ -4,6 +4,7 @@ import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
 import { normalizePlanType, isInTrial, trialDaysLeft, effectivePlan } from '../utils/planUtils'
 import { FaInstagram, FaTelegram, FaWhatsapp, FaGoogle } from 'react-icons/fa'
+import { FaMeta } from 'react-icons/fa6'
 
 import { PrivacyPolicy, TermsOfService, DataDeletion, SupportPage } from './LegalPages'
 import FloatingWhatsAppButton from './FloatingWhatsAppButton'
@@ -453,6 +454,9 @@ export default function Dashboard({ session }: { session: Session }) {
               <button onClick={() => setLegalView('support')} className="hover:text-blue-300 transition-colors">Ayuda</button>
             </div>
             <p className="text-[10px] text-gray-600 font-mono tracking-widest uppercase">© 2026 • Santiago, CL</p>
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[10px] text-gray-400">
+              <FaMeta className="text-blue-400 text-sm" /> Meta Partner
+            </div>
           </div>
         </div>
 
