@@ -74,9 +74,9 @@ function App() {
 
       {/* RUTA 4: RESULTADO DE PAGO (Pública) */}
       {/* Esta es la URL que llamará Mercado Pago */}
-      <Route 
-        path="/payment-result" 
-        element={<PaymentResult />} 
+      <Route
+        path="/payment-result"
+        element={<PaymentResult session={session} />}
       />
       
       <Route

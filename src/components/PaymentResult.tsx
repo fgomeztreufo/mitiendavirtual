@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import confetti from 'canvas-confetti' // Opcional: si quieres fiesta, sino quita esta línea y el useEffect de abajo
+import confetti from 'canvas-confetti'
+import { supabase } from '../supabaseClient'
+import { Session } from '@supabase/supabase-js'
 
-export default function PaymentResult() {
+interface PaymentResultProps {
+  session: Session | null
+}
+
+export default function PaymentResult({ session }: PaymentResultProps) {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [status, setStatus] = useState<'success' | 'failure' | 'pending'>('pending')
@@ -54,8 +60,19 @@ export default function PaymentResult() {
                 <p className="text-gray-400 mb-8">
                     Tu suscripción ha sido activada correctamente. Ya puedes usar todo el poder de tu vendedor virtual.
                 </p>
-                <button 
-                    onClick={() => navigate('/dashboard?payment=success')}
+                <button
+                    onClick={async () => {
+                      if (session) {
+                        navigate('/dashboard?payment=success')
+                      } else {
+                        const { data } = await supabase.auth.getSession()
+                        if (data.session) {
+                          navigate('/dashboard?payment=success')
+                        } else {
+                          navigate('/login')
+                        }
+                      }
+                    }}
                     className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-green-500/20"
                 >
                     Ir al Dashboard
@@ -77,13 +94,20 @@ export default function PaymentResult() {
                     El pago no pudo procesarse. No te preocupes, no se ha realizado ningún cargo.
                 </p>
                 <div className="space-y-3">
-                    <button 
-                        onClick={() => navigate('/dashboard?activeTab=plans')}
+                    <button
+                        onClick={async () => {
+                          if (session) {
+                            navigate('/dashboard?activeTab=plans')
+                          } else {
+                            const { data } = await supabase.auth.getSession()
+                            navigate(data.session ? '/dashboard?activeTab=plans' : '/login')
+                          }
+                        }}
                         className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-xl transition-all"
                     >
                         Intentar de nuevo
                     </button>
-                    <button onClick={() => navigate('/dashboard')} className="text-sm text-gray-500 hover:text-gray-300">
+                    <button onClick={() => navigate(session ? '/dashboard' : '/login')} className="text-sm text-gray-500 hover:text-gray-300">
                         Volver al inicio
                     </button>
                 </div>
@@ -103,8 +127,15 @@ export default function PaymentResult() {
                 <p className="text-gray-400 mb-8">
                     Estamos esperando la confirmación de tu banco. Esto puede tardar unos minutos.
                 </p>
-                <button 
-                    onClick={() => navigate('/dashboard')}
+                <button
+                    onClick={async () => {
+                      if (session) {
+                        navigate('/dashboard')
+                      } else {
+                        const { data } = await supabase.auth.getSession()
+                        navigate(data.session ? '/dashboard' : '/login')
+                      }
+                    }}
                     className="w-full py-3 bg-yellow-600 hover:bg-yellow-500 text-black font-bold rounded-xl transition-all"
                 >
                     Volver y Esperar
