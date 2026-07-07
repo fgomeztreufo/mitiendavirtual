@@ -130,9 +130,9 @@ export default function NotificationsView({ session, profile }: any) {
     // Telegram
     if (channel === 'telegram') {
       const config = configs.find(c => c.channel_type === channel);
-      const isConnected = !!(config?.config?.telegram_chat_id || config?.config?.connected_at);
+      const isConnected = !!(config?.config?.telegram_chat_id || config?.config?.connected_at || config?.telegram_chat_id);
 
-      if (isConnected) {
+      if (isConnected || currentStatus) {
         const newActive = !currentStatus;
         try {
           const updatePayload: any = { is_active: newActive };
@@ -287,7 +287,7 @@ export default function NotificationsView({ session, profile }: any) {
           const meta = CHANNEL_META[channel];
 
           const connected = channel === 'telegram'
-            ? !!(config?.config?.telegram_chat_id || config?.config?.connected_at)
+            ? !!(config?.config?.telegram_chat_id || config?.config?.connected_at || config?.telegram_chat_id)
             : channel === 'push'
             ? !!(config?.config?.fcm_token || config?.config?.devices?.length)
             : active;
