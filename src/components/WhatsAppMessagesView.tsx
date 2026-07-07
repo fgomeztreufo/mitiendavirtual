@@ -161,12 +161,13 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
     }
   }, [messages, offset])
 
-  // Realtime subscription
-  useEffect(() => {
-    if (!selectedContact) return
+  const selectedContactRef = useRef<string | null>(null)
+  useEffect(() => { selectedContactRef.current = selectedContact }, [selectedContact])
 
+  // Realtime subscription — always active, not dependent on selected contact
+  useEffect(() => {
     const channel = supabase
-      .channel('wpp-messages-' + selectedContact)
+      .channel('wpp-inbox-' + session.user.id)
       .on(
         'postgres_changes',
         {
@@ -177,9 +178,12 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
         },
         (payload) => {
           const newMsg = payload.new as WppMessage
-          if (newMsg.contact_phone === selectedContact) {
-            setMessages(prev => [...prev, newMsg])
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+          if (newMsg.contact_phone === selectedContactRef.current) {
+            setMessages(prev => {
+              if (prev.some(m => m.id === newMsg.id)) return prev
+              return [...prev.filter(m => !m.id.startsWith('optimistic-')), newMsg]
+            })
+            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
           }
           fetchConversations()
         }
@@ -187,7 +191,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [selectedContact, session.user.id, fetchConversations])
+  }, [session.user.id, fetchConversations])
 
   const handleSend = useCallback(async () => {
     if (!selectedContact || !newMessage.trim() || sending) return
@@ -230,10 +234,6 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
         const data = await res.json().catch(() => ({}))
         throw new Error(data.message || 'Error al enviar mensaje.')
       }
-
-      setTimeout(() => {
-        setMessages(prev => prev.filter(m => m.id !== optimisticId))
-      }, 2000)
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'No se pudo enviar el mensaje.'
       setSendError(errorMsg)

@@ -42,8 +42,8 @@ export default function Dashboard({ session }: { session: Session }) {
   const [telegramMenuOpen, setTelegramMenuOpen] = useState(false)
   const [whatsappMenuOpen, setWhatsappMenuOpen] = useState(false)
   const [legalView, setLegalView] = useState<string | null>(null);
-  const [knowledgeOpen, setKnowledgeOpen] = useState(false);
-  const [configAgentsOpen, setConfigAgentsOpen] = useState(false);
+  const [knowledgeOpen, setKnowledgeOpen] = useState(true);
+  const [configAgentsOpen, setConfigAgentsOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Plan access helpers (evaluated after profile loads)
