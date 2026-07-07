@@ -1,0 +1,64 @@
+{
+  "name": "Influencer - 01 Generar Guion",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a1000001-0001-4000-8000-000000000001",
+      "name": "Trigger Sub-Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-600, 240]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o\",\n  \"temperature\": 0.85,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Eres {{ $json.persona_nombre }}, una influencer virtual chilena. Tu personalidad: {{ $json.persona_personalidad }}. Tono: {{ $json.persona_tono }}. Respondes SOLO con JSON valido.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Genera contenido para un post/reel de 30 segundos sobre {{ $json.tema || 'automatizacion de ventas con IA para pymes chilenas usando mitiendavirtual.cl' }}.\\n\\nHabla EN PRIMERA PERSONA como {{ $json.persona_nombre }}. Usa tu personalidad y tono. Menciona la plataforma mitiendavirtual.cl de forma natural.\\n\\nResponde con este JSON exacto:\\n{\\n  \\\"gancho\\\": \\\"(frase impactante, maximo 15 palabras, en primera persona)\\\",\\n  \\\"cuerpo\\\": \\\"(guion de 30 segundos, tono cercano, primera persona)\\\",\\n  \\\"cta\\\": \\\"(llamado a la accion mencionando mitiendavirtual.cl)\\\",\\n  \\\"prompt_visual\\\": \\\"(ENGLISH: detailed description of the influencer in a scene. Include: {{ $json.persona_look }}. Setting related to the content. Vertical 9:16, photorealistic, cinematic lighting, modern tech aesthetic, gold and black accents)\\\",\\n  \\\"hashtags\\\": \\\"(5-7 hashtags chilenos relevantes)\\\",\\n  \\\"titulo_post\\\": \\\"(titulo corto para la publicacion)\\\"\\n}\"\n    }\n  ]\n}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "a1000001-0001-4000-8000-000000000002",
+      "name": "LLM - Generar Guion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-360, 240],
+      "credentials": {
+        "openAiApi": {
+          "id": "CONFIGURAR",
+          "name": "OpenAI Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nlet content = raw.choices[0].message.content;\ncontent = content.replace(/```json\\n?/gi, '').replace(/```\\n?/g, '').trim();\nconst parsed = JSON.parse(content);\n\nconst textoCompleto = `${parsed.gancho}. ${parsed.cuerpo}. ${parsed.cta}`;\n\nreturn [{\n  json: {\n    gancho: parsed.gancho,\n    cuerpo: parsed.cuerpo,\n    cta: parsed.cta,\n    prompt_visual: parsed.prompt_visual,\n    hashtags: parsed.hashtags || '#pymescl #mitiendavirtual #marketingia #emprendedoreschile #ventasonline',\n    titulo_post: parsed.titulo_post || 'Automatiza tu negocio con IA',\n    texto_audio: textoCompleto,\n    texto_subtitulos: textoCompleto\n  }\n}];"
+      },
+      "id": "a1000001-0001-4000-8000-000000000003",
+      "name": "Parsear Guion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-120, 240]
+    }
+  ],
+  "connections": {
+    "Trigger Sub-Workflow": {
+      "main": [[{ "node": "LLM - Generar Guion", "type": "main", "index": 0 }]]
+    },
+    "LLM - Generar Guion": {
+      "main": [[{ "node": "Parsear Guion", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": [{ "name": "influencer-virtual" }]
+}

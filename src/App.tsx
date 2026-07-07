@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react'
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom' // <--- IMPORTANTE
-import { PrivacyPolicy, TermsOfService, DataDeletion } from './components/LegalPages';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { PrivacyPolicy, TermsOfService, DataDeletion } from './components/LegalPages'
 import { supabase } from './supabaseClient'
 import { Session } from '@supabase/supabase-js'
+import ErrorBoundary from './components/ErrorBoundary'
 
-// --- TUS COMPONENTES ---
 import IndexLanding from './components/Index'
 import Dashboard from './components/Dashboard'
 import LoginPage from './components/LoginPage'
-import PaymentResult from './components/PaymentResult' // <--- TU NUEVA PÁGINA
+import PaymentResult from './components/PaymentResult'
 
-import KnowlowerView from './components/KnowlowerView';
+import KnowlowerView from './components/KnowlowerView'
 
 function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -38,6 +38,7 @@ function App() {
   }
 
   return (
+    <ErrorBoundary>
     <Routes>
       
       {/* RUTA 1: LANDING PAGE (Inicio) */}
@@ -95,6 +96,7 @@ function App() {
       <Route path="*" element={<Navigate to="/" />} />
 
     </Routes>
+    </ErrorBoundary>
   )
 }
 

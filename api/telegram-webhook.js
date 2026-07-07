@@ -1,6 +1,5 @@
-// Thin Vercel proxy: forward Telegram updates to an n8n webhook.
-// Keep logic in n8n workflows (TLG Webhook Central, TLG Link Start, etc.).
-// Configure `N8N_WEBHOOK_URL` in Vercel to point to your n8n HTTP trigger.
+import crypto from 'crypto'
+
 const TELEGRAM_WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET || ''
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || ''
 
@@ -22,10 +21,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' })
   }
 
-  // Verify secret token from Telegram (if configured)
   if (TELEGRAM_WEBHOOK_SECRET) {
     const incoming = req.headers['x-telegram-bot-api-secret-token'] || ''
-    if (incoming !== TELEGRAM_WEBHOOK_SECRET) {
+    const bufA = Buffer.from(incoming)
+    const bufB = Buffer.from(TELEGRAM_WEBHOOK_SECRET)
+    if (bufA.length !== bufB.length || !crypto.timingSafeEqual(bufA, bufB)) {
       console.warn('Invalid Telegram secret token')
       return res.status(401).json({ message: 'Unauthorized' })
     }

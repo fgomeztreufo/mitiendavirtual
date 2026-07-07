@@ -1,6 +1,16 @@
-// Proxy incoming WhatsApp updates to n8n. n8n will handle business logic and linking.
+import crypto from 'crypto'
+
 const WHATSAPP_WEBHOOK_SECRET = process.env.WHATSAPP_WEBHOOK_SECRET || ''
+const WHATSAPP_APP_SECRET = process.env.WHATSAPP_APP_SECRET || ''
 const N8N_WEBHOOK_URL = process.env.N8N_WPP_INBOUND_URL || process.env.N8N_WEBHOOK_URL || ''
+
+function safeEqual(a, b) {
+  if (!a || !b) return false
+  const bufA = Buffer.from(a)
+  const bufB = Buffer.from(b)
+  if (bufA.length !== bufB.length) return false
+  return crypto.timingSafeEqual(bufA, bufB)
+}
 
 function parseJsonBody(req) {
   return new Promise((resolve, reject) => {
@@ -34,8 +44,7 @@ export default async function handler(req, res) {
     const challenge = q['hub.challenge'] || q['challenge'] || ''
     const verifyToken = q['hub.verify_token'] || q['verify_token'] || q['verifyToken'] || ''
 
-    if (mode === 'subscribe' && verifyToken && WHATSAPP_WEBHOOK_SECRET && verifyToken === WHATSAPP_WEBHOOK_SECRET) {
-      // Respond with challenge to verify webhook
+    if (mode === 'subscribe' && verifyToken && WHATSAPP_WEBHOOK_SECRET && safeEqual(verifyToken, WHATSAPP_WEBHOOK_SECRET)) {
       return res.status(200).send(challenge)
     }
     return res.status(403).send('Forbidden')
@@ -46,14 +55,24 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' })
   }
 
-  // Optional verification via a simple header (configurable)
-  if (WHATSAPP_WEBHOOK_SECRET) {
-    const incoming = req.headers['x-whatsapp-webhook-secret'] || req.headers['x-hub-signature'] || ''
-    if (incoming && incoming !== WHATSAPP_WEBHOOK_SECRET) {
-      console.warn('Invalid WhatsApp webhook secret')
+  // Verify Meta HMAC signature if app secret is configured
+  if (WHATSAPP_APP_SECRET) {
+    const signature = req.headers['x-hub-signature-256'] || ''
+    if (!signature) {
+      return res.status(401).json({ message: 'Missing signature' })
+    }
+    const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || '')
+    const expected = 'sha256=' + crypto.createHmac('sha256', WHATSAPP_APP_SECRET).update(rawBody).digest('hex')
+    if (!safeEqual(signature, expected)) {
+      console.warn('Invalid WhatsApp HMAC signature')
       return res.status(401).json({ message: 'Unauthorized' })
     }
-    // If a secret is configured but header not sent, continue (some setups don't send header)
+  } else if (WHATSAPP_WEBHOOK_SECRET) {
+    const incoming = req.headers['x-whatsapp-webhook-secret'] || ''
+    if (!incoming || !safeEqual(incoming, WHATSAPP_WEBHOOK_SECRET)) {
+      console.warn('Invalid or missing WhatsApp webhook secret')
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
   }
 
   let body

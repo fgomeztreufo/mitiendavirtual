@@ -117,7 +117,7 @@ export default function WhatsAppLeadsView({ onClose, userId }: Readonly<{ onClos
                 if (lead.status === 'nuevo') statusClass = 'bg-green-500/10 border-green-500/30 text-green-500';
                 else if (lead.status === 'completado') statusClass = 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500';
 
-                const phone = lead.whatsapp_contacto || lead.telegram_contacto || '';
+                const phone = lead.whatsapp_contacto || '';
                 const waLink = phone ? `https://wa.me/${phone.replace(/\D/g, '')}` : '#';
 
                 return (

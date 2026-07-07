@@ -46,7 +46,7 @@ export default function FaqsView({ session }: FaqsViewProps) {
       formData.append('faqs', file);
       
       // Se envía el user_id para que el Almacén Faqs lo registre correctamente
-      const webhookUrl = `https://webhook.mitiendavirtual.cl/webhook/carga-faqs?user_id=${session.user.id}`;
+      const webhookUrl = `${import.meta.env.VITE_WEBHOOK_BASE_URL || 'https://webhook.mitiendavirtual.cl'}/webhook/carga-faqs?user_id=${session.user.id}`;
 
       const response = await fetch(webhookUrl, { method: 'POST', body: formData });
 

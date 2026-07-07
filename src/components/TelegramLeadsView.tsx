@@ -133,9 +133,9 @@ export default function TelegramLeadsView({ onClose, userId }: Readonly<{ onClos
                     <div className="text-zinc-100 font-bold text-base flex items-center gap-2">
                       {lead.cliente_nombre || 'Prospecto sin nombre'}
                       <a
-                        href={`https://t.me/${lead.telegram_contacto?.replace(/\D/g, '')}`}
+                        href={`https://t.me/${(lead.telegram_contacto || '').replace(/^@/, '')}`}
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                         className="opacity-0 group-hover:opacity-100 text-emerald-500 hover:scale-110 transition-all"
                       >
                         <FiExternalLink />

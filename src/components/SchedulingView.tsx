@@ -89,6 +89,10 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   no_show: { label: 'No asistió', color: 'text-gray-400 bg-gray-500/10 border-gray-500/30' },
 }
 
+function escHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+}
+
 export default function SchedulingView({ session, profile, instance, onUpdate, goToPlans }: SchedulingViewProps) {
   const [subTab, setSubTab] = useState<SubTab>('services')
   const [loading, setLoading] = useState(true)
@@ -280,8 +284,8 @@ function ServicesPanel({ services, userId, onRefresh }: { services: Service[]; u
     const { value: formValues } = await Swal.fire({
       title: 'Editar Servicio',
       html: `
-        <input id="swal-name" class="swal2-input" placeholder="Nombre" value="${svc.name.replace(/"/g, '&quot;')}">
-        <input id="swal-desc" class="swal2-input" placeholder="Descripción (opcional)" value="${(svc.description || '').replace(/"/g, '&quot;')}">
+        <input id="swal-name" class="swal2-input" placeholder="Nombre" value="${escHtml(svc.name)}">
+        <input id="swal-desc" class="swal2-input" placeholder="Descripción (opcional)" value="${escHtml(svc.description || '')}">
         <input id="swal-duration" class="swal2-input" type="number" placeholder="Duración (minutos)" value="${svc.duration_minutes}">
         <input id="swal-price" class="swal2-input" type="number" placeholder="Precio CLP (opcional)" value="${svc.price ?? ''}">
         <input id="swal-buffer" class="swal2-input" type="number" placeholder="Buffer entre citas (min)" value="${svc.buffer_minutes}">
@@ -420,11 +424,11 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh }: {
     }
 
     const { value: selected } = await Swal.fire({
-      title: `Servicios de ${member.name}`,
+      title: `Servicios de ${escHtml(member.name)}`,
       html: activeServices.map(s => `
         <label class="flex items-center gap-2 p-2 text-sm text-left text-gray-200">
           <input type="checkbox" value="${s.id}" ${assigned.includes(s.id) ? 'checked' : ''} class="swal2-checkbox-custom">
-          ${s.name} (${s.duration_minutes} min)
+          ${escHtml(s.name)} (${s.duration_minutes} min)
         </label>
       `).join(''),
       background: '#1a1a1a', color: '#fff',
@@ -913,10 +917,10 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
         <input id="swal-client-name" class="swal2-input" placeholder="Nombre del cliente">
         <input id="swal-client-phone" class="swal2-input" placeholder="Teléfono (ej: 56912345678)">
         <select id="swal-service" class="swal2-select">
-          ${activeServices.map(s => `<option value="${s.id}">${s.name} (${s.duration_minutes} min)</option>`).join('')}
+          ${activeServices.map(s => `<option value="${s.id}">${escHtml(s.name)} (${s.duration_minutes} min)</option>`).join('')}
         </select>
         <select id="swal-staff" class="swal2-select">
-          ${activeStaff.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+          ${activeStaff.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join('')}
         </select>
         <input id="swal-date" class="swal2-input" type="date">
         <input id="swal-time" class="swal2-input" type="time">

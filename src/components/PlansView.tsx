@@ -96,7 +96,7 @@ export default function PlansView({ session, profile }: PlansViewProps) {
     
             const { user } = session;
     
-            const response = await fetch('https://webhook.mitiendavirtual.cl/webhook/create-payment', { 
+            const response = await fetch(`${import.meta.env.VITE_WEBHOOK_BASE_URL || 'https://webhook.mitiendavirtual.cl'}/webhook/create-payment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -108,10 +108,14 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                     })
             });
     
+            if (!response.ok) {
+                throw new Error(`Error del servidor (${response.status})`);
+            }
+
             const data = await response.json();
-    
+
             if (data && data.init_point) {
-                window.location.href = data.init_point; 
+                window.location.href = data.init_point;
             } else {
                 throw new Error('No se recibió el link de pago');
             }

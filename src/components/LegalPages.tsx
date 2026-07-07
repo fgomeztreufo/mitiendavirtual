@@ -73,13 +73,13 @@ export const TermsOfService = ({ onClose }: { onClose: () => void }) => (
             </tr>
             <tr className="hover:bg-blue-500/5 transition-colors text-xs bg-blue-500/5">
               <td className="px-6 py-4 font-bold text-white uppercase">Pro</td>
-              <td className="px-6 py-4">$39.990 CLP</td>
+              <td className="px-6 py-4">$44.990 CLP</td>
               <td className="px-6 py-4">Hasta 500 productos</td>
-              <td className="px-6 py-4 font-bold text-blue-400 italic">2.000 mensajes</td>
+              <td className="px-6 py-4 font-bold text-blue-400 italic">Ilimitados*</td>
             </tr>
             <tr className="hover:bg-white/5 transition-colors text-xs font-medium">
               <td className="px-6 py-4 font-bold text-white uppercase">Full</td>
-              <td className="px-6 py-4">$59.990 CLP</td>
+              <td className="px-6 py-4">$79.990 CLP</td>
               <td className="px-6 py-4">Hasta 2.000 productos</td>
               <td className="px-6 py-4 text-emerald-400 uppercase tracking-tighter italic">Ilimitados*</td>
             </tr>

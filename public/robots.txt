@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /payment-result
+Disallow: /api/
+
+Sitemap: https://mitiendavirtual.cl/sitemap.xml

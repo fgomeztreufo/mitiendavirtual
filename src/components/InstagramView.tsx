@@ -106,9 +106,12 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
       if (!result.isConfirmed) return
     }
     const clientId = '1397698478805069'
-    const redirectUri = 'https://webhook.mitiendavirtual.cl/webhook/instagram-auth'
+    const redirectUri = `${import.meta.env.VITE_WEBHOOK_BASE_URL || 'https://webhook.mitiendavirtual.cl'}/webhook/instagram-auth`
     const scopes = 'instagram_basic,instagram_manage_messages,pages_manage_metadata,pages_read_engagement,pages_show_list,business_management,instagram_manage_comments,pages_messaging'
-    window.location.href = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes}&response_type=code&state=${session.user.id}`
+    const nonce = crypto.randomUUID()
+    const statePayload = `${session.user.id}:${nonce}`
+    sessionStorage.setItem('ig_oauth_state', statePayload)
+    window.location.href = `https://www.facebook.com/v25.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes}&response_type=code&state=${encodeURIComponent(statePayload)}`
   }
 
   const handleDisconnectInstagram = async () => {
@@ -124,7 +127,7 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
     if (result.isConfirmed) {
       try {
         setSaving(true)
-        await fetch('https://webhook.mitiendavirtual.cl/webhook/instagram-unsuscribed', {
+        await fetch(`${import.meta.env.VITE_WEBHOOK_BASE_URL || 'https://webhook.mitiendavirtual.cl'}/webhook/instagram-unsuscribed`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: session.user.id, instagramId: instance.provider_id })

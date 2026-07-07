@@ -99,7 +99,7 @@ export default function CatalogView({ session, profile, onProductAdded,goToPlans
       data.append('brand', formData.brand);
       data.append('category', formData.category);
       data.append('foto', file);
-      const res = await fetch('https://webhook.mitiendavirtual.cl/webhook/subir-productos', {
+      const res = await fetch(`${import.meta.env.VITE_WEBHOOK_BASE_URL || 'https://webhook.mitiendavirtual.cl'}/webhook/subir-productos`, {
         method: 'POST',
         body: data
       });

@@ -1,0 +1,64 @@
+{
+  "name": "Influencer - 02 Generar Imagen (GPT Image)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a2000001-0001-4000-8000-000000000001",
+      "name": "Trigger Sub-Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-600, 240]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/generations",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-image-1\",\n  \"prompt\": \"{{ $json.prompt_visual }}\",\n  \"n\": 1,\n  \"size\": \"1024x1536\",\n  \"quality\": \"medium\"\n}",
+        "options": { "timeout": 90000 }
+      },
+      "id": "a2000001-0001-4000-8000-000000000002",
+      "name": "GPT Image - Generar Imagen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-360, 240],
+      "credentials": {
+        "openAiApi": {
+          "id": "CONFIGURAR",
+          "name": "OpenAI Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst imageData = response.data[0];\n\nlet imageUrl = imageData.url || '';\n\n// gpt-image-1 retorna b64_json por defecto si no hay url\nif (!imageUrl && imageData.b64_json) {\n  imageUrl = `data:image/png;base64,${imageData.b64_json}`;\n}\n\nreturn [{\n  json: {\n    image_url: imageUrl,\n    image_b64: imageData.b64_json || null,\n    revised_prompt: imageData.revised_prompt || '',\n    provider: 'gpt-image-1'\n  }\n}];"
+      },
+      "id": "a2000001-0001-4000-8000-000000000003",
+      "name": "Extraer URL Imagen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-120, 240]
+    }
+  ],
+  "connections": {
+    "Trigger Sub-Workflow": {
+      "main": [[{ "node": "GPT Image - Generar Imagen", "type": "main", "index": 0 }]]
+    },
+    "GPT Image - Generar Imagen": {
+      "main": [[{ "node": "Extraer URL Imagen", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": [{ "name": "influencer-virtual" }, { "name": "swappable-imagen" }]
+}

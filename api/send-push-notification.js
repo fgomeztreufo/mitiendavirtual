@@ -1,23 +1,35 @@
+import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { sendPushToUser } from './_lib/push-sender.js';
+
+function safeEqual(a, b) {
+  if (!a || !b) return false;
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
 
 const supabase = createClient(
   process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+const PUSH_ALLOWED_ORIGINS = ['https://mitiendavirtual.cl', 'https://www.mitiendavirtual.cl', 'http://localhost:5173'];
+
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin || '';
+  if (PUSH_ALLOWED_ORIGINS.includes(origin)) res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-push-secret');
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const pushSecret = req.headers['x-push-secret'];
   const bearerToken = (req.headers['authorization'] || '').replace('Bearer ', '');
   let authenticatedUserId = null;
 
-  if (pushSecret && pushSecret === process.env.PUSH_WEBHOOK_SECRET) {
+  if (pushSecret && safeEqual(pushSecret, process.env.PUSH_WEBHOOK_SECRET)) {
     // n8n / server-to-server auth
   } else if (bearerToken) {
     const { data: { user }, error } = await supabase.auth.getUser(bearerToken);
@@ -43,6 +55,6 @@ export default async function handler(req, res) {
     return res.status(200).json(result);
   } catch (err) {
     console.error('Push notification error:', err.message || err);
-    return res.status(500).json({ error: 'Internal server error', detail: err.message });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }

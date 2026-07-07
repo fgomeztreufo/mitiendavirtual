@@ -276,7 +276,7 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
         { label: 'Citas hoy', value: calendarStats.today },
         { label: 'Calendario', value: calendarConnected ? 'Vinculado' : 'Sin vincular' },
       ],
-      action: () => onNavigate('google-calendar'),
+      action: () => onNavigate('scheduling'),
       actionLabel: calendarConnected ? 'Configurar' : 'Conectar',
     },
   ];

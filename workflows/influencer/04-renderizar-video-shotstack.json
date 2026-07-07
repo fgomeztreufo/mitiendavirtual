@@ -1,0 +1,219 @@
+{
+  "name": "Influencer - 04 Renderizar Video (Shotstack)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a4000001-0001-4000-8000-000000000001",
+      "name": "Trigger Sub-Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-1040, 240]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst binary = $input.first().binary;\nconst ts = Date.now();\n\nreturn [{\n  json: {\n    image_url: input.image_url || '',\n    gancho: input.gancho || '',\n    cuerpo: input.cuerpo || '',\n    cta: input.cta || '',\n    hashtags: input.hashtags || '',\n    titulo_post: input.titulo_post || '',\n    supabase_url: input.supabase_url || '',\n    audio_filename: `influencer-audio-${ts}.mp3`,\n    has_binary_audio: !!(binary && binary.audio_data)\n  },\n  binary: binary || {}\n}];"
+      },
+      "id": "a4000001-0001-4000-8000-000000000020",
+      "name": "Preparar Nombre Audio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-800, 240]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.supabase_url || $env.SUPABASE_URL }}/storage/v1/object/influencer-assets/{{ $json.audio_filename }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "audio/mpeg" },
+            { "name": "x-upsert", "value": "true" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "audio_data",
+        "options": { "timeout": 30000 }
+      },
+      "id": "a4000001-0001-4000-8000-000000000021",
+      "name": "Subir Audio a Supabase Storage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-560, 240],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CONFIGURAR",
+          "name": "Supabase Service Role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Preparar Nombre Audio').first().json;\nconst supabaseUrl = input.supabase_url || process.env.SUPABASE_URL || 'CONFIGURAR_SUPABASE_URL';\nconst audioUrl = `${supabaseUrl}/storage/v1/object/public/influencer-assets/${input.audio_filename}`;\n\nreturn [{\n  json: {\n    image_url: input.image_url || '',\n    gancho: input.gancho || '',\n    cuerpo: input.cuerpo || '',\n    cta: input.cta || '',\n    hashtags: input.hashtags || '',\n    titulo_post: input.titulo_post || '',\n    audio_url: audioUrl\n  }\n}];"
+      },
+      "id": "a4000001-0001-4000-8000-000000000022",
+      "name": "Construir Audio URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-320, 240]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nconst audioUrl = input.audio_url;\nconst imageUrl = input.image_url;\nconst gancho = (input.gancho || '').replace(/\"/g, '\\\\\"').replace(/\\n/g, ' ');\nconst cuerpo = (input.cuerpo || '').replace(/\"/g, '\\\\\"').replace(/\\n/g, ' ');\nconst cta = (input.cta || '').replace(/\"/g, '\\\\\"').replace(/\\n/g, ' ');\n\nconst timeline = {\n  timeline: {\n    soundtrack: {\n      src: audioUrl,\n      effect: \"fadeOut\"\n    },\n    background: \"#000000\",\n    tracks: [\n      {\n        clips: [\n          {\n            asset: {\n              type: \"html\",\n              html: `<div style=\"font-family:Inter,sans-serif;color:#D4AF37;font-size:42px;font-weight:800;text-align:center;padding:40px;text-shadow:2px 2px 8px rgba(0,0,0,0.8)\">${gancho}</div>`,\n              width: 1080,\n              height: 400\n            },\n            start: 0,\n            length: 5,\n            position: \"center\",\n            offset: { y: -0.15 },\n            transition: { in: \"fadeSlowDown\", out: \"fade\" }\n          },\n          {\n            asset: {\n              type: \"html\",\n              html: `<div style=\"font-family:Inter,sans-serif;color:#FFFFFF;font-size:32px;text-align:center;padding:40px;line-height:1.4;text-shadow:2px 2px 8px rgba(0,0,0,0.8)\">${cuerpo}</div>`,\n              width: 1080,\n              height: 600\n            },\n            start: 5,\n            length: 18,\n            position: \"center\",\n            transition: { in: \"fade\", out: \"fade\" }\n          },\n          {\n            asset: {\n              type: \"html\",\n              html: `<div style=\"font-family:Inter,sans-serif;color:#D4AF37;font-size:38px;font-weight:700;text-align:center;padding:40px;text-shadow:2px 2px 8px rgba(0,0,0,0.8)\">${cta}</div>`,\n              width: 1080,\n              height: 400\n            },\n            start: 23,\n            length: 7,\n            position: \"center\",\n            offset: { y: 0.1 },\n            transition: { in: \"fadeSlowUp\", out: \"fade\" }\n          }\n        ]\n      },\n      {\n        clips: [\n          {\n            asset: {\n              type: \"html\",\n              html: `<div style=\"position:absolute;bottom:0;left:0;right:0;height:100%;background:linear-gradient(transparent 30%,rgba(0,0,0,0.7) 100%)\"></div>`,\n              width: 1080,\n              height: 1920\n            },\n            start: 0,\n            length: 30\n          }\n        ]\n      },\n      {\n        clips: [\n          {\n            asset: {\n              type: \"image\",\n              src: imageUrl\n            },\n            start: 0,\n            length: 30,\n            fit: \"cover\",\n            effect: \"zoomIn\"\n          }\n        ]\n      }\n    ]\n  },\n  output: {\n    format: \"mp4\",\n    fps: 30,\n    size: {\n      width: 1080,\n      height: 1920\n    }\n  }\n};\n\nreturn [{ json: timeline }];"
+      },
+      "id": "a4000001-0001-4000-8000-000000000002",
+      "name": "Construir Timeline Shotstack",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-80, 240]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.shotstack.io/stage/render",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "a4000001-0001-4000-8000-000000000003",
+      "name": "Shotstack - Enviar Render",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [160, 240],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CONFIGURAR",
+          "name": "Shotstack Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nreturn [{ json: { render_id: response.response.id, status: 'queued' } }];"
+      },
+      "id": "a4000001-0001-4000-8000-000000000004",
+      "name": "Extraer Render ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 240]
+    },
+    {
+      "parameters": { "amount": 20 },
+      "id": "a4000001-0001-4000-8000-000000000005",
+      "name": "Esperar Render",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [640, 240],
+      "webhookId": "shot-wait-render"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.shotstack.io/stage/render/{{ $json.render_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": { "timeout": 15000 }
+      },
+      "id": "a4000001-0001-4000-8000-000000000006",
+      "name": "Shotstack - Poll Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 240],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CONFIGURAR",
+          "name": "Shotstack Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst render = response.response;\n\nif (render.status === 'done') {\n  return [{\n    json: {\n      render_id: render.id,\n      status: 'done',\n      video_url: render.url,\n      needs_polling: false,\n      provider: 'shotstack'\n    }\n  }];\n}\n\nif (render.status === 'failed') {\n  throw new Error(`Shotstack render fallo: ${render.error || 'Error desconocido'}`);\n}\n\nreturn [{\n  json: {\n    render_id: render.id,\n    status: render.status,\n    video_url: null,\n    needs_polling: true\n  }\n}];"
+      },
+      "id": "a4000001-0001-4000-8000-000000000007",
+      "name": "Verificar Status Render",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 240]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "poll-check",
+              "leftValue": "={{ $json.needs_polling }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a4000001-0001-4000-8000-000000000008",
+      "name": "Necesita Polling?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1360, 240]
+    }
+  ],
+  "connections": {
+    "Trigger Sub-Workflow": {
+      "main": [[{ "node": "Preparar Nombre Audio", "type": "main", "index": 0 }]]
+    },
+    "Preparar Nombre Audio": {
+      "main": [[{ "node": "Subir Audio a Supabase Storage", "type": "main", "index": 0 }]]
+    },
+    "Subir Audio a Supabase Storage": {
+      "main": [[{ "node": "Construir Audio URL", "type": "main", "index": 0 }]]
+    },
+    "Construir Audio URL": {
+      "main": [[{ "node": "Construir Timeline Shotstack", "type": "main", "index": 0 }]]
+    },
+    "Construir Timeline Shotstack": {
+      "main": [[{ "node": "Shotstack - Enviar Render", "type": "main", "index": 0 }]]
+    },
+    "Shotstack - Enviar Render": {
+      "main": [[{ "node": "Extraer Render ID", "type": "main", "index": 0 }]]
+    },
+    "Extraer Render ID": {
+      "main": [[{ "node": "Esperar Render", "type": "main", "index": 0 }]]
+    },
+    "Esperar Render": {
+      "main": [[{ "node": "Shotstack - Poll Status", "type": "main", "index": 0 }]]
+    },
+    "Shotstack - Poll Status": {
+      "main": [[{ "node": "Verificar Status Render", "type": "main", "index": 0 }]]
+    },
+    "Verificar Status Render": {
+      "main": [[{ "node": "Necesita Polling?", "type": "main", "index": 0 }]]
+    },
+    "Necesita Polling?": {
+      "main": [
+        [{ "node": "Esperar Render", "type": "main", "index": 0 }],
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": [{ "name": "influencer-virtual" }, { "name": "swappable-video" }]
+}

@@ -1,0 +1,212 @@
+{
+  "name": "Influencer Virtual - Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "triggerAtHour": 9 }]
+        }
+      },
+      "id": "a0000001-0001-4000-8000-000000000001",
+      "name": "Cron Diario 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-1200, 240]
+    },
+    {
+      "parameters": {},
+      "id": "a0000001-0001-4000-8000-000000000015",
+      "name": "Trigger Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-1200, 440]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "persona_nombre",
+              "value": "Luna"
+            },
+            {
+              "name": "persona_personalidad",
+              "value": "Soy una emprendedora tech chilena, apasionada por ayudar a pymes a digitalizarse. Soy directa, cercana y uso humor chileno. Me encanta la tecnologia y la automatizacion. Hablo de tu a tu con mi audiencia."
+            },
+            {
+              "name": "persona_tono",
+              "value": "cercano y entusiasta, con modismos chilenos naturales"
+            },
+            {
+              "name": "persona_look",
+              "value": "Young Chilean woman, late 20s, warm brown skin, dark wavy hair, confident smile, modern tech-casual style, wearing minimalist gold jewelry. Always the SAME person with consistent facial features."
+            },
+            {
+              "name": "voice_id",
+              "value": "EXAVITQu4vr4xnSDxMaL"
+            },
+            {
+              "name": "tema",
+              "value": ""
+            },
+            {
+              "name": "ig_business_account_id",
+              "value": "CONFIGURAR_IG_ACCOUNT_ID"
+            },
+            {
+              "name": "ig_access_token",
+              "value": "CONFIGURAR_IG_ACCESS_TOKEN"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a0000001-0001-4000-8000-000000000002",
+      "name": "Persona Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-920, 240],
+      "notesInFlow": true,
+      "notes": "CONFIGURAR: Edita los valores de la persona aqui. Cambia nombre, personalidad, look, voice_id, y credenciales de redes sociales."
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": "={{ /*CONFIGURAR: ID del workflow 01-generar-guion*/ 'WORKFLOW_ID_GUION' }}"
+      },
+      "id": "a0000001-0001-4000-8000-000000000003",
+      "name": "Ejecutar: Generar Guion",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [-640, 240]
+    },
+    {
+      "parameters": {
+        "jsCode": "const guion = $input.first().json;\nconst persona = $('Persona Config').first().json;\n\nreturn [{\n  json: {\n    ...guion,\n    ...persona,\n    prompt_visual: guion.prompt_visual\n  }\n}];"
+      },
+      "id": "a0000001-0001-4000-8000-000000000004",
+      "name": "Merge Guion + Persona",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-400, 240]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": "={{ /*CONFIGURAR: ID del workflow 02-generar-imagen*/ 'WORKFLOW_ID_IMAGEN' }}"
+      },
+      "id": "a0000001-0001-4000-8000-000000000005",
+      "name": "Ejecutar: Generar Imagen",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [-160, 120]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": "={{ /*CONFIGURAR: ID del workflow 03-generar-voz*/ 'WORKFLOW_ID_VOZ' }}"
+      },
+      "id": "a0000001-0001-4000-8000-000000000006",
+      "name": "Ejecutar: Generar Voz",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [-160, 360]
+    },
+    {
+      "parameters": {
+        "jsCode": "const imagen = $('Ejecutar: Generar Imagen').first().json;\nconst vozBinary = $('Ejecutar: Generar Voz').first().binary;\nconst guion = $('Merge Guion + Persona').first().json;\n\nreturn [{\n  json: {\n    image_url: imagen.image_url,\n    gancho: guion.gancho,\n    cuerpo: guion.cuerpo,\n    cta: guion.cta,\n    hashtags: guion.hashtags,\n    titulo_post: guion.titulo_post\n  },\n  binary: vozBinary\n}];"
+      },
+      "id": "a0000001-0001-4000-8000-000000000007",
+      "name": "Merge Assets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [120, 240]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": "={{ /*CONFIGURAR: ID del workflow 04-renderizar-video*/ 'WORKFLOW_ID_VIDEO' }}"
+      },
+      "id": "a0000001-0001-4000-8000-000000000008",
+      "name": "Ejecutar: Renderizar Video",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [360, 240]
+    },
+    {
+      "parameters": {
+        "jsCode": "const video = $input.first().json;\nconst guion = $('Merge Guion + Persona').first().json;\nconst persona = $('Persona Config').first().json;\n\nreturn [{\n  json: {\n    video_url: video.video_url,\n    gancho: guion.gancho,\n    cuerpo: guion.cuerpo,\n    cta: guion.cta,\n    hashtags: guion.hashtags,\n    titulo_post: guion.titulo_post,\n    ig_business_account_id: persona.ig_business_account_id,\n    ig_access_token: persona.ig_access_token\n  }\n}];"
+      },
+      "id": "a0000001-0001-4000-8000-000000000009",
+      "name": "Preparar Publicacion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 240]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": "={{ /*CONFIGURAR: ID del workflow 05-publicar-contenido*/ 'WORKFLOW_ID_PUBLICAR' }}"
+      },
+      "id": "a0000001-0001-4000-8000-000000000010",
+      "name": "Ejecutar: Publicar",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [840, 240]
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $input.first().json;\nconst persona = $('Persona Config').first().json;\nconst guion = $('Merge Guion + Persona').first().json;\n\nreturn [{\n  json: {\n    timestamp: new Date().toISOString(),\n    influencer: persona.persona_nombre,\n    contenido: {\n      titulo: guion.titulo_post,\n      gancho: guion.gancho\n    },\n    publicacion: results\n  }\n}];"
+      },
+      "id": "a0000001-0001-4000-8000-000000000011",
+      "name": "Log Final",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 240]
+    }
+  ],
+  "connections": {
+    "Cron Diario 09:00": {
+      "main": [[{ "node": "Persona Config", "type": "main", "index": 0 }]]
+    },
+    "Trigger Manual": {
+      "main": [[{ "node": "Persona Config", "type": "main", "index": 0 }]]
+    },
+    "Persona Config": {
+      "main": [[{ "node": "Ejecutar: Generar Guion", "type": "main", "index": 0 }]]
+    },
+    "Ejecutar: Generar Guion": {
+      "main": [[{ "node": "Merge Guion + Persona", "type": "main", "index": 0 }]]
+    },
+    "Merge Guion + Persona": {
+      "main": [
+        [
+          { "node": "Ejecutar: Generar Imagen", "type": "main", "index": 0 },
+          { "node": "Ejecutar: Generar Voz", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Ejecutar: Generar Imagen": {
+      "main": [[{ "node": "Merge Assets", "type": "main", "index": 0 }]]
+    },
+    "Ejecutar: Generar Voz": {
+      "main": [[{ "node": "Merge Assets", "type": "main", "index": 0 }]]
+    },
+    "Merge Assets": {
+      "main": [[{ "node": "Ejecutar: Renderizar Video", "type": "main", "index": 0 }]]
+    },
+    "Ejecutar: Renderizar Video": {
+      "main": [[{ "node": "Preparar Publicacion", "type": "main", "index": 0 }]]
+    },
+    "Preparar Publicacion": {
+      "main": [[{ "node": "Ejecutar: Publicar", "type": "main", "index": 0 }]]
+    },
+    "Ejecutar: Publicar": {
+      "main": [[{ "node": "Log Final", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": [{ "name": "influencer-virtual" }]
+}

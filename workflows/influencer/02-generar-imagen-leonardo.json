@@ -1,0 +1,111 @@
+{
+  "name": "Influencer - 02 Generar Imagen (Leonardo AI)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a2100001-0001-4000-8000-000000000001",
+      "name": "Trigger Sub-Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-800, 240]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://cloud.leonardo.ai/api/rest/v1/generations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": \"{{ $json.prompt_visual }}\",\n  \"modelId\": \"e71a1c2f-4f80-4800-934f-2c68979d8cc8\",\n  \"width\": 576,\n  \"height\": 1024,\n  \"num_images\": 1,\n  \"guidance_scale\": 7,\n  \"presetStyle\": \"CINEMATIC\",\n  \"photoReal\": true,\n  \"photoRealVersion\": \"v2\",\n  \"alchemy\": true\n}",
+        "options": { "timeout": 60000 }
+      },
+      "id": "a2100001-0001-4000-8000-000000000002",
+      "name": "Leonardo AI - Iniciar Generacion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-560, 240],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CONFIGURAR",
+          "name": "Leonardo AI Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst generationId = response.sdGenerationJob.generationId;\nreturn [{ json: { generation_id: generationId } }];"
+      },
+      "id": "a2100001-0001-4000-8000-000000000003",
+      "name": "Extraer Generation ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-320, 240]
+    },
+    {
+      "parameters": { "amount": 15 },
+      "id": "a2100001-0001-4000-8000-000000000004",
+      "name": "Esperar Generacion",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [-80, 240],
+      "webhookId": "leo-wait-gen"
+    },
+    {
+      "parameters": {
+        "url": "=https://cloud.leonardo.ai/api/rest/v1/generations/{{ $json.generation_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": { "timeout": 15000 }
+      },
+      "id": "a2100001-0001-4000-8000-000000000005",
+      "name": "Leonardo AI - Obtener Resultado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [160, 240],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CONFIGURAR",
+          "name": "Leonardo AI Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst generation = response.generations_by_pk;\n\nif (generation.status !== 'COMPLETE') {\n  throw new Error(`Generacion aun en proceso: ${generation.status}`);\n}\n\nconst imageUrl = generation.generated_images[0].url;\n\nreturn [{\n  json: {\n    image_url: imageUrl,\n    revised_prompt: generation.prompt,\n    provider: 'leonardo-ai'\n  }\n}];"
+      },
+      "id": "a2100001-0001-4000-8000-000000000006",
+      "name": "Extraer URL Imagen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 240]
+    }
+  ],
+  "connections": {
+    "Trigger Sub-Workflow": {
+      "main": [[{ "node": "Leonardo AI - Iniciar Generacion", "type": "main", "index": 0 }]]
+    },
+    "Leonardo AI - Iniciar Generacion": {
+      "main": [[{ "node": "Extraer Generation ID", "type": "main", "index": 0 }]]
+    },
+    "Extraer Generation ID": {
+      "main": [[{ "node": "Esperar Generacion", "type": "main", "index": 0 }]]
+    },
+    "Esperar Generacion": {
+      "main": [[{ "node": "Leonardo AI - Obtener Resultado", "type": "main", "index": 0 }]]
+    },
+    "Leonardo AI - Obtener Resultado": {
+      "main": [[{ "node": "Extraer URL Imagen", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": [{ "name": "influencer-virtual" }, { "name": "swappable-imagen" }]
+}

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../supabaseClient'
 import { Auth } from '@supabase/auth-ui-react'
@@ -26,12 +26,6 @@ export default function LoginPage({ onBack }: LoginPageProps) {
   const smallStars = useMemo(() => generateStars(400), [])
   const mediumStars = useMemo(() => generateStars(100), [])
 
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log(event, session)
-    })
-    return () => subscription.unsubscribe()
-  }, [])
 
   return (
     <div className="min-h-screen w-full bg-[#050505] text-white flex flex-col relative overflow-x-hidden">

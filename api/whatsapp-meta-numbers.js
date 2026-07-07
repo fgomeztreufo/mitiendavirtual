@@ -3,8 +3,11 @@
 // Header: Authorization: Bearer <META_ACCESS_TOKEN>
 // Returns: array of { phone_number_id, waba_id, display_phone_number, verified_name, quality_rating }
 
+const META_ALLOWED_ORIGINS = ['https://mitiendavirtual.cl', 'https://www.mitiendavirtual.cl', 'http://localhost:5173'];
+
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*')
+  const origin = req.headers.origin || '';
+  if (META_ALLOWED_ORIGINS.includes(origin)) res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type')
   if (req.method === 'OPTIONS') return res.status(204).end()
   if (req.method !== 'GET') return res.status(405).json({ message: 'Method Not Allowed' })
@@ -85,6 +88,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ numbers, wabas })
   } catch (err) {
     console.error('whatsapp-meta-numbers error', err)
-    return res.status(500).json({ message: 'Internal error', error: err.message })
+    return res.status(500).json({ message: 'Internal error' })
   }
 }

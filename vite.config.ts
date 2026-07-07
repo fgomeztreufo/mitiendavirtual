@@ -19,5 +19,9 @@ export default defineConfig({
   // Aquí agregamos la configuración para evitar la advertencia en Vercel
   build: {
     chunkSizeWarningLimit: 1000,
+    minify: 'esbuild',
+  },
+  esbuild: {
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
   },
 });

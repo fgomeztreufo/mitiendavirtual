@@ -1,31 +1,35 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
 import { normalizePlanType, isInTrial, trialDaysLeft } from '../utils/planUtils'
 import { FaInstagram, FaTelegram, FaWhatsapp, FaGoogle } from 'react-icons/fa'
 
-// --- VISTAS DE APP ---
-import InstagramView from './InstagramView'
-import CatalogView from './CatalogView'
-import ProductsListView from './ProductsListView'
-import PlansView from './PlansView'
-import WhatsAppView from './WhatsAppView.tsx' 
-import FaqsView from './FaqsView' // <--- RE-INCORPORADO
-
-// --- VISTAS LEGALES ---
 import { PrivacyPolicy, TermsOfService, DataDeletion, SupportPage } from './LegalPages'
-import KnowlowerView from './KnowlowerView.tsx'
-import LeadsView from './Leads.tsx'
-import TelegramLeadsView from './TelegramLeadsView'
 import FloatingWhatsAppButton from './FloatingWhatsAppButton'
-import NotificationsView from './NotificationsView.tsx'
-import TelegramView from './TelegramView'
-import AgentsDashboard from './AgentsDashboard'
-import SchedulingView from './SchedulingView'
-import ServicesView from './ServicesView'
-import WhatsAppMessagesView from './WhatsAppMessagesView'
-import WhatsAppLeadsView from './WhatsAppLeadsView'
+
+const InstagramView = lazy(() => import('./InstagramView'))
+const CatalogView = lazy(() => import('./CatalogView'))
+const ProductsListView = lazy(() => import('./ProductsListView'))
+const PlansView = lazy(() => import('./PlansView'))
+const WhatsAppView = lazy(() => import('./WhatsAppView'))
+const FaqsView = lazy(() => import('./FaqsView'))
+const KnowlowerView = lazy(() => import('./KnowlowerView'))
+const LeadsView = lazy(() => import('./Leads'))
+const TelegramLeadsView = lazy(() => import('./TelegramLeadsView'))
+const NotificationsView = lazy(() => import('./NotificationsView'))
+const TelegramView = lazy(() => import('./TelegramView'))
+const AgentsDashboard = lazy(() => import('./AgentsDashboard'))
+const SchedulingView = lazy(() => import('./SchedulingView'))
+const ServicesView = lazy(() => import('./ServicesView'))
+const WhatsAppMessagesView = lazy(() => import('./WhatsAppMessagesView'))
+const WhatsAppLeadsView = lazy(() => import('./WhatsAppLeadsView'))
+
+const LazyFallback = () => (
+  <div className="flex items-center justify-center h-64">
+    <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+  </div>
+)
 
 export default function Dashboard({ session }: { session: Session }) {
   const [profile, setProfile] = useState<any>(null)
@@ -84,21 +88,28 @@ export default function Dashboard({ session }: { session: Session }) {
   useEffect(() => { getData() }, [])
 
   async function getData() {
-    // 1. Obtener Perfil (Límites, Plan, Nombre) - Mantenemos .single() como pediste
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single()
-    if (profileData) setProfile(profileData)
+    try {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single()
+      if (profileData) setProfile(profileData)
 
-    // 2. Obtener Instancia (Conexión Instagram, Prompt) - Mantenemos .single()
-    const { data: instanceData } = await supabase
-      .from('instances')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .single()
-    if (instanceData) setInstance(instanceData)
+      const { data: instanceData } = await supabase
+        .from('instances')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single()
+      if (instanceData) setInstance(instanceData)
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de conexión',
+        text: 'No se pudieron cargar tus datos. Intenta recargar la página.',
+        confirmButtonColor: '#6366f1',
+      })
+    }
   }
 
   return (
@@ -351,6 +362,7 @@ export default function Dashboard({ session }: { session: Session }) {
         {/* Subtle glow in content area */}
         <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-gradient-to-bl from-indigo-600/5 to-transparent blur-[100px] pointer-events-none" />
         <div className="max-w-5xl mx-auto p-4 sm:p-6 md:p-10 w-full flex-grow relative z-10">
+          <Suspense fallback={<LazyFallback />}>
             {activeTab === 'home' && (
               <AgentsDashboard
                 session={session}
@@ -425,6 +437,7 @@ export default function Dashboard({ session }: { session: Session }) {
               />
             )}
             {activeTab === 'plans' && <PlansView session={session} profile={profile} />}
+          </Suspense>
         </div>
         
         {/* Footer compacto */}

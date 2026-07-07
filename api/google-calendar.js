@@ -27,11 +27,19 @@ function signState(payload) {
   return `${data}.${sig}`
 }
 
+function safeEqual(a, b) {
+  if (!a || !b) return false
+  const bufA = Buffer.from(a)
+  const bufB = Buffer.from(b)
+  if (bufA.length !== bufB.length) return false
+  return crypto.timingSafeEqual(bufA, bufB)
+}
+
 function verifyState(state) {
   const [data, sig] = state.split('.')
   if (!data || !sig) return null
   const expected = crypto.createHmac('sha256', SUPABASE_ENCRYPT_KEY).update(data).digest('base64url')
-  if (sig !== expected) return null
+  if (!safeEqual(sig, expected)) return null
   try {
     const payload = JSON.parse(Buffer.from(data, 'base64url').toString())
     if (Date.now() - payload.ts > 10 * 60 * 1000) return null
@@ -206,7 +214,7 @@ async function handleAssign(req, res) {
 async function handleSync(req, res) {
   const secret = req.headers['x-gcal-sync-secret']
   const auth = (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
-  if (secret !== GCAL_SYNC_SECRET && auth !== SUPABASE_SERVICE_ROLE_KEY) {
+  if (!safeEqual(secret, GCAL_SYNC_SECRET) && !safeEqual(auth, SUPABASE_SERVICE_ROLE_KEY)) {
     return res.status(401).json({ message: 'No autorizado' })
   }
 
@@ -289,7 +297,7 @@ async function handleSync(req, res) {
 async function handleEvent(req, res) {
   const secret = req.headers['x-gcal-sync-secret']
   const auth = (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
-  if (secret !== GCAL_SYNC_SECRET && auth !== SUPABASE_SERVICE_ROLE_KEY) {
+  if (!safeEqual(secret, GCAL_SYNC_SECRET) && !safeEqual(auth, SUPABASE_SERVICE_ROLE_KEY)) {
     return res.status(401).json({ message: 'No autorizado' })
   }
 
