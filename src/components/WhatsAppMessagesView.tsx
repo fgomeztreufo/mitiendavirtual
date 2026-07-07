@@ -37,6 +37,8 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
   const [hasActiveConnection, setHasActiveConnection] = useState<boolean | null>(null)
+  const [blockedPhones, setBlockedPhones] = useState<Set<string>>(new Set())
+  const [togglingBlock, setTogglingBlock] = useState(false)
 
   const fetchConversations = useCallback(async () => {
     setLoading(true)
@@ -74,6 +76,38 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
   }, [session.user.id])
 
   useEffect(() => { fetchConversations() }, [fetchConversations])
+
+  const fetchBlocked = useCallback(async () => {
+    const { data } = await supabase
+      .from('blocked_contacts')
+      .select('contact_phone')
+      .eq('user_id', session.user.id)
+      .eq('channel', 'whatsapp')
+    setBlockedPhones(new Set((data || []).map(r => r.contact_phone)))
+  }, [session.user.id])
+
+  useEffect(() => { fetchBlocked() }, [fetchBlocked])
+
+  const toggleBlock = useCallback(async (phone: string) => {
+    setTogglingBlock(true)
+    try {
+      const isBlocked = blockedPhones.has(phone)
+      if (isBlocked) {
+        await supabase
+          .from('blocked_contacts')
+          .delete()
+          .eq('user_id', session.user.id)
+          .eq('contact_phone', phone)
+          .eq('channel', 'whatsapp')
+      } else {
+        await supabase
+          .from('blocked_contacts')
+          .insert({ user_id: session.user.id, contact_phone: phone, channel: 'whatsapp', reason: 'Bloqueado desde bandeja' })
+      }
+      await fetchBlocked()
+    } catch (_) { /* silent */ }
+    finally { setTogglingBlock(false) }
+  }, [session.user.id, blockedPhones, fetchBlocked])
 
   useEffect(() => {
     async function checkConnection() {
@@ -272,8 +306,15 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-white font-mono">{conv.contact_phone}</span>
-                    <span className="text-[10px] text-gray-600">{formatDate(conv.last_at)}</span>
+                    <span className={`text-sm font-mono ${blockedPhones.has(conv.contact_phone) ? 'text-red-400/60 line-through' : 'text-white'}`}>
+                      {conv.contact_phone}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {blockedPhones.has(conv.contact_phone) && (
+                        <span className="text-[8px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full font-bold">BLOQ</span>
+                      )}
+                      <span className="text-[10px] text-gray-600">{formatDate(conv.last_at)}</span>
+                    </div>
                   </div>
                   <p className="text-xs text-gray-500 mt-1 truncate">{conv.last_message}</p>
                 </button>
@@ -289,18 +330,35 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
               </div>
             ) : (
               <>
-                <div className="p-4 border-b border-white/5 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#25D366]/20 flex items-center justify-center">
-                    <span className="text-xs text-[#25D366] font-bold">
-                      {selectedContact.slice(-2)}
-                    </span>
+                <div className="p-4 border-b border-white/5 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${blockedPhones.has(selectedContact) ? 'bg-red-500/20' : 'bg-[#25D366]/20'}`}>
+                      <span className={`text-xs font-bold ${blockedPhones.has(selectedContact) ? 'text-red-400' : 'text-[#25D366]'}`}>
+                        {selectedContact.slice(-2)}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm text-white font-mono">{selectedContact}</p>
+                      <p className={`text-[10px] uppercase tracking-widest ${
+                        blockedPhones.has(selectedContact) ? 'text-red-400' :
+                        hasActiveConnection ? 'text-[#25D366]' : 'text-gray-500'
+                      }`}>
+                        {blockedPhones.has(selectedContact) ? 'Bloqueado' :
+                         hasActiveConnection ? 'Conectado' : 'Sin conexión activa'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-white font-mono">{selectedContact}</p>
-                    <p className={`text-[10px] uppercase tracking-widest ${hasActiveConnection ? 'text-[#25D366]' : 'text-gray-500'}`}>
-                      {hasActiveConnection ? 'Conectado' : 'Sin conexión activa'}
-                    </p>
-                  </div>
+                  <button
+                    onClick={() => toggleBlock(selectedContact)}
+                    disabled={togglingBlock}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all disabled:opacity-50 ${
+                      blockedPhones.has(selectedContact)
+                        ? 'bg-white/5 text-gray-400 hover:bg-white/10'
+                        : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
+                    }`}
+                  >
+                    {togglingBlock ? '...' : blockedPhones.has(selectedContact) ? 'Desbloquear' : 'Bloquear'}
+                  </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -344,7 +402,11 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
                 </div>
 
                 <div className="p-3 border-t border-white/5">
-                  {!hasActiveConnection ? (
+                  {blockedPhones.has(selectedContact) ? (
+                    <p className="text-[10px] text-red-400/60 italic text-center">
+                      Este contacto está bloqueado. Tu asistente IA no responderá sus mensajes.
+                    </p>
+                  ) : !hasActiveConnection ? (
                     <p className="text-[10px] text-gray-600 italic text-center">
                       Conecta tu WhatsApp Business para enviar mensajes.
                     </p>
