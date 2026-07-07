@@ -156,6 +156,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
         const sorted = [...data].reverse()
         if (fromOffset === 0) {
           setMessages(sorted)
+          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'auto' }), 80)
         } else {
           setMessages(prev => [...sorted, ...prev])
         }
@@ -173,12 +174,6 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
       fetchMessages(selectedContact, 0)
     }
   }, [selectedContact, fetchMessages])
-
-  useEffect(() => {
-    if (messages.length > 0 && offset <= PAGE_SIZE) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }
-  }, [messages, offset])
 
   const selectedContactRef = useRef<string | null>(null)
   useEffect(() => { selectedContactRef.current = selectedContact }, [selectedContact])
