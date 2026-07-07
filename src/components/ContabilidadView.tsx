@@ -52,7 +52,7 @@ export default function ContabilidadView({ session }: ContabilidadViewProps) {
       const { data, error } = await supabase
         .from('payment_logs')
         .select('*')
-        .eq('status', 'approved')
+        .in('status', ['approved', 'refunded', 'charged_back'])
         .gte('created_at', start)
         .lte('created_at', end)
         .order('created_at', { ascending: true })
@@ -67,11 +67,16 @@ export default function ContabilidadView({ session }: ContabilidadViewProps) {
     }
   }
 
-  const totalBruto = payments.reduce((s, p) => s + (p.amount || 0), 0)
+  const approved = payments.filter(p => p.status === 'approved')
+  const refunded = payments.filter(p => p.status === 'refunded' || p.status === 'charged_back')
+
+  const brutApproved = approved.reduce((s, p) => s + (p.amount || 0), 0)
+  const brutRefunded = refunded.reduce((s, p) => s + (p.amount || 0), 0)
+  const totalBruto = brutApproved - brutRefunded
   const totalNeto = Math.round(totalBruto / 1.19)
   const totalIVA = totalBruto - totalNeto
-  const totalMPFee = payments.reduce((s, p) => s + (p.mp_fee || 0), 0)
-  const totalNetReceived = payments.reduce((s, p) => s + (p.net_amount || p.amount || 0), 0)
+  const totalMPFee = approved.reduce((s, p) => s + (p.mp_fee || 0), 0)
+  const totalNetReceived = approved.reduce((s, p) => s + (p.net_amount || p.amount || 0), 0) - brutRefunded
   const count = payments.length
 
   function downloadCSV() {
@@ -88,21 +93,26 @@ export default function ContabilidadView({ session }: ContabilidadViewProps) {
     lines.push(`IVA Débito Fiscal (19%),${totalIVA}`)
     lines.push(`Comisión Mercado Pago,${totalMPFee}`)
     lines.push(`Neto Recibido,${Math.round(totalNetReceived)}`)
-    lines.push(`Cantidad de Transacciones,${count}`)
+    lines.push(`Reversas,${brutRefunded}`)
+    lines.push(`Cantidad de Transacciones Aprobadas,${approved.length}`)
+    lines.push(`Cantidad de Reversas,${refunded.length}`)
     lines.push('')
     lines.push('DETALLE DE TRANSACCIONES')
-    lines.push('Fecha,Plan,Email Pagador,Método Pago,Tipo Pago,Bruto,Neto,IVA,Comisión MP,Recibido,Payment ID')
+    lines.push('Fecha,Plan,Status,Email Pagador,Método Pago,Tipo Pago,Bruto,Neto,IVA,Comisión MP,Recibido,Payment ID')
 
     for (const p of payments) {
-      const bruto = p.amount || 0
-      const neto = Math.round(bruto / 1.19)
+      const isRefund = p.status === 'refunded' || p.status === 'charged_back'
+      const sign = isRefund ? -1 : 1
+      const bruto = (p.amount || 0) * sign
+      const neto = Math.round(Math.abs(bruto) / 1.19) * sign
       const iva = bruto - neto
-      const fee = p.mp_fee || 0
-      const received = p.net_amount || bruto
+      const fee = (p.mp_fee || 0) * sign
+      const received = (p.net_amount || p.amount || 0) * sign
       const date = p.payment_date ? new Date(p.payment_date).toLocaleDateString('es-CL') : ''
       lines.push([
         date,
         p.plan_name || '',
+        isRefund ? 'REVERSA' : 'APROBADO',
         p.payer_email || '',
         p.payment_method || '',
         p.payment_type || '',
@@ -175,13 +185,14 @@ export default function ContabilidadView({ session }: ContabilidadViewProps) {
         </div>
 
         {/* Tarjetas resumen */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
-          <SummaryCard label="Ventas Brutas" value={formatCLP(totalBruto)} sub="con IVA" color="text-white" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 mb-8">
+          <SummaryCard label="Ventas Brutas" value={formatCLP(totalBruto)} sub="con IVA (neto)" color="text-white" />
           <SummaryCard label="Ventas Netas" value={formatCLP(totalNeto)} sub="sin IVA" color="text-emerald-400" />
           <SummaryCard label="IVA Débito" value={formatCLP(totalIVA)} sub="19%" color="text-amber-400" />
           <SummaryCard label="Comisión MP" value={formatCLP(totalMPFee)} sub="Mercado Pago" color="text-red-400" />
           <SummaryCard label="Neto Recibido" value={formatCLP(Math.round(totalNetReceived))} sub="en tu cuenta" color="text-blue-400" />
-          <SummaryCard label="Transacciones" value={String(count)} sub="boletas" color="text-purple-400" />
+          <SummaryCard label="Reversas" value={refunded.length > 0 ? `-${formatCLP(brutRefunded)}` : '$0'} sub={`${refunded.length} reversa${refunded.length !== 1 ? 's' : ''}`} color="text-orange-400" />
+          <SummaryCard label="Transacciones" value={String(approved.length)} sub={refunded.length > 0 ? `+ ${refunded.length} reversas` : 'aprobadas'} color="text-purple-400" />
         </div>
 
         {/* Tabla detalle */}
@@ -191,6 +202,7 @@ export default function ContabilidadView({ session }: ContabilidadViewProps) {
               <tr className="bg-zinc-900/60 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">
                 <th className="px-4 sm:px-6 py-4 border-b border-zinc-800/50">Fecha</th>
                 <th className="px-4 sm:px-6 py-4 border-b border-zinc-800/50">Plan</th>
+                <th className="px-4 sm:px-6 py-4 border-b border-zinc-800/50">Status</th>
                 <th className="px-4 sm:px-6 py-4 border-b border-zinc-800/50">Email Pagador</th>
                 <th className="px-4 sm:px-6 py-4 border-b border-zinc-800/50">Método</th>
                 <th className="px-4 sm:px-6 py-4 border-b border-zinc-800/50 text-right">Bruto</th>
@@ -203,26 +215,37 @@ export default function ContabilidadView({ session }: ContabilidadViewProps) {
             <tbody className="divide-y divide-zinc-800/30">
               {payments.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={9} className="px-6 py-16 text-center">
+                  <td colSpan={10} className="px-6 py-16 text-center">
                     <p className="text-zinc-700 text-lg italic font-light">Sin transacciones en {MONTHS[month]} {year}</p>
                   </td>
                 </tr>
               )}
               {payments.map((p) => {
-                const bruto = p.amount || 0
-                const neto = Math.round(bruto / 1.19)
+                const isRefund = p.status === 'refunded' || p.status === 'charged_back'
+                const sign = isRefund ? -1 : 1
+                const bruto = (p.amount || 0) * sign
+                const neto = Math.round(Math.abs(bruto) / 1.19) * sign
                 const iva = bruto - neto
-                const fee = p.mp_fee || 0
-                const received = p.net_amount || bruto
+                const fee = (p.mp_fee || 0) * sign
+                const received = ((p.net_amount || p.amount || 0)) * sign
                 const date = p.payment_date
                   ? new Date(p.payment_date).toLocaleDateString('es-CL')
                   : new Date(p.created_at).toLocaleDateString('es-CL')
 
                 return (
-                  <tr key={p.id} className="group hover:bg-white/[0.01] transition-all">
-                    <td className="px-4 sm:px-6 py-4 text-zinc-300 text-sm">{date}</td>
+                  <tr key={p.id} className={`group transition-all ${isRefund ? 'bg-red-950/20 hover:bg-red-950/30' : 'hover:bg-white/[0.01]'}`}>
+                    <td className="px-4 sm:px-6 py-4 text-sm">
+                      <span className={isRefund ? 'text-red-400' : 'text-zinc-300'}>{date}</span>
+                      {isRefund && <span className="text-red-500 text-[10px] font-bold block uppercase tracking-wider">Reversa</span>}
+                    </td>
                     <td className="px-4 sm:px-6 py-4">
-                      <span className="text-zinc-200 text-sm font-semibold capitalize">{p.plan_name}</span>
+                      <span className={`text-sm font-semibold capitalize ${isRefund ? 'text-red-400 line-through' : 'text-zinc-200'}`}>{p.plan_name}</span>
+                    </td>
+                    <td className="px-4 sm:px-6 py-4">
+                      {isRefund
+                        ? <span className="px-2 py-0.5 bg-red-500/20 text-red-400 text-[10px] font-bold rounded-full uppercase">Reversa</span>
+                        : <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-full uppercase">Aprobado</span>
+                      }
                     </td>
                     <td className="px-4 sm:px-6 py-4 text-zinc-500 text-xs font-mono">{p.payer_email || '-'}</td>
                     <td className="px-4 sm:px-6 py-4">
@@ -231,11 +254,11 @@ export default function ContabilidadView({ session }: ContabilidadViewProps) {
                         <span className="text-zinc-600 text-[10px] block">{p.payment_type}</span>
                       )}
                     </td>
-                    <td className="px-4 sm:px-6 py-4 text-right text-zinc-200 text-sm font-mono">{formatCLP(bruto)}</td>
-                    <td className="px-4 sm:px-6 py-4 text-right text-emerald-400 text-sm font-mono">{formatCLP(neto)}</td>
-                    <td className="px-4 sm:px-6 py-4 text-right text-amber-400/80 text-sm font-mono">{formatCLP(iva)}</td>
-                    <td className="px-4 sm:px-6 py-4 text-right text-red-400/80 text-sm font-mono">{formatCLP(fee)}</td>
-                    <td className="px-4 sm:px-6 py-4 text-right text-blue-400 text-sm font-mono">{formatCLP(Math.round(received))}</td>
+                    <td className={`px-4 sm:px-6 py-4 text-right text-sm font-mono ${isRefund ? 'text-red-400' : 'text-zinc-200'}`}>{formatCLP(bruto)}</td>
+                    <td className={`px-4 sm:px-6 py-4 text-right text-sm font-mono ${isRefund ? 'text-red-400' : 'text-emerald-400'}`}>{formatCLP(neto)}</td>
+                    <td className={`px-4 sm:px-6 py-4 text-right text-sm font-mono ${isRefund ? 'text-red-400' : 'text-amber-400/80'}`}>{formatCLP(iva)}</td>
+                    <td className={`px-4 sm:px-6 py-4 text-right text-sm font-mono ${isRefund ? 'text-red-400' : 'text-red-400/80'}`}>{formatCLP(fee)}</td>
+                    <td className={`px-4 sm:px-6 py-4 text-right text-sm font-mono ${isRefund ? 'text-red-400' : 'text-blue-400'}`}>{formatCLP(Math.round(received))}</td>
                   </tr>
                 )
               })}
@@ -243,7 +266,7 @@ export default function ContabilidadView({ session }: ContabilidadViewProps) {
             {payments.length > 0 && (
               <tfoot>
                 <tr className="bg-zinc-900/40 text-sm font-bold">
-                  <td colSpan={4} className="px-4 sm:px-6 py-4 text-zinc-400 uppercase text-xs tracking-widest">Totales</td>
+                  <td colSpan={5} className="px-4 sm:px-6 py-4 text-zinc-400 uppercase text-xs tracking-widest">Totales</td>
                   <td className="px-4 sm:px-6 py-4 text-right text-white font-mono">{formatCLP(totalBruto)}</td>
                   <td className="px-4 sm:px-6 py-4 text-right text-emerald-400 font-mono">{formatCLP(totalNeto)}</td>
                   <td className="px-4 sm:px-6 py-4 text-right text-amber-400 font-mono">{formatCLP(totalIVA)}</td>

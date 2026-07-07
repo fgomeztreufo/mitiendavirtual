@@ -1,0 +1,7 @@
+-- Migration: document refund handling support
+-- No DB changes needed — payment_logs.status column already supports any text value.
+-- n8n workflow "notificacion mercado pago" now handles:
+--   - status 'approved'     → INSERT into payment_logs (existing flow)
+--   - status 'refunded'     → UPDATE payment_logs SET status='refunded' WHERE payment_id=X
+--   - status 'charged_back' → UPDATE payment_logs SET status='charged_back' WHERE payment_id=X
+-- ContabilidadView shows refunds in red with negative amounts and deducts from totals.

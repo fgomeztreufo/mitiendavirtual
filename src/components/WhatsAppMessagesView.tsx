@@ -12,6 +12,7 @@ interface WppMessage {
   direction: 'inbound' | 'outbound'
   body: string
   created_at: string
+  sender_type?: 'ai' | 'human'
 }
 
 interface Conversation {
@@ -32,6 +33,10 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
   const [hasMore, setHasMore] = useState(false)
   const [offset, setOffset] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [newMessage, setNewMessage] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState<string | null>(null)
+  const [hasActiveConnection, setHasActiveConnection] = useState<boolean | null>(null)
 
   const fetchConversations = useCallback(async () => {
     setLoading(true)
@@ -70,12 +75,25 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
 
   useEffect(() => { fetchConversations() }, [fetchConversations])
 
+  useEffect(() => {
+    async function checkConnection() {
+      const { data } = await supabase
+        .from('whatsapp_connections')
+        .select('id, active')
+        .eq('user_id', session.user.id)
+        .eq('active', true)
+        .limit(1)
+      setHasActiveConnection(data != null && data.length > 0)
+    }
+    checkConnection()
+  }, [session.user.id])
+
   const fetchMessages = useCallback(async (contact: string, fromOffset = 0) => {
     setLoadingMessages(true)
     try {
       const { data, error } = await supabase
         .from('whatsapp_messages')
-        .select('id, contact_phone, direction, body, created_at')
+        .select('id, contact_phone, direction, body, created_at, sender_type')
         .eq('user_id', session.user.id)
         .eq('contact_phone', contact)
         .order('created_at', { ascending: false })
@@ -137,6 +155,61 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
     return () => { supabase.removeChannel(channel) }
   }, [selectedContact, session.user.id, fetchConversations])
 
+  const handleSend = useCallback(async () => {
+    if (!selectedContact || !newMessage.trim() || sending) return
+
+    const messageText = newMessage.trim()
+    setSending(true)
+    setSendError(null)
+
+    const optimisticId = 'optimistic-' + Date.now()
+    const optimisticMsg: WppMessage = {
+      id: optimisticId,
+      contact_phone: selectedContact,
+      direction: 'outbound',
+      body: messageText,
+      created_at: new Date().toISOString(),
+      sender_type: 'human'
+    }
+    setMessages(prev => [...prev, optimisticMsg])
+    setNewMessage('')
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+
+    try {
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      if (!currentSession) {
+        setSendError('Sesión expirada.')
+        setMessages(prev => prev.filter(m => m.id !== optimisticId))
+        return
+      }
+
+      const res = await fetch('/api/whatsapp-send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentSession.access_token}`
+        },
+        body: JSON.stringify({ contact_phone: selectedContact, message: messageText })
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.message || 'Error al enviar mensaje.')
+      }
+
+      setTimeout(() => {
+        setMessages(prev => prev.filter(m => m.id !== optimisticId))
+      }, 2000)
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'No se pudo enviar el mensaje.'
+      setSendError(errorMsg)
+      setMessages(prev => prev.filter(m => m.id !== optimisticId))
+      setNewMessage(messageText)
+    } finally {
+      setSending(false)
+    }
+  }, [selectedContact, newMessage, sending])
+
   const formatTime = (iso: string) => {
     const d = new Date(iso)
     return d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })
@@ -166,8 +239,8 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
   return (
     <div className="max-w-5xl mx-auto space-y-4 p-4">
       <div>
-        <h2 className="text-2xl font-bold text-white">Visor WhatsApp</h2>
-        <p className="text-gray-400 text-sm">Audita las conversaciones de tu asistente IA en tiempo real (solo lectura).</p>
+        <h2 className="text-2xl font-bold text-white">Bandeja WhatsApp</h2>
+        <p className="text-gray-400 text-sm">Gestiona las conversaciones de tu asistente IA en tiempo real.</p>
       </div>
 
       {conversations.length === 0 ? (
@@ -224,7 +297,9 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
                   </div>
                   <div>
                     <p className="text-sm text-white font-mono">{selectedContact}</p>
-                    <p className="text-[10px] text-gray-500 uppercase tracking-widest">Solo lectura</p>
+                    <p className={`text-[10px] uppercase tracking-widest ${hasActiveConnection ? 'text-[#25D366]' : 'text-gray-500'}`}>
+                      {hasActiveConnection ? 'Conectado' : 'Sin conexión activa'}
+                    </p>
                   </div>
                 </div>
 
@@ -257,7 +332,9 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
                         <div className={`flex items-center gap-1 mt-1 ${msg.direction === 'outbound' ? 'justify-end' : ''}`}>
                           <span className="text-[10px] text-gray-600">{formatTime(msg.created_at)}</span>
                           {msg.direction === 'outbound' && (
-                            <span className="text-[10px] text-[#25D366]/60">IA</span>
+                            <span className={`text-[10px] ${msg.sender_type === 'human' ? 'text-blue-400/60' : 'text-[#25D366]/60'}`}>
+                              {msg.sender_type === 'human' ? 'Tú' : 'IA'}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -266,10 +343,51 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
                   <div ref={messagesEndRef} />
                 </div>
 
-                <div className="p-3 border-t border-white/5 text-center">
-                  <p className="text-[10px] text-gray-600 italic">
-                    Este visor es de solo lectura. No puedes enviar mensajes desde aquí.
-                  </p>
+                <div className="p-3 border-t border-white/5">
+                  {!hasActiveConnection ? (
+                    <p className="text-[10px] text-gray-600 italic text-center">
+                      Conecta tu WhatsApp Business para enviar mensajes.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {sendError && (
+                        <p className="text-[10px] text-red-400 px-1">{sendError}</p>
+                      )}
+                      <div className="flex items-end gap-2">
+                        <textarea
+                          value={newMessage}
+                          onChange={(e) => { setNewMessage(e.target.value); setSendError(null) }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault()
+                              handleSend()
+                            }
+                          }}
+                          placeholder="Escribe un mensaje..."
+                          disabled={sending}
+                          rows={1}
+                          className="flex-1 bg-white/[0.06] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 resize-none focus:outline-none focus:border-[#25D366]/50 disabled:opacity-40"
+                          style={{ maxHeight: '120px' }}
+                        />
+                        <button
+                          onClick={handleSend}
+                          disabled={sending || !newMessage.trim()}
+                          className="p-2.5 rounded-xl bg-[#25D366] hover:bg-[#1da851] disabled:opacity-30 disabled:cursor-not-allowed transition-all flex-shrink-0"
+                        >
+                          {sending ? (
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-gray-700 italic text-center">
+                        Al responder, tu asistente IA seguirá activo en esta conversación.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </>
             )}

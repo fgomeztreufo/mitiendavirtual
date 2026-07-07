@@ -246,7 +246,7 @@ export default function Dashboard({ session }: { session: Session }) {
                 onClick={() => { setActiveTab('wpp-leads'); setLegalView(null) }}
               />
               <SidebarSubBtn
-                label="Visor Mensajes"
+                label="Bandeja"
                 active={activeTab === 'wpp-messages'}
                 onClick={() => { setActiveTab('wpp-messages'); setLegalView(null) }}
               />
