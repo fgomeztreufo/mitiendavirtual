@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { PrivacyPolicy, TermsOfService, DataDeletion } from './components/LegalPages'
 import { supabase } from './supabaseClient'
@@ -10,7 +10,7 @@ import Dashboard from './components/Dashboard'
 import LoginPage from './components/LoginPage'
 import PaymentResult from './components/PaymentResult'
 
-import KnowlowerView from './components/KnowlowerView'
+const KnowlowerView = lazy(() => import('./components/KnowlowerView'))
 
 function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -89,7 +89,7 @@ function App() {
 />
 <Route
         path="/knowlower"
-        element={<KnowlowerView onClose={() => navigate('/')} userId={session?.user?.id || ''} />}
+        element={<Suspense fallback={<div className="min-h-screen bg-black text-white flex items-center justify-center">Cargando...</div>}><KnowlowerView onClose={() => navigate('/')} userId={session?.user?.id || ''} /></Suspense>}
       />
 
       {/* RUTA COMODÍN (Debe ser la última) */}
