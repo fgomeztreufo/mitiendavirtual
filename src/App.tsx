@@ -15,19 +15,22 @@ const KnowlowerView = lazy(() => import('./components/KnowlowerView'))
 function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
-  const navigate = useNavigate() // Hook para movernos programáticamente
+  const [passwordRecovery, setPasswordRecovery] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
-    // 1. Verificamos sesión al cargar
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setLoading(false)
     })
 
-    // 2. Escuchamos cambios (Login/Logout)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
       setLoading(false)
+      if (event === 'PASSWORD_RECOVERY') {
+        setPasswordRecovery(true)
+        navigate('/login?view=update_password')
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -51,12 +54,13 @@ function App() {
       />
 
       {/* RUTA 2: LOGIN */}
-      <Route 
-        path="/login" 
+      <Route
+        path="/login"
         element={
-          // Si ya hay sesión, no lo dejamos entrar al login, lo mandamos al dashboard
-          session ? <Navigate to="/dashboard" /> : <LoginPage onBack={() => navigate('/')} />
-        } 
+          passwordRecovery
+            ? <LoginPage onBack={() => navigate('/')} initialView="update_password" onPasswordUpdated={() => { setPasswordRecovery(false); navigate('/dashboard') }} />
+            : session ? <Navigate to="/dashboard" /> : <LoginPage onBack={() => navigate('/')} />
+        }
       />
 
       {/* RUTA 3: DASHBOARD (Protegida) */}

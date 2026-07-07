@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../supabaseClient'
 import { Auth } from '@supabase/auth-ui-react'
@@ -8,6 +8,8 @@ import { TermsOfService, PrivacyPolicy, DataDeletion } from './LegalPages'
 
 interface LoginPageProps {
   onBack: () => void;
+  initialView?: 'sign_in' | 'update_password';
+  onPasswordUpdated?: () => void;
 }
 
 const generateStars = (count: number) => {
@@ -21,11 +23,18 @@ const generateStars = (count: number) => {
   return stars.slice(0, -1)
 }
 
-export default function LoginPage({ onBack }: LoginPageProps) {
+export default function LoginPage({ onBack, initialView, onPasswordUpdated }: LoginPageProps) {
   const [legalView, setLegalView] = useState<string | null>(null)
   const smallStars = useMemo(() => generateStars(400), [])
   const mediumStars = useMemo(() => generateStars(100), [])
 
+  useEffect(() => {
+    if (initialView !== 'update_password' || !onPasswordUpdated) return
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'USER_UPDATED') onPasswordUpdated()
+    })
+    return () => subscription.unsubscribe()
+  }, [initialView, onPasswordUpdated])
 
   return (
     <div className="min-h-screen w-full bg-[#050505] text-white flex flex-col relative overflow-x-hidden">
@@ -91,6 +100,7 @@ export default function LoginPage({ onBack }: LoginPageProps) {
         >
           <Auth
             supabaseClient={supabase}
+            view={initialView || 'sign_in'}
             appearance={{
               theme: ThemeSupa,
               variables: {
