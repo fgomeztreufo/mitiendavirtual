@@ -350,12 +350,12 @@ function ServicesPanel({ services, userId, onRefresh }: { services: Service[]; u
           {services.map(svc => (
             <div key={svc.id} className={`rounded-xl border p-4 ${svc.is_active ? 'bg-white/[0.03] border-white/5' : 'bg-gray-900/40 border-white/5 opacity-60'}`}>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 overflow-hidden">
                   <p className="text-sm font-bold text-white truncate">{svc.name}</p>
-                  {svc.description && <p className="text-xs text-gray-500 truncate">{svc.description}</p>}
+                  {svc.description && <p className="text-xs text-gray-500 line-clamp-2">{svc.description}</p>}
                   <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[10px] text-gray-500 uppercase tracking-wider">
                     <span>{svc.duration_minutes} min</span>
-                    {svc.price && <span>${svc.price.toLocaleString('es-CL')}</span>}
+                    {svc.price != null && <span>${svc.price.toLocaleString('es-CL')}</span>}
                     {svc.buffer_minutes > 0 && <span>+{svc.buffer_minutes} min descanso</span>}
                   </div>
                 </div>
