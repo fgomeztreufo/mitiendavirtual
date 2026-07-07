@@ -1,5 +1,5 @@
 import Swal from 'sweetalert2'
-import { planDisplayToCode, normalizePlanType, isInTrial, trialDaysLeft } from '../utils/planUtils'
+import { planDisplayToCode, normalizePlanType, isInTrial, trialDaysLeft, effectivePlan } from '../utils/planUtils'
 import { Session } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
 import type { IconType } from 'react-icons'
@@ -160,7 +160,8 @@ export default function PlansView({ session, profile }: PlansViewProps) {
 
               {!loading && plans.map((plan: any) => {
                 const code = plan.code
-                const isCurrent = normalizePlanType(profile?.plan_type) === code
+                const activePlan = effectivePlan(profile)
+                const isCurrent = activePlan === code
                 const price = Number(plan.monthly_price_clp || 0)
                 const channels = PLAN_CHANNELS[code] || []
 
@@ -193,7 +194,13 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                     ? 'border border-orange-500 text-orange-400 bg-transparent hover:bg-orange-500/10'
                     : 'bg-blue-600 hover:bg-blue-500 text-white'
 
-                const label = isCurrent
+                const inTrial = isInTrial(profile)
+                const isTrialPlan = inTrial && activePlan === code
+                const isRealPlan = !inTrial && isCurrent
+
+                const label = isTrialPlan
+                    ? 'Plan en Prueba'
+                    : isRealPlan
                     ? 'Tu Plan Actual'
                     : code === 'free'
                     ? 'Plan Base'
@@ -206,8 +213,8 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                 const planEmoji = code === 'free' ? '🌱' : code === 'pro' ? '💎' : code === 'full' ? '🔥' : '⚡'
 
                 const mostPopular = 'basic'
-                const buttonLabelComputed = isCurrent ? 'Tu Plan Actual' : label
-                const isButtonDisabled = isCurrent || (code === 'free')
+                const buttonLabelComputed = label
+                const isButtonDisabled = isRealPlan || (code === 'free' && !inTrial)
 
                 return (
                     <div key={code} className={`${bgClass} ${borderClass} ${baseClasses}`}>

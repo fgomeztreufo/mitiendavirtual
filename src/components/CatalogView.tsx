@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import Swal from 'sweetalert2'
-import { normalizePlanType, planCodeToDisplay } from '../utils/planUtils'
+import { effectivePlan, planCodeToDisplay } from '../utils/planUtils'
 import { supabase } from '../supabaseClient'
 
 export default function CatalogView({ session, profile, onProductAdded,goToPlans }: any) {
@@ -10,7 +10,7 @@ export default function CatalogView({ session, profile, onProductAdded,goToPlans
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   // --- LÓGICA DE RESTRICCIÓN ---
-  const planCode = normalizePlanType(profile?.plan_type);
+  const planCode = effectivePlan(profile);
   const currentCount = Number(profile?.current_products) || 0;
 
   const [planLimit, setPlanLimit] = useState<number | null>(null)

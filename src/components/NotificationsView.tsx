@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import Swal from 'sweetalert2';
-import { normalizePlanType, PLAN_PERMISSIONS } from '../utils/planUtils';
+import { effectivePlan, PLAN_PERMISSIONS } from '../utils/planUtils';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 
 export default function NotificationsView({ session, profile }: any) {
   const [configs, setConfigs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const planCode = normalizePlanType(profile?.plan_type);
+  const planCode = effectivePlan(profile);
   const allowedChannels = PLAN_PERMISSIONS[planCode] || ['email'];
   const botUsername = ((import.meta as any).env?.VITE_TELEGRAM_BOT_USERNAME) || 'Mitiendavirtualclbot';
   const API_BASE = '/api';

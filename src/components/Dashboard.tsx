@@ -2,7 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react'
 import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
-import { normalizePlanType, isInTrial, trialDaysLeft } from '../utils/planUtils'
+import { normalizePlanType, isInTrial, trialDaysLeft, effectivePlan } from '../utils/planUtils'
 import { FaInstagram, FaTelegram, FaWhatsapp, FaGoogle } from 'react-icons/fa'
 
 import { PrivacyPolicy, TermsOfService, DataDeletion, SupportPage } from './LegalPages'
@@ -45,7 +45,7 @@ export default function Dashboard({ session }: { session: Session }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Plan access helpers (evaluated after profile loads)
-  const planCode = normalizePlanType(profile?.plan_type)
+  const planCode = effectivePlan(profile)
   const hasTelegram = ['basic', 'pro', 'full'].includes(planCode)
   const hasWhatsApp = ['pro', 'full'].includes(planCode)
   const hasScheduling = planCode === 'full'

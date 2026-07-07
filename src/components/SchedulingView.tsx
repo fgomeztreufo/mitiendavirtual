@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../supabaseClient'
 import Swal from 'sweetalert2'
-import { normalizePlanType } from '../utils/planUtils'
+import { effectivePlan } from '../utils/planUtils'
 import { Session } from '@supabase/supabase-js'
 
 interface SchedulingViewProps {
@@ -105,7 +105,7 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
   const [overrides, setOverrides] = useState<ScheduleOverride[]>([])
   const [selectedStaffId, setSelectedStaffId] = useState<string>('')
 
-  const planCode = normalizePlanType(profile?.plan_type)
+  const planCode = effectivePlan(profile)
   const userId = session?.user?.id
 
   const loadAll = useCallback(async () => {

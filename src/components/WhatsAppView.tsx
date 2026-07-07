@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../supabaseClient'
 import Swal from 'sweetalert2'
-import { normalizePlanType } from '../utils/planUtils'
+import { effectivePlan } from '../utils/planUtils'
 import AgentPersonalitySection from './AgentPersonalitySection'
 import { Session } from '@supabase/supabase-js'
 
@@ -43,7 +43,7 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
   const [sdkStatus, setSdkStatus] = useState<SdkStatus>('loading-sdk')
   const [errorMsg, setErrorMsg] = useState('')
 
-  const planCode = normalizePlanType(profile?.plan_type)
+  const planCode = effectivePlan(profile)
   const [planMessagesLimit, setPlanMessagesLimit] = useState<number | null>(null)
 
   const fetchConnection = useCallback(async () => {

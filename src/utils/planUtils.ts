@@ -67,3 +67,10 @@ export function trialDaysLeft(profile: any): number {
   const diff = new Date(profile.trial_ends_at).getTime() - Date.now();
   return Math.max(0, Math.ceil(diff / 86400000));
 }
+
+export function effectivePlan(profile: any): string {
+  if (isInTrial(profile) && profile?.trial_plan) {
+    return normalizePlanType(profile.trial_plan);
+  }
+  return normalizePlanType(profile?.plan_type);
+}

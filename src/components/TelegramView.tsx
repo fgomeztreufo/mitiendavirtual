@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import Swal from 'sweetalert2'
-import { normalizePlanType } from '../utils/planUtils'
+import { effectivePlan } from '../utils/planUtils'
 import AgentPersonalitySection from './AgentPersonalitySection'
 import { Session } from '@supabase/supabase-js'
 
@@ -34,7 +34,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   const [platformDeepLink, setPlatformDeepLink] = useState<string | null>(null)
   const [platformLinkLoading, setPlatformLinkLoading] = useState(false)
 
-  const planCode = normalizePlanType(profile?.plan_type)
+  const planCode = effectivePlan(profile)
   const [planMessagesLimit, setPlanMessagesLimit] = useState<number | null>(null)
 
   const [botChoice, setBotChoice] = useState<'platform' | 'own'>('platform')
