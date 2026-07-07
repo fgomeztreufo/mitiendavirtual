@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { siteConfig } from '../config/siteConfig';
+import { supabase } from '../supabaseClient';
 
 // --- LAYOUT BASE (MODO OVERLAY) ---
 const LegalLayout = ({ title, subtitle, children, onClose }: { title: string, subtitle: string, children: React.ReactNode, onClose: () => void }) => (
@@ -40,9 +41,15 @@ const LegalLayout = ({ title, subtitle, children, onClose }: { title: string, su
 );
 
 // --- VISTA: TÉRMINOS DE SERVICIO (CON PLANES Y PROTECCIÓN LEGAL) ---
-export const TermsOfService = ({ onClose }: { onClose: () => void }) => (
+export const TermsOfService = ({ onClose }: { onClose: () => void }) => {
+  const [plans, setPlans] = useState<any[]>([])
+  useEffect(() => {
+    supabase.from('plans').select('*').order('monthly_price_clp', { ascending: true })
+      .then(({ data }) => { if (data) setPlans(data) })
+  }, [])
+  return (
   <LegalLayout title="Términos" subtitle="Contrato de Servicio y Uso" onClose={onClose}>
-    
+
     <section className="space-y-6">
       <h3 className="text-white font-bold text-xl border-l-4 border-blue-500 pl-4 uppercase tracking-tight">1. Estructura de Planes y Precios</h3>
       <p className="text-sm">
@@ -60,30 +67,14 @@ export const TermsOfService = ({ onClose }: { onClose: () => void }) => (
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            <tr className="hover:bg-white/5 transition-colors text-xs">
-              <td className="px-6 py-4 font-bold text-white uppercase">Free</td>
-              <td className="px-6 py-4">$0 (Costo Cero)</td>
-              <td className="px-6 py-4">Hasta 10 productos</td>
-              <td className="px-6 py-4">50 mensajes</td>
-            </tr>
-            <tr className="hover:bg-white/5 transition-colors text-xs">
-              <td className="px-6 py-4 font-bold text-white uppercase">Basic</td>
-              <td className="px-6 py-4">$14.990 CLP</td>
-              <td className="px-6 py-4">Hasta 50 productos</td>
-              <td className="px-6 py-4">500 mensajes</td>
-            </tr>
-            <tr className="hover:bg-blue-500/5 transition-colors text-xs bg-blue-500/5">
-              <td className="px-6 py-4 font-bold text-white uppercase">Pro</td>
-              <td className="px-6 py-4">$44.990 CLP</td>
-              <td className="px-6 py-4">Hasta 500 productos</td>
-              <td className="px-6 py-4">2.000 mensajes</td>
-            </tr>
-            <tr className="hover:bg-white/5 transition-colors text-xs font-medium">
-              <td className="px-6 py-4 font-bold text-white uppercase">Full</td>
-              <td className="px-6 py-4">$79.990 CLP</td>
-              <td className="px-6 py-4">Hasta 2.000 productos</td>
-              <td className="px-6 py-4">5.000 mensajes</td>
-            </tr>
+            {plans.map((plan) => (
+              <tr key={plan.code} className="hover:bg-white/5 transition-colors text-xs">
+                <td className="px-6 py-4 font-bold text-white uppercase">{plan.display_name}</td>
+                <td className="px-6 py-4">{plan.monthly_price_clp === 0 ? '$0 (Costo Cero)' : `$${Number(plan.monthly_price_clp).toLocaleString('es-CL')} CLP`}</td>
+                <td className="px-6 py-4">Hasta {Number(plan.products_limit).toLocaleString('es-CL')} productos</td>
+                <td className="px-6 py-4">{plan.messages_limit ? `${Number(plan.messages_limit).toLocaleString('es-CL')} mensajes` : 'Ilimitados*'}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -126,7 +117,8 @@ export const TermsOfService = ({ onClose }: { onClose: () => void }) => (
       Titular Responsable: FELIPE ALONSO GOMEZ TREUFO • RUT: 16.208.020-2 • Domicilio Comercial: Los Castaños 1088, Puente Alto, Santiago, Chile.
     </footer>
   </LegalLayout>
-);
+  )
+}
 
 // --- VISTA: PRIVACIDAD (CUMPLIMIENTO LEY 19.628) ---
 export const PrivacyPolicy = ({ onClose }: { onClose: () => void }) => (

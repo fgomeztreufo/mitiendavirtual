@@ -1,3 +1,5 @@
+import { FaMeta } from 'react-icons/fa6'
+
 interface FooterProps {
   onNavigate: (tab: string) => void;
   variant?: 'index' | 'login' | 'dashboard' | 'transparent';
@@ -93,6 +95,9 @@ export default function Footer({ onNavigate, variant = 'transparent' }: FooterPr
         <p className="text-xs text-gray-500 tracking-[0.4em] uppercase font-mono">
           © 2026 MiTiendaVirtual • Santiago, CL
         </p>
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[10px] text-gray-400">
+          <FaMeta className="text-blue-400 text-sm" /> Meta Partner
+        </div>
       </div>
     </footer>
   );
