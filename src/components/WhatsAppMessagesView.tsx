@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
 
@@ -39,6 +39,25 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
   const [hasActiveConnection, setHasActiveConnection] = useState<boolean | null>(null)
   const [blockedPhones, setBlockedPhones] = useState<Set<string>>(new Set())
   const [togglingBlock, setTogglingBlock] = useState(false)
+  const [daysFilter, setDaysFilter] = useState(3)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const filteredConversations = useMemo(() => {
+    let filtered = conversations
+    if (daysFilter > 0) {
+      const cutoff = new Date()
+      cutoff.setDate(cutoff.getDate() - daysFilter)
+      cutoff.setHours(0, 0, 0, 0)
+      filtered = filtered.filter(c => new Date(c.last_at) >= cutoff)
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase()
+      filtered = filtered.filter(c =>
+        c.contact_phone.includes(q) || c.last_message.toLowerCase().includes(q)
+      )
+    }
+    return filtered
+  }, [conversations, daysFilter, searchQuery])
 
   const fetchConversations = useCallback(async () => {
     setLoading(true)
@@ -284,20 +303,51 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
               <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
             </svg>
           </div>
-          <p className="text-gray-500 text-sm">Aún no hay conversaciones registradas.</p>
-          <p className="text-gray-600 text-xs">Los mensajes aparecerán aquí cuando tu bot comience a responder.</p>
+          <p className="text-gray-500 text-sm">Aun no hay conversaciones registradas.</p>
+          <p className="text-gray-600 text-xs">Los mensajes apareceran aqui cuando tu bot comience a responder.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-[600px]">
           {/* Conversation List */}
           <div className="md:col-span-4 rounded-2xl bg-white/[0.03] border border-white/5 overflow-hidden flex flex-col">
-            <div className="p-3 border-b border-white/5">
-              <p className="text-[10px] font-bold tracking-[0.18em] text-gray-500 uppercase text-center">
-                Conversaciones ({conversations.length})
-              </p>
+            <div className="p-3 border-b border-white/5 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold tracking-[0.18em] text-gray-500 uppercase">
+                  Conversaciones ({filteredConversations.length})
+                </p>
+                <select
+                  value={daysFilter}
+                  onChange={(e) => setDaysFilter(Number(e.target.value))}
+                  className="bg-white/[0.06] border border-white/10 rounded-lg px-2 py-1 text-[10px] text-gray-400 focus:outline-none focus:border-[#25D366]/50 cursor-pointer"
+                >
+                  <option value={1}>Hoy</option>
+                  <option value={3}>3 dias</option>
+                  <option value={7}>7 dias</option>
+                  <option value={30}>30 dias</option>
+                  <option value={0}>Todos</option>
+                </select>
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar por telefono o mensaje..."
+                className="w-full bg-white/[0.06] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-[#25D366]/50"
+              />
             </div>
             <div className="flex-1 overflow-y-auto">
-              {conversations.map(conv => (
+              {filteredConversations.length === 0 ? (
+                <div className="p-6 text-center">
+                  <p className="text-xs text-gray-600">No hay conversaciones en este periodo.</p>
+                  <button
+                    onClick={() => { setDaysFilter(0); setSearchQuery('') }}
+                    className="text-[10px] text-[#25D366] mt-2 hover:underline"
+                  >
+                    Ver todas
+                  </button>
+                </div>
+              ) : null}
+              {filteredConversations.map(conv => (
                 <button
                   key={conv.contact_phone}
                   onClick={() => setSelectedContact(conv.contact_phone)}
