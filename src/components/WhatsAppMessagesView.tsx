@@ -22,6 +22,9 @@ interface Conversation {
   unread: number
 }
 
+type DateItem = { type: 'date'; label: string }
+type MsgItem = { type: 'message'; msg: WppMessage }
+
 const PAGE_SIZE = 50
 
 export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewProps) {
@@ -32,8 +35,6 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [hasMore, setHasMore] = useState(false)
   const [offset, setOffset] = useState(0)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const shouldScrollToBottom = useRef(false)
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
@@ -42,7 +43,31 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
   const [togglingBlock, setTogglingBlock] = useState(false)
   const [daysFilter, setDaysFilter] = useState(3)
   const [searchQuery, setSearchQuery] = useState('')
+  const [realtimeStatus, setRealtimeStatus] = useState<'connecting' | 'connected' | 'fallback'>('connecting')
 
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const shouldScrollToBottom = useRef(false)
+  const selectedContactRef = useRef<string | null>(null)
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const lastMessageTimeRef = useRef<string | null>(null)
+
+  useEffect(() => { selectedContactRef.current = selectedContact }, [selectedContact])
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    if (behavior === 'auto') {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const c = messagesContainerRef.current
+          if (c) c.scrollTop = c.scrollHeight
+        })
+      })
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [])
+
+  // --- Filters ---
   const filteredConversations = useMemo(() => {
     let filtered = conversations
     if (daysFilter > 0) {
@@ -60,6 +85,22 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
     return filtered
   }, [conversations, daysFilter, searchQuery])
 
+  // --- Date separators ---
+  const messagesWithDates = useMemo(() => {
+    const result: Array<DateItem | MsgItem> = []
+    let lastDateStr = ''
+    for (const msg of messages) {
+      const dateStr = new Date(msg.created_at).toDateString()
+      if (dateStr !== lastDateStr) {
+        lastDateStr = dateStr
+        result.push({ type: 'date', label: formatDate(msg.created_at) })
+      }
+      result.push({ type: 'message', msg })
+    }
+    return result
+  }, [messages])
+
+  // --- Fetch conversations ---
   const fetchConversations = useCallback(async () => {
     setLoading(true)
     try {
@@ -97,6 +138,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
 
   useEffect(() => { fetchConversations() }, [fetchConversations])
 
+  // --- Blocked contacts ---
   const fetchBlocked = useCallback(async () => {
     const { data } = await supabase
       .from('blocked_contacts')
@@ -129,6 +171,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
     finally { setTogglingBlock(false) }
   }, [session.user.id, blockedPhones, fetchBlocked])
 
+  // --- Check active WPP connection ---
   useEffect(() => {
     async function checkConnection() {
       const { data } = await supabase
@@ -142,6 +185,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
     checkConnection()
   }, [session.user.id])
 
+  // --- Fetch messages ---
   const fetchMessages = useCallback(async (contact: string, fromOffset = 0) => {
     setLoadingMessages(true)
     try {
@@ -158,6 +202,9 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
         if (fromOffset === 0) {
           shouldScrollToBottom.current = true
           setMessages(sorted)
+          if (sorted.length > 0) {
+            lastMessageTimeRef.current = sorted[sorted.length - 1].created_at
+          }
         } else {
           setMessages(prev => [...sorted, ...prev])
         }
@@ -176,20 +223,94 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
     }
   }, [selectedContact, fetchMessages])
 
+  // --- Scroll after messages load ---
   useEffect(() => {
     if (shouldScrollToBottom.current && messages.length > 0) {
       shouldScrollToBottom.current = false
-      requestAnimationFrame(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' })
-      })
+      scrollToBottom('auto')
     }
-  }, [messages])
+  }, [messages, scrollToBottom])
 
-  const selectedContactRef = useRef<string | null>(null)
-  useEffect(() => { selectedContactRef.current = selectedContact }, [selectedContact])
+  // --- Handle new message from realtime/polling ---
+  const handleNewMessage = useCallback((newMsg: WppMessage) => {
+    lastMessageTimeRef.current = newMsg.created_at
 
-  // Realtime subscription — always active, not dependent on selected contact
+    if (newMsg.contact_phone === selectedContactRef.current) {
+      setMessages(prev => {
+        if (prev.some(m => m.id === newMsg.id)) return prev
+        if (newMsg.direction === 'outbound') {
+          let removedOne = false
+          const cleaned = prev.filter(m => {
+            if (!removedOne && m.id.startsWith('optimistic-') && m.body === newMsg.body && m.contact_phone === newMsg.contact_phone) {
+              removedOne = true
+              return false
+            }
+            return true
+          })
+          return [...cleaned, newMsg]
+        }
+        return [...prev.filter(m => !m.id.startsWith('optimistic-')), newMsg]
+      })
+      setTimeout(() => scrollToBottom('smooth'), 50)
+    }
+
+    // Optimistic conversation list update
+    setConversations(prev => {
+      const exists = prev.some(c => c.contact_phone === newMsg.contact_phone)
+      let updated = prev.map(c => {
+        if (c.contact_phone === newMsg.contact_phone) {
+          return {
+            ...c,
+            last_message: newMsg.body,
+            last_at: newMsg.created_at,
+            unread: newMsg.contact_phone !== selectedContactRef.current && newMsg.direction === 'inbound'
+              ? c.unread + 1 : c.unread
+          }
+        }
+        return c
+      })
+      if (!exists) {
+        updated = [{
+          contact_phone: newMsg.contact_phone,
+          last_message: newMsg.body,
+          last_at: newMsg.created_at,
+          unread: newMsg.direction === 'inbound' ? 1 : 0
+        }, ...updated]
+      }
+      return updated.sort((a, b) => new Date(b.last_at).getTime() - new Date(a.last_at).getTime())
+    })
+  }, [scrollToBottom])
+
+  // --- Realtime + Polling fallback ---
   useEffect(() => {
+    const startPolling = () => {
+      if (pollingRef.current) return
+      pollingRef.current = setInterval(async () => {
+        const since = lastMessageTimeRef.current || new Date(Date.now() - 30000).toISOString()
+        try {
+          const { data } = await supabase
+            .from('whatsapp_messages')
+            .select('id, contact_phone, direction, body, created_at, sender_type')
+            .eq('user_id', session.user.id)
+            .gt('created_at', since)
+            .order('created_at', { ascending: true })
+
+          if (data && data.length > 0) {
+            for (const msg of data) {
+              handleNewMessage(msg as WppMessage)
+            }
+          }
+        } catch (_) { /* silent */ }
+      }, 5000)
+    }
+
+    const stopPolling = () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current)
+        pollingRef.current = null
+      }
+    }
+
     const channel = supabase
       .channel('wpp-inbox-' + session.user.id)
       .on(
@@ -201,22 +322,44 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
           filter: `user_id=eq.${session.user.id}`
         },
         (payload) => {
-          const newMsg = payload.new as WppMessage
-          if (newMsg.contact_phone === selectedContactRef.current) {
-            setMessages(prev => {
-              if (prev.some(m => m.id === newMsg.id)) return prev
-              return [...prev.filter(m => !m.id.startsWith('optimistic-')), newMsg]
-            })
-            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
-          }
-          fetchConversations()
+          handleNewMessage(payload.new as WppMessage)
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setRealtimeStatus('connected')
+          stopPolling()
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn('Realtime subscription failed, using polling fallback:', status)
+          setRealtimeStatus('fallback')
+          startPolling()
+        }
+      })
 
-    return () => { supabase.removeChannel(channel) }
-  }, [session.user.id, fetchConversations])
+    // Start polling as safety net after 8s if not connected
+    const fallbackTimer = setTimeout(() => {
+      if (realtimeStatus === 'connecting') {
+        setRealtimeStatus('fallback')
+        startPolling()
+      }
+    }, 8000)
 
+    return () => {
+      supabase.removeChannel(channel)
+      stopPolling()
+      clearTimeout(fallbackTimer)
+    }
+  }, [session.user.id, handleNewMessage])
+
+  // --- Select contact with unread reset ---
+  const handleSelectContact = useCallback((phone: string) => {
+    setSelectedContact(phone)
+    setConversations(prev => prev.map(c =>
+      c.contact_phone === phone ? { ...c, unread: 0 } : c
+    ))
+  }, [])
+
+  // --- Send message ---
   const handleSend = useCallback(async () => {
     if (!selectedContact || !newMessage.trim() || sending) return
 
@@ -235,12 +378,12 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
     }
     setMessages(prev => [...prev, optimisticMsg])
     setNewMessage('')
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    scrollToBottom('smooth')
 
     try {
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       if (!currentSession) {
-        setSendError('Sesión expirada.')
+        setSendError('Sesion expirada.')
         setMessages(prev => prev.filter(m => m.id !== optimisticId))
         return
       }
@@ -266,14 +409,15 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
     } finally {
       setSending(false)
     }
-  }, [selectedContact, newMessage, sending])
+  }, [selectedContact, newMessage, sending, scrollToBottom])
 
-  const formatTime = (iso: string) => {
+  // --- Helpers ---
+  function formatTime(iso: string) {
     const d = new Date(iso)
     return d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })
   }
 
-  const formatDate = (iso: string) => {
+  function formatDate(iso: string) {
     const d = new Date(iso)
     const today = new Date()
     if (d.toDateString() === today.toDateString()) return 'Hoy'
@@ -283,6 +427,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
     return d.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' })
   }
 
+  // --- Render ---
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto p-4 flex items-center justify-center min-h-[400px]">
@@ -296,9 +441,27 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
 
   return (
     <div className="max-w-5xl mx-auto space-y-4 p-4">
-      <div>
-        <h2 className="text-2xl font-bold text-white">Bandeja WhatsApp</h2>
-        <p className="text-gray-400 text-sm">Gestiona las conversaciones de tu asistente IA en tiempo real.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-white">Bandeja WhatsApp</h2>
+          <p className="text-gray-400 text-sm">Gestiona las conversaciones de tu asistente IA en tiempo real.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className={`w-2 h-2 rounded-full ${
+            realtimeStatus === 'connected' ? 'bg-[#25D366]' :
+            realtimeStatus === 'fallback' ? 'bg-yellow-500' :
+            'bg-gray-500 animate-pulse'
+          }`} />
+          <span className={`text-[10px] uppercase tracking-wider ${
+            realtimeStatus === 'connected' ? 'text-[#25D366]' :
+            realtimeStatus === 'fallback' ? 'text-yellow-500' :
+            'text-gray-500'
+          }`}>
+            {realtimeStatus === 'connected' ? 'En vivo' :
+             realtimeStatus === 'fallback' ? 'Cada 5s' :
+             'Conectando...'}
+          </span>
+        </div>
       </div>
 
       {conversations.length === 0 ? (
@@ -355,7 +518,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
               {filteredConversations.map(conv => (
                 <button
                   key={conv.contact_phone}
-                  onClick={() => setSelectedContact(conv.contact_phone)}
+                  onClick={() => handleSelectContact(conv.contact_phone)}
                   className={`w-full text-left p-4 border-b border-white/5 transition-all hover:bg-white/[0.03] ${
                     selectedContact === conv.contact_phone ? 'bg-[#25D366]/10 border-l-2 border-l-[#25D366]' : ''
                   }`}
@@ -367,6 +530,11 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
                     <div className="flex items-center gap-1.5">
                       {blockedPhones.has(conv.contact_phone) && (
                         <span className="text-[8px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full font-bold">BLOQ</span>
+                      )}
+                      {conv.unread > 0 && (
+                        <span className="min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#25D366] text-[10px] text-white font-bold px-1">
+                          {conv.unread}
+                        </span>
                       )}
                       <span className="text-[10px] text-gray-600">{formatDate(conv.last_at)}</span>
                     </div>
@@ -381,7 +549,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
           <div className="md:col-span-8 rounded-2xl bg-white/[0.03] border border-white/5 overflow-hidden flex flex-col">
             {!selectedContact ? (
               <div className="flex-1 flex items-center justify-center">
-                <p className="text-gray-600 text-sm">Selecciona una conversación</p>
+                <p className="text-gray-600 text-sm">Selecciona una conversacion</p>
               </div>
             ) : (
               <>
@@ -399,7 +567,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
                         hasActiveConnection ? 'text-[#25D366]' : 'text-gray-500'
                       }`}>
                         {blockedPhones.has(selectedContact) ? 'Bloqueado' :
-                         hasActiveConnection ? 'Conectado' : 'Sin conexión activa'}
+                         hasActiveConnection ? 'Conectado' : 'Sin conexion activa'}
                       </p>
                     </div>
                   </div>
@@ -416,7 +584,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
                   </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3">
                   {hasMore && (
                     <button
                       onClick={() => fetchMessages(selectedContact, offset)}
@@ -427,39 +595,57 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
                     </button>
                   )}
 
-                  {messages.map(msg => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.direction === 'outbound' ? 'justify-end' : 'justify-start'}`}
-                    >
+                  {loadingMessages && messages.length === 0 && (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="w-6 h-6 border-2 border-[#25D366] border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+
+                  {messagesWithDates.map((item, idx) => {
+                    if (item.type === 'date') {
+                      return (
+                        <div key={`date-${idx}`} className="flex items-center justify-center my-4">
+                          <div className="bg-white/[0.06] border border-white/10 rounded-full px-4 py-1">
+                            <span className="text-[11px] text-gray-500 font-medium">{item.label}</span>
+                          </div>
+                        </div>
+                      )
+                    }
+                    const msg = item.msg
+                    return (
                       <div
-                        className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
-                          msg.direction === 'outbound'
-                            ? 'bg-[#25D366]/20 border border-[#25D366]/30 rounded-br-md'
-                            : 'bg-white/[0.06] border border-white/10 rounded-bl-md'
-                        }`}
+                        key={msg.id}
+                        className={`flex ${msg.direction === 'outbound' ? 'justify-end' : 'justify-start'}`}
                       >
-                        <p className={`text-sm ${msg.direction === 'outbound' ? 'text-[#25D366]' : 'text-gray-300'}`}>
-                          {msg.body}
-                        </p>
-                        <div className={`flex items-center gap-1 mt-1 ${msg.direction === 'outbound' ? 'justify-end' : ''}`}>
-                          <span className="text-[10px] text-gray-600">{formatTime(msg.created_at)}</span>
-                          {msg.direction === 'outbound' && (
-                            <span className={`text-[10px] ${msg.sender_type === 'human' ? 'text-blue-400/60' : 'text-[#25D366]/60'}`}>
-                              {msg.sender_type === 'human' ? 'Tú' : 'IA'}
-                            </span>
-                          )}
+                        <div
+                          className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
+                            msg.direction === 'outbound'
+                              ? 'bg-[#25D366]/20 border border-[#25D366]/30 rounded-br-md'
+                              : 'bg-white/[0.06] border border-white/10 rounded-bl-md'
+                          } ${msg.id.startsWith('optimistic-') ? 'opacity-60' : ''}`}
+                        >
+                          <p className={`text-sm ${msg.direction === 'outbound' ? 'text-[#25D366]' : 'text-gray-300'}`}>
+                            {msg.body}
+                          </p>
+                          <div className={`flex items-center gap-1 mt-1 ${msg.direction === 'outbound' ? 'justify-end' : ''}`}>
+                            <span className="text-[10px] text-gray-600">{formatTime(msg.created_at)}</span>
+                            {msg.direction === 'outbound' && (
+                              <span className={`text-[10px] ${msg.sender_type === 'human' ? 'text-blue-400/60' : 'text-[#25D366]/60'}`}>
+                                {msg.sender_type === 'human' ? 'Tu' : 'IA'}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                   <div ref={messagesEndRef} />
                 </div>
 
                 <div className="p-3 border-t border-white/5">
                   {blockedPhones.has(selectedContact) ? (
                     <p className="text-[10px] text-red-400/60 italic text-center">
-                      Este contacto está bloqueado. Tu asistente IA no responderá sus mensajes.
+                      Este contacto esta bloqueado. Tu asistente IA no respondera sus mensajes.
                     </p>
                   ) : !hasActiveConnection ? (
                     <p className="text-[10px] text-gray-600 italic text-center">
@@ -479,6 +665,11 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
                               e.preventDefault()
                               handleSend()
                             }
+                          }}
+                          onInput={(e) => {
+                            const t = e.target as HTMLTextAreaElement
+                            t.style.height = 'auto'
+                            t.style.height = Math.min(t.scrollHeight, 120) + 'px'
                           }}
                           placeholder="Escribe un mensaje..."
                           disabled={sending}
@@ -501,7 +692,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
                         </button>
                       </div>
                       <p className="text-[10px] text-gray-700 italic text-center">
-                        Al responder, tu asistente IA seguirá activo en esta conversación.
+                        Al responder, tu asistente IA seguira activo en esta conversacion.
                       </p>
                     </div>
                   )}
