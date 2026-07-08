@@ -34,7 +34,7 @@ async function logInboundMessages(body) {
           if (!msg.id || !msg.from) continue
           const textBody = msg.text?.body || msg.button?.text || msg.interactive?.button_reply?.title || ''
           if (!textBody) continue
-          await sb.from('whatsapp_messages').upsert({
+          const { error: insertErr } = await sb.from('whatsapp_messages').insert({
             user_id: conn.user_id,
             phone_number_id: phoneNumberId,
             contact_phone: msg.from,
@@ -42,7 +42,10 @@ async function logInboundMessages(body) {
             body: textBody,
             wamid: msg.id,
             created_at: msg.timestamp ? new Date(parseInt(msg.timestamp) * 1000).toISOString() : new Date().toISOString()
-          }, { onConflict: 'wamid', ignoreDuplicates: true })
+          })
+          if (insertErr && !insertErr.message?.includes('duplicate')) {
+            console.error('logInbound insert error:', insertErr.message)
+          }
         }
       }
     }
