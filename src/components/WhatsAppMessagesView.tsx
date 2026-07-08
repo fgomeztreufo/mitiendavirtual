@@ -33,6 +33,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
   const [hasMore, setHasMore] = useState(false)
   const [offset, setOffset] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const shouldScrollToBottom = useRef(false)
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
@@ -155,8 +156,8 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
       if (!error && data) {
         const sorted = [...data].reverse()
         if (fromOffset === 0) {
+          shouldScrollToBottom.current = true
           setMessages(sorted)
-          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'auto' }), 80)
         } else {
           setMessages(prev => [...sorted, ...prev])
         }
@@ -174,6 +175,15 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
       fetchMessages(selectedContact, 0)
     }
   }, [selectedContact, fetchMessages])
+
+  useEffect(() => {
+    if (shouldScrollToBottom.current && messages.length > 0) {
+      shouldScrollToBottom.current = false
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' })
+      })
+    }
+  }, [messages])
 
   const selectedContactRef = useRef<string | null>(null)
   useEffect(() => { selectedContactRef.current = selectedContact }, [selectedContact])
