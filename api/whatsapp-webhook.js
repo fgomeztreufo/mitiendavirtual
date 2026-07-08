@@ -4,11 +4,14 @@ import { createClient } from '@supabase/supabase-js'
 const WHATSAPP_WEBHOOK_SECRET = process.env.WHATSAPP_WEBHOOK_SECRET || ''
 const WHATSAPP_APP_SECRET = process.env.WHATSAPP_APP_SECRET || ''
 const N8N_WEBHOOK_URL = process.env.N8N_WPP_INBOUND_URL || process.env.N8N_WEBHOOK_URL || ''
-const supabaseUrl = process.env.SUPABASE_URL || ''
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || ''
 
 async function logInboundMessages(body) {
-  if (!supabaseUrl || !supabaseServiceKey) return
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.warn('logInboundMessages: missing supabase config, skipping')
+    return
+  }
   try {
     const entries = body?.entry || []
     for (const entry of entries) {

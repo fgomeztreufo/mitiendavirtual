@@ -51,6 +51,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
   const selectedContactRef = useRef<string | null>(null)
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const lastMessageTimeRef = useRef<string | null>(null)
+  const realtimeStatusRef = useRef<'connecting' | 'connected' | 'fallback'>('connecting')
 
   useEffect(() => { selectedContactRef.current = selectedContact }, [selectedContact])
 
@@ -327,10 +328,12 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
+          realtimeStatusRef.current = 'connected'
           setRealtimeStatus('connected')
           stopPolling()
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           console.warn('Realtime subscription failed, using polling fallback:', status)
+          realtimeStatusRef.current = 'fallback'
           setRealtimeStatus('fallback')
           startPolling()
         }
@@ -338,7 +341,8 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
 
     // Start polling as safety net after 8s if not connected
     const fallbackTimer = setTimeout(() => {
-      if (realtimeStatus === 'connecting') {
+      if (realtimeStatusRef.current === 'connecting') {
+        realtimeStatusRef.current = 'fallback'
         setRealtimeStatus('fallback')
         startPolling()
       }

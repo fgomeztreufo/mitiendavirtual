@@ -949,7 +949,7 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
     const service = services.find(s => s.id === formValues.serviceId)
     const endsAt = new Date(startsAt.getTime() + (service?.duration_minutes || 30) * 60000)
 
-    const { error } = await supabase.from('appointments').insert({
+    const { data: insertedAppt, error } = await supabase.from('appointments').insert({
       user_id: userId,
       staff_id: formValues.staffId,
       service_id: formValues.serviceId,
@@ -958,14 +958,15 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
       starts_at: startsAt.toISOString(),
       ends_at: endsAt.toISOString(),
       source: 'dashboard',
-    })
+    }).select('id').single()
     if (error) {
       Swal.fire('Error', error.message, 'error')
       return
     }
 
     const serviceName = service?.name || 'Cita'
-    const dateStr = startsAt.toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric', month: 'short' })
+    const staffName = staff.find(s => s.id === formValues.staffId)?.name || ''
+    const dateStr = startsAt.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })
     const timeStr = startsAt.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       if (!s?.access_token) return
@@ -976,6 +977,25 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
           user_id: userId,
           title: 'Nueva cita agendada',
           body: `${serviceName} - ${formValues.clientName} | ${dateStr} ${timeStr}`,
+        }),
+      }).catch(() => {})
+      fetch('/api/whatsapp-send-template', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${s.access_token}` },
+        body: JSON.stringify({
+          contact_phone: formValues.clientPhone,
+          template_name: 'appointment_confirmation',
+          template_language: 'es',
+          components: [{
+            type: 'body',
+            parameters: [
+              { type: 'text', text: formValues.clientName },
+              { type: 'text', text: serviceName },
+              { type: 'text', text: dateStr },
+              { type: 'text', text: timeStr },
+              { type: 'text', text: staffName },
+            ]
+          }]
         }),
       }).catch(() => {})
     })
