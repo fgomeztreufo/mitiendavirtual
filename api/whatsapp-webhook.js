@@ -1,8 +1,55 @@
 import crypto from 'crypto'
+import { createClient } from '@supabase/supabase-js'
 
 const WHATSAPP_WEBHOOK_SECRET = process.env.WHATSAPP_WEBHOOK_SECRET || ''
 const WHATSAPP_APP_SECRET = process.env.WHATSAPP_APP_SECRET || ''
 const N8N_WEBHOOK_URL = process.env.N8N_WPP_INBOUND_URL || process.env.N8N_WEBHOOK_URL || ''
+const supabaseUrl = process.env.SUPABASE_URL || ''
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+
+async function logInboundMessages(body) {
+  if (!supabaseUrl || !supabaseServiceKey) return
+  try {
+    const entries = body?.entry || []
+    for (const entry of entries) {
+      const changes = entry?.changes || []
+      for (const change of changes) {
+        if (change?.field !== 'messages') continue
+        const value = change?.value || {}
+        const phoneNumberId = value?.metadata?.phone_number_id
+        const messages = value?.messages || []
+        if (!phoneNumberId || messages.length === 0) continue
+
+        const sb = createClient(supabaseUrl, supabaseServiceKey)
+        const { data: conn } = await sb
+          .from('whatsapp_connections')
+          .select('user_id')
+          .eq('phone_number_id', phoneNumberId)
+          .eq('active', true)
+          .limit(1)
+          .single()
+        if (!conn?.user_id) continue
+
+        for (const msg of messages) {
+          if (!msg.id || !msg.from) continue
+          const textBody = msg.text?.body || msg.button?.text || msg.interactive?.button_reply?.title || ''
+          if (!textBody) continue
+          await sb.from('whatsapp_messages').upsert({
+            user_id: conn.user_id,
+            phone_number_id: phoneNumberId,
+            contact_phone: msg.from,
+            direction: 'inbound',
+            body: textBody,
+            wamid: msg.id,
+            created_at: msg.timestamp ? new Date(parseInt(msg.timestamp) * 1000).toISOString() : new Date().toISOString()
+          }, { onConflict: 'wamid', ignoreDuplicates: true })
+        }
+      }
+    }
+  } catch (err) {
+    console.error('logInboundMessages error (non-blocking):', err.message)
+  }
+}
 
 function safeEqual(a, b) {
   if (!a || !b) return false
@@ -82,6 +129,8 @@ export default async function handler(req, res) {
     console.warn('Invalid JSON in whatsapp-webhook', err)
     return res.status(400).json({ message: 'Invalid JSON' })
   }
+
+  await logInboundMessages(body)
 
   if (!N8N_WEBHOOK_URL) {
     console.warn('N8N_WEBHOOK_URL not set — acting as sample webhook (no forwarding).')
