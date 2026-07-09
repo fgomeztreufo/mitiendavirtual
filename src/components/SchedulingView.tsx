@@ -968,7 +968,7 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
     const serviceName = service?.name || 'Cita'
     const staffName = staff.find(s => s.id === formValues.staffId)?.name || ''
     const dateStr = startsAt.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })
-    const timeStr = startsAt.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })
+    const timeStr = startsAt.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', hour12: false })
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       if (!s?.access_token) return
       fetch('/api/send-push-notification', {
@@ -987,7 +987,7 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
           type: 'template',
           contact_phone: formValues.clientPhone,
           template_name: 'appointment_confirmation',
-          template_language: 'es',
+          template_language: 'es_CL',
           components: [{
             type: 'body',
             parameters: [
