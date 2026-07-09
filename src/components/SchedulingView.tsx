@@ -958,6 +958,7 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
       starts_at: startsAt.toISOString(),
       ends_at: endsAt.toISOString(),
       source: 'dashboard',
+      reminder_sent: true,
     }).select('id').single()
     if (error) {
       Swal.fire('Error', error.message, 'error')
