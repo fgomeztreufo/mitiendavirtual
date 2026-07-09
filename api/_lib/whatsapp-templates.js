@@ -21,6 +21,48 @@ export const DEFAULT_TEMPLATES = [
         ]
       }
     ]
+  },
+  {
+    name: 'new_lead_notification',
+    language: 'es',
+    category: 'UTILITY',
+    components: [
+      {
+        type: 'BODY',
+        text: 'Nuevo lead desde {{1}}: {{2}} ({{3}}) te ha contactado. Revisa tu panel para responder.',
+        example: {
+          body_text: [['WhatsApp', 'Carlos Pérez', '+56 9 1234 5678']]
+        }
+      }
+    ]
+  },
+  {
+    name: 'payment_received',
+    language: 'es',
+    category: 'UTILITY',
+    components: [
+      {
+        type: 'BODY',
+        text: 'Hola {{1}}, tu pago de {{2}} por {{3}} ha sido recibido exitosamente. Gracias por tu compra.',
+        example: {
+          body_text: [['Felipe', '$14.990', 'Plan Básico']]
+        }
+      }
+    ]
+  },
+  {
+    name: 'order_update',
+    language: 'es',
+    category: 'UTILITY',
+    components: [
+      {
+        type: 'BODY',
+        text: 'Hola {{1}}, tu pedido de {{2}} ha sido {{3}}. {{4}}',
+        example: {
+          body_text: [['Felipe', 'Zapatillas Nike', 'enviado', 'Llegará el 15 de julio.']]
+        }
+      }
+    ]
   }
 ]
 
