@@ -17,7 +17,7 @@ function safeEqual(a, b) {
 
 function buildReadableBody(templateName, params) {
   if (templateName === 'appointment_confirmation' && params.length >= 5) {
-    return `Hola ${params[0]}, tu cita de ${params[1]} ha sido agendada para el ${params[2]} a las ${params[3]} con ${params[4]}. Si necesitas cancelar o reagendar, responde a este mensaje.`
+    return `Hola ${params[0]}, tienes una cita de ${params[1]} para el ${params[2]} a las ${params[3]} con ${params[4]}. Por favor confirma o cancela tu asistencia.`
   }
   return `[Template: ${templateName}] ${params.join(', ')}`
 }
