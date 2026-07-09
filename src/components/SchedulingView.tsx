@@ -979,10 +979,11 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
           body: `${serviceName} - ${formValues.clientName} | ${dateStr} ${timeStr}`,
         }),
       }).catch(() => {})
-      fetch('/api/whatsapp-send-template', {
+      fetch('/api/whatsapp-send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${s.access_token}` },
         body: JSON.stringify({
+          type: 'template',
           contact_phone: formValues.clientPhone,
           template_name: 'appointment_confirmation',
           template_language: 'es',
