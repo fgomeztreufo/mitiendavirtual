@@ -987,7 +987,7 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
           type: 'template',
           contact_phone: formValues.clientPhone,
           template_name: 'appointment_confirmation',
-          template_language: 'es_CL',
+          template_language: 'es',
           components: [{
             type: 'body',
             parameters: [

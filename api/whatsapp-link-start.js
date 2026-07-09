@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { provisionTemplates } from './_lib/whatsapp-templates.js'
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
@@ -79,6 +80,24 @@ export default async function handler(req, res) {
       if (auth) headers.Authorization = auth
       const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) })
       const text = await r.text()
+
+      if (r.status >= 200 && r.status < 300) {
+        try {
+          const { data: conn } = await sb
+            .from('whatsapp_connections')
+            .select('waba_id, access_token')
+            .eq('user_id', user.id)
+            .limit(1)
+            .single()
+          if (conn?.waba_id && conn?.access_token) {
+            const tplResult = await provisionTemplates(conn.waba_id, conn.access_token)
+            console.log('Template provisioning:', JSON.stringify(tplResult))
+          }
+        } catch (tplErr) {
+          console.error('Template provisioning error:', tplErr.message || tplErr)
+        }
+      }
+
       return res.status(r.status).send(text)
     } catch (err) {
       return res.status(502).json({ message: 'Service unavailable' })
