@@ -33,6 +33,13 @@ interface WppConnection {
   updated_at: string
 }
 
+interface WppTemplate {
+  name: string
+  status: string
+  language: string
+  category: string
+}
+
 type SdkStatus = 'loading-sdk' | 'sdk-ready' | 'connecting' | 'exchanging'
 
 export default function WhatsAppView({ session, profile, instance, onUpdate, goToPlans }: WhatsAppViewProps) {
@@ -42,6 +49,8 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
   const [disconnecting, setDisconnecting] = useState(false)
   const [sdkStatus, setSdkStatus] = useState<SdkStatus>('loading-sdk')
   const [errorMsg, setErrorMsg] = useState('')
+  const [templates, setTemplates] = useState<WppTemplate[]>([])
+  const [templatesLoading, setTemplatesLoading] = useState(false)
 
   const planCode = effectivePlan(profile)
   const [planMessagesLimit, setPlanMessagesLimit] = useState<number | null>(null)
@@ -83,6 +92,26 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
     if (planCode) loadPlanLimit()
     return () => { mounted = false }
   }, [planCode])
+
+  const fetchTemplates = useCallback(async () => {
+    if (!connection) { setTemplates([]); return }
+    setTemplatesLoading(true)
+    try {
+      const { data: { session: s } } = await supabase.auth.getSession()
+      if (!s) return
+      const res = await fetch('/api/whatsapp-link-start?action=templates', {
+        headers: { Authorization: `Bearer ${s.access_token}` }
+      })
+      const json = await res.json()
+      setTemplates(json.templates || [])
+    } catch (_) {
+      setTemplates([])
+    } finally {
+      setTemplatesLoading(false)
+    }
+  }, [connection])
+
+  useEffect(() => { fetchTemplates() }, [fetchTemplates])
 
   // Facebook SDK
   useEffect(() => {
@@ -508,6 +537,57 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
             <p className="text-sm text-amber-300 font-semibold">Recepción pausada</p>
             <p className="text-xs text-amber-400/60 mt-0.5">Tu número <span className="font-mono">{connection.display_phone_number}</span> está vinculado pero no está respondiendo mensajes. Haz clic en "Reactivar" para volver a recibir.</p>
           </div>
+        </div>
+      )}
+
+      {/* TEMPLATE STATUS */}
+      {connection && (
+        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-5 backdrop-blur-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] font-bold tracking-[0.18em] text-gray-500 uppercase">Plantillas de Mensaje</p>
+            <button
+              onClick={fetchTemplates}
+              disabled={templatesLoading}
+              className="text-[10px] text-gray-500 hover:text-white transition-colors disabled:opacity-40"
+            >
+              {templatesLoading ? 'Cargando...' : '↻ Actualizar'}
+            </button>
+          </div>
+
+          {templatesLoading && templates.length === 0 ? (
+            <div className="flex justify-center py-4">
+              <svg className="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            </div>
+          ) : templates.length === 0 ? (
+            <p className="text-xs text-gray-600 text-center py-2">No se encontraron plantillas.</p>
+          ) : (
+            <div className="space-y-2">
+              {templates.map((t) => (
+                <div key={`${t.name}-${t.language}`} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  <div className="min-w-0">
+                    <p className="text-sm text-white font-medium truncate">{t.name.replace(/_/g, ' ')}</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">{t.category} · {t.language}</p>
+                  </div>
+                  <span className={`flex-shrink-0 ml-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    t.status === 'APPROVED' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' :
+                    t.status === 'REJECTED' ? 'bg-red-500/15 text-red-400 border border-red-500/20' :
+                    'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                  }`}>
+                    {t.status === 'APPROVED' ? '✓ Aprobada' :
+                     t.status === 'REJECTED' ? '✗ Rechazada' :
+                     '⏳ En revisión'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <p className="text-[10px] text-gray-600 text-center">
+            Las plantillas se crean automáticamente al vincular WhatsApp. Meta las revisa en minutos.
+          </p>
         </div>
       )}
 

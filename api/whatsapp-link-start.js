@@ -41,8 +41,45 @@ export default async function handler(req, res) {
 
   const auth = req.headers.authorization || ''
 
-  // Flujo GET: Consulta estado de conexión existente
+  // Flujo GET: Consulta estado de conexión existente o templates
   if (req.method === 'GET') {
+    const action = (req.query?.action || '').toLowerCase()
+
+    if (action === 'templates') {
+      const token = (auth || '').replace(/^Bearer\s+/i, '')
+      if (!token) return res.status(401).json({ message: 'Se requiere autenticación.' })
+      const sb = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: `Bearer ${token}` } }
+      })
+      const { data: { user }, error: authErr } = await sb.auth.getUser(token)
+      if (authErr || !user) return res.status(401).json({ message: 'Token inválido.' })
+
+      const { data: conn } = await sb
+        .from('whatsapp_connections')
+        .select('waba_id, access_token')
+        .eq('user_id', user.id)
+        .limit(1)
+        .single()
+
+      if (!conn?.waba_id || !conn?.access_token) {
+        return res.status(200).json({ templates: [] })
+      }
+
+      try {
+        const metaRes = await fetch(
+          `https://graph.facebook.com/v25.0/${conn.waba_id}/message_templates?fields=name,status,language,category&limit=50`,
+          { headers: { Authorization: `Bearer ${conn.access_token}` } }
+        )
+        const metaJson = await metaRes.json()
+        if (metaJson.error) {
+          return res.status(200).json({ templates: [], meta_error: metaJson.error.message })
+        }
+        return res.status(200).json({ templates: metaJson.data || [] })
+      } catch (e) {
+        return res.status(200).json({ templates: [], error: e.message })
+      }
+    }
+
     const url = n8nUrl('wpp-status')
     if (!url.startsWith('http')) return res.status(500).json({ message: 'N8N_WPP_STATUS_URL no configurada.' })
     try {
