@@ -38,10 +38,10 @@ export function normalizePlanType(input?: string | null): string {
 
 // ESTA ES LA CLAVE: Asegúrate de que diga EXPORT
 export const PLAN_PERMISSIONS: Record<string, string[]> = {
-  free: ['email', 'push'],
-  basic: ['email', 'telegram', 'push'],
-  pro: ['email', 'telegram', 'push'],
-  full: ['email', 'telegram', 'push', 'scheduling']
+  free: ['email', 'push', 'whatsapp'],
+  basic: ['email', 'telegram', 'push', 'whatsapp'],
+  pro: ['email', 'telegram', 'push', 'whatsapp'],
+  full: ['email', 'telegram', 'push', 'whatsapp', 'scheduling']
 };
 
 export function planDisplayToCode(display?: string) {

@@ -240,6 +240,99 @@ export default function NotificationsView({ session, profile }: any) {
       return;
     }
 
+    // WhatsApp
+    if (channel === 'whatsapp') {
+      const config = configs.find(c => c.channel_type === 'whatsapp');
+      const isConnected = !!(config?.config?.owner_phone);
+
+      if (isConnected && currentStatus) {
+        const { error } = await supabase
+          .from('user_notification_configs')
+          .update({ is_active: false })
+          .eq('user_id', session.user.id)
+          .eq('channel_type', 'whatsapp');
+        if (!error) {
+          await fetchConfigs();
+          Swal.fire({
+            icon: 'success',
+            title: 'WhatsApp desactivado',
+            text: 'Ya no recibirás alertas por WhatsApp.',
+            background: '#111827',
+            color: '#fff',
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        }
+        return;
+      }
+
+      if (isConnected && !currentStatus) {
+        const { error } = await supabase
+          .from('user_notification_configs')
+          .update({ is_active: true })
+          .eq('user_id', session.user.id)
+          .eq('channel_type', 'whatsapp');
+        if (!error) {
+          await fetchConfigs();
+          Swal.fire({
+            icon: 'success',
+            title: 'WhatsApp activado',
+            text: `Alertas se enviarán a ${config?.config?.owner_phone}`,
+            background: '#111827',
+            color: '#fff',
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        }
+        return;
+      }
+
+      const { value: phone } = await Swal.fire({
+        title: 'Configurar WhatsApp',
+        html: '<p class="text-sm text-gray-400 mb-2">Ingresa tu número de WhatsApp personal donde recibirás las alertas de ventas.</p>',
+        input: 'tel',
+        inputPlaceholder: '+56 9 1234 5678',
+        inputAttributes: { autocomplete: 'tel' },
+        showCancelButton: true,
+        confirmButtonText: 'Activar',
+        confirmButtonColor: '#10B981',
+        cancelButtonText: 'Cancelar',
+        background: '#111827',
+        color: '#fff',
+        inputValidator: (value) => {
+          const cleaned = value.replace(/[\s\-()]/g, '');
+          if (!cleaned || cleaned.length < 8) return 'Ingresa un número válido';
+          return null;
+        }
+      });
+
+      if (!phone) return;
+      const cleanPhone = phone.replace(/[\s\-()]/g, '');
+
+      const { error } = await supabase
+        .from('user_notification_configs')
+        .upsert({
+          user_id: session.user.id,
+          channel_type: 'whatsapp',
+          is_active: true,
+          config: { owner_phone: cleanPhone }
+        }, { onConflict: 'user_id, channel_type' });
+
+      if (!error) {
+        await fetchConfigs();
+        Swal.fire({
+          icon: 'success',
+          title: 'WhatsApp activado',
+          text: `Recibirás alertas en ${cleanPhone}`,
+          background: '#111827',
+          color: '#fff',
+          timer: 2500,
+          showConfirmButton: false,
+        });
+      }
+      return;
+    }
+
     // Generic toggle (fallback)
     const { error } = await supabase
       .from('user_notification_configs')
@@ -272,6 +365,12 @@ export default function NotificationsView({ session, profile }: any) {
       icon: '🔔',
       color: 'border-amber-800',
     },
+    whatsapp: {
+      label: 'WhatsApp',
+      description: 'Recibe alertas de ventas en tu WhatsApp personal',
+      icon: '💬',
+      color: 'border-green-800',
+    },
   };
 
   return (
@@ -280,7 +379,7 @@ export default function NotificationsView({ session, profile }: any) {
       <p className="text-gray-400 text-sm">Gestiona cómo recibes las alertas de ventas e inventario.</p>
 
       <div className="grid gap-4">
-        {['email', 'telegram', 'push'].map((channel) => {
+        {['email', 'telegram', 'push', 'whatsapp'].map((channel) => {
           const isLocked = !allowedChannels.includes(channel);
           const config = configs.find(c => c.channel_type === channel);
           const active = !!config?.is_active;
@@ -290,12 +389,15 @@ export default function NotificationsView({ session, profile }: any) {
             ? !!(config?.config?.telegram_chat_id || config?.config?.connected_at || config?.telegram_chat_id)
             : channel === 'push'
             ? !!(config?.config?.fcm_token || config?.config?.devices?.length)
+            : channel === 'whatsapp'
+            ? !!(config?.config?.owner_phone)
             : active;
 
           const deviceCount = channel === 'push' ? (config?.config?.devices?.length || (config?.config?.fcm_token ? 1 : 0)) : 0;
 
           const toggleOn = channel === 'telegram' ? (connected && active)
             : channel === 'push' ? (connected && active)
+            : channel === 'whatsapp' ? (connected && active)
             : active;
 
           return (
@@ -333,6 +435,17 @@ export default function NotificationsView({ session, profile }: any) {
                           No soportado
                         </span>
                       )}
+                      {channel === 'whatsapp' && connected && (
+                        <span className="text-[10px] bg-green-900/30 text-green-400 px-2 py-0.5 rounded-full border border-green-800">
+                          Conectado
+                        </span>
+                      )}
+                      {channel === 'whatsapp' && !connected && !isLocked && (
+                        <span className="text-[10px] bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full border border-gray-700 cursor-pointer"
+                          onClick={() => toggleChannel(channel, active, isLocked)}>
+                          Configurar
+                        </span>
+                      )}
                     </div>
                     <p className="text-[10px] text-gray-500 mt-0.5">{meta.description}</p>
                   </div>
@@ -353,6 +466,14 @@ export default function NotificationsView({ session, profile }: any) {
                   {config?.config?.telegram_username && (
                     <p className="text-xs text-gray-500">@{config.config.telegram_username}</p>
                   )}
+                  {!active && (
+                    <span className="text-xs text-gray-500">Notificaciones desactivadas</span>
+                  )}
+                </div>
+              )}
+              {channel === 'whatsapp' && connected && (
+                <div className="mt-2 flex items-center justify-between">
+                  <p className="text-xs text-gray-500">{config?.config?.owner_phone}</p>
                   {!active && (
                     <span className="text-xs text-gray-500">Notificaciones desactivadas</span>
                   )}
