@@ -57,9 +57,9 @@ export const DEFAULT_TEMPLATES = [
     components: [
       {
         type: 'BODY',
-        text: 'Hola {{1}}, tu pedido de {{2}} ha sido {{3}}. {{4}}',
+        text: 'Hola {{1}}, tu pedido de {{2}} ha sido {{3}}. Gracias por tu preferencia.',
         example: {
-          body_text: [['Felipe', 'Zapatillas Nike', 'enviado', 'Llegará el 15 de julio.']]
+          body_text: [['Felipe', 'Zapatillas Nike', 'enviado']]
         }
       }
     ]
