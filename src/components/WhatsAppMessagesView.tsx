@@ -114,6 +114,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
           .select('contact_phone, body, created_at, direction')
           .eq('user_id', session.user.id)
           .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
           .limit(200)
 
         if (fallbackData) {
@@ -196,6 +197,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
         .eq('user_id', session.user.id)
         .eq('contact_phone', contact)
         .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
         .range(fromOffset, fromOffset + PAGE_SIZE - 1)
 
       if (!error && data) {
@@ -295,6 +297,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
             .eq('user_id', session.user.id)
             .gt('created_at', since)
             .order('created_at', { ascending: true })
+            .order('id', { ascending: true })
 
           if (data && data.length > 0) {
             for (const msg of data) {
