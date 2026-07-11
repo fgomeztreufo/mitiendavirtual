@@ -123,21 +123,65 @@ export const TermsOfService = ({ onClose }: { onClose: () => void }) => {
 // --- VISTA: PRIVACIDAD (CUMPLIMIENTO LEY 19.628) ---
 export const PrivacyPolicy = ({ onClose }: { onClose: () => void }) => (
   <LegalLayout title="Privacidad" subtitle="Protocolo de Protección de Datos" onClose={onClose}>
-    <section className="space-y-6 text-sm">
-      <p>MiTiendaVirtual garantiza el cumplimiento de la <strong>Ley 19.628</strong> sobre Protección de la Vida Privada en territorio chileno.</p>
-      <ul className="space-y-4">
-        <li className="flex gap-4">
-          <span className="text-blue-500 font-bold">01.</span>
-          <p>Los datos de catálogo y mensajería se utilizan exclusivamente para el entrenamiento y respuesta de su asistente IA personalizado.</p>
-        </li>
-        <li className="flex gap-4">
-          <span className="text-blue-500 font-bold">02.</span>
-          <p>No comercializamos bases de datos con terceros bajo ninguna circunstancia.</p>
-        </li>
-      </ul>
+    <section className="space-y-8 text-sm">
+      <p>MiTiendaVirtual garantiza el cumplimiento de la <strong>Ley 19.628</strong> sobre Protección de la Vida Privada en territorio chileno. Esta política describe cómo recopilamos, usamos, almacenamos y protegemos su información.</p>
+
+      <div>
+        <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-3">1. Datos que recopilamos</h3>
+        <ul className="space-y-3">
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">01.</span><p><strong>Datos de cuenta:</strong> nombre, correo electrónico y método de autenticación (email o Google OAuth).</p></li>
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">02.</span><p><strong>Datos de negocio:</strong> catálogo de productos, preguntas frecuentes (FAQs), servicios y configuración de agentes IA.</p></li>
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">03.</span><p><strong>Datos de mensajería:</strong> mensajes recibidos y enviados a través de Instagram, Telegram y WhatsApp para el funcionamiento del asistente IA.</p></li>
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">04.</span><p><strong>Datos de leads:</strong> nombre, teléfono y canal de origen de clientes potenciales que contactan su negocio.</p></li>
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">05.</span><p><strong>Tokens de integración:</strong> credenciales de acceso a Meta (Instagram, WhatsApp), Telegram y Google Calendar, almacenadas de forma encriptada.</p></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-3">2. Uso de los datos</h3>
+        <ul className="space-y-3">
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">01.</span><p>Entrenamiento y respuesta de su asistente IA personalizado.</p></li>
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">02.</span><p>Gestión de leads y pipeline de ventas (CRM).</p></li>
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">03.</span><p>Envío de notificaciones configuradas por el usuario (email, push, Telegram, WhatsApp).</p></li>
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">04.</span><p>Agendamiento de citas y sincronización con Google Calendar.</p></li>
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">05.</span><p>Procesamiento de pagos a través de Mercado Pago.</p></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-3">3. Compartición de datos</h3>
+        <ul className="space-y-3">
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">01.</span><p>No comercializamos bases de datos con terceros bajo ninguna circunstancia.</p></li>
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">02.</span><p>Los datos se comparten únicamente con los proveedores necesarios para el servicio: Supabase (base de datos), Meta Platforms (mensajería de Instagram y WhatsApp), Telegram y Google (Calendar).</p></li>
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">03.</span><p>Los mensajes de WhatsApp se procesan a través de la API oficial de WhatsApp Business Cloud de Meta, cumpliendo sus términos de servicio.</p></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-3">4. Almacenamiento y seguridad</h3>
+        <ul className="space-y-3">
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">01.</span><p>Los datos se almacenan en servidores de Supabase con seguridad a nivel de fila (RLS) por usuario.</p></li>
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">02.</span><p>Las credenciales de integración se almacenan con encriptación PGP (pgp_sym_encrypt).</p></li>
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">03.</span><p>Los mensajes de WhatsApp se eliminan automáticamente después de 90 días.</p></li>
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">04.</span><p>Las instrucciones del agente IA son sanitizadas para prevenir inyección de código.</p></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-3">5. Retención de datos</h3>
+        <p>Sus datos se mantienen mientras su cuenta esté activa. Al solicitar eliminación, todos los datos asociados (catálogo, leads, mensajes, credenciales) se eliminan en un plazo de 24 a 48 horas hábiles.</p>
+      </div>
+
+      <div>
+        <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-3">6. Sus derechos</h3>
+        <p>Usted tiene derecho a acceder, rectificar, cancelar y oponerse al tratamiento de sus datos personales (derechos ARCO), según lo establecido en la Ley 19.628. También puede solicitar la eliminación completa de su cuenta y datos asociados en cualquier momento.</p>
+      </div>
+
       <p className="pt-6 border-t border-white/5 italic text-gray-500">
-        Para consultas sobre sus derechos ARCO (Acceso, Rectificación, Cancelación y Oposición), contacte a: contacto@mitiendavirtual.cl
+        Para ejercer sus derechos o consultas sobre esta política, contacte a: contacto@mitiendavirtual.cl
       </p>
+
+      <p className="text-[10px] text-gray-600">Última actualización: julio 2026</p>
     </section>
   </LegalLayout>
 );
