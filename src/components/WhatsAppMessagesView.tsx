@@ -27,6 +27,19 @@ type MsgItem = { type: 'message'; msg: WppMessage }
 
 const PAGE_SIZE = 50
 
+function sortByTime(msgs: WppMessage[]): WppMessage[] {
+  return msgs.sort((a, b) => {
+    if (a.id.startsWith('optimistic-')) return 1
+    if (b.id.startsWith('optimistic-')) return -1
+    const timeDiff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    if (timeDiff !== 0) return timeDiff
+    const idA = Number(a.id)
+    const idB = Number(b.id)
+    if (!isNaN(idA) && !isNaN(idB)) return idA - idB
+    return a.id.localeCompare(b.id)
+  })
+}
+
 export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewProps) {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedContact, setSelectedContact] = useState<string | null>(null)
@@ -201,7 +214,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
         .range(fromOffset, fromOffset + PAGE_SIZE - 1)
 
       if (!error && data) {
-        const sorted = [...data].reverse()
+        const sorted = sortByTime([...data].reverse())
         if (fromOffset === 0) {
           shouldScrollToBottom.current = true
           setMessages(sorted)
@@ -250,9 +263,9 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
             }
             return true
           })
-          return [...cleaned, newMsg]
+          return sortByTime([...cleaned, newMsg])
         }
-        return [...prev.filter(m => !m.id.startsWith('optimistic-')), newMsg]
+        return sortByTime([...prev.filter(m => !m.id.startsWith('optimistic-')), newMsg])
       })
       setTimeout(() => scrollToBottom('smooth'), 50)
     }

@@ -4,6 +4,34 @@ import { provisionTemplates } from './_lib/whatsapp-templates.js'
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
 
+async function shareCreditLine(wabaId) {
+  const creditLineId = process.env.META_CREDIT_LINE_ID
+  const systemToken = process.env.META_SYSTEM_USER_TOKEN
+  if (!creditLineId || !systemToken) {
+    console.warn('shareCreditLine: META_CREDIT_LINE_ID or META_SYSTEM_USER_TOKEN not configured, skipping')
+    return null
+  }
+  try {
+    const res = await fetch(
+      `https://graph.facebook.com/v25.0/${creditLineId}/whatsapp_credit_sharing_and_attach?waba_id=${encodeURIComponent(wabaId)}&waba_currency=USD`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${systemToken}` }
+      }
+    )
+    const data = await res.json()
+    if (data.error) {
+      console.error('shareCreditLine error:', data.error.message)
+      return { error: data.error.message }
+    }
+    console.log('Credit line shared with WABA', wabaId, '- allocation:', data.allocation_config_id)
+    return data
+  } catch (err) {
+    console.error('shareCreditLine exception:', err.message)
+    return { error: err.message }
+  }
+}
+
 function n8nUrl(path) {
   return process.env['N8N_WPP_' + path.replace(/-/g, '_').toUpperCase() + '_URL']
     || (process.env.N8N_WPP_WEBHOOK_URL || process.env.N8N_WEBHOOK_URL || '').replace(/\/$/, '') + '/' + path
@@ -129,9 +157,14 @@ export default async function handler(req, res) {
           if (conn?.waba_id && conn?.access_token) {
             const tplResult = await provisionTemplates(conn.waba_id, conn.access_token)
             console.log('Template provisioning:', JSON.stringify(tplResult))
+
+            const creditResult = await shareCreditLine(conn.waba_id)
+            if (creditResult) {
+              console.log('Credit line sharing:', JSON.stringify(creditResult))
+            }
           }
         } catch (tplErr) {
-          console.error('Template provisioning error:', tplErr.message || tplErr)
+          console.error('Post-onboarding error:', tplErr.message || tplErr)
         }
       }
 
