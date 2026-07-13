@@ -19,18 +19,31 @@ function App() {
   const navigate = useNavigate()
 
   useEffect(() => {
+    const hash = window.location.hash
+    const isRecovery = hash.includes('type=recovery')
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setLoading(false)
+      if (isRecovery && session) {
+        setPasswordRecovery(true)
+        setSession(session)
+        setLoading(false)
+        navigate('/login?view=update_password')
+      } else {
+        setSession(session)
+        setLoading(false)
+      }
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session)
-      setLoading(false)
       if (event === 'PASSWORD_RECOVERY') {
         setPasswordRecovery(true)
+        setSession(session)
+        setLoading(false)
         navigate('/login?view=update_password')
+        return
       }
+      setSession(session)
+      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
