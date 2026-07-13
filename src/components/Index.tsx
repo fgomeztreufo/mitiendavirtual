@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { FaInstagram, FaTelegram, FaWhatsapp, FaGoogle, FaMeta } from 'react-icons/fa6'
 import { DataDeletion, PrivacyPolicy, SupportPage, TermsOfService } from './LegalPages'
@@ -8,17 +8,6 @@ interface IndexProps {
 }
 
 /* ─── Helpers ─── */
-const generateStars = (count: number) => {
-  let stars = ''
-  for (let i = 0; i < count; i++) {
-    const x = Math.floor(Math.random() * 100)
-    const y = Math.floor(Math.random() * 100)
-    const alpha = (Math.random() * 0.5 + 0.3).toFixed(2)
-    stars += `${x}vw ${y}vh rgba(255,255,255,${alpha}),`
-  }
-  return stars.slice(0, -1)
-}
-
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
   visible: (i: number) => ({
@@ -51,30 +40,20 @@ const PLANS = [
 export default function IndexLanding({ onLoginClick }: IndexProps) {
   const [legalView, setLegalView] = useState<string | null>(null)
 
-  const smallStars = useMemo(() => generateStars(600), [])
-  const mediumStars = useMemo(() => generateStars(150), [])
-
   const { scrollYProgress } = useScroll()
   const heroY = useTransform(scrollYProgress, [0, 0.3], [0, -80])
   const heroOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0])
 
   return (
-    <div className="min-h-screen w-full bg-[#050505] text-white overflow-x-hidden font-sans">
-
-      {/* ════════════ STARFIELD BACKGROUND ════════════ */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 opacity-25" style={{ width: '1px', height: '1px', boxShadow: smallStars }} />
-        <div className="absolute inset-0 opacity-40" style={{ width: '2px', height: '2px', boxShadow: mediumStars }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#050505]" />
-      </div>
+    <div className="min-h-screen w-full bg-white text-gray-900 overflow-x-hidden font-sans">
 
       {/* ════════════ HERO ════════════ */}
       <motion.section
         style={{ y: heroY, opacity: heroOpacity }}
         className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 md:px-8 text-center"
       >
-        {/* Glow orb — smaller on mobile */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] sm:w-[450px] sm:h-[450px] md:w-[600px] md:h-[600px] rounded-full bg-gradient-to-br from-indigo-600/20 via-purple-500/10 to-transparent blur-[80px] md:blur-[120px] pointer-events-none" />
+        {/* Glow orb — subtle on white */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] sm:w-[450px] sm:h-[450px] md:w-[600px] md:h-[600px] rounded-full bg-gradient-to-br from-indigo-500/[0.07] via-purple-500/[0.04] to-transparent blur-[80px] md:blur-[120px] pointer-events-none" />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -89,17 +68,17 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
             transition={{ delay: 0.4, duration: 0.8 }}
             className="flex items-center justify-center gap-2 mb-8"
           >
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md">
-              <FaMeta className="text-blue-400 text-lg" />
-              <span className="text-xs text-gray-300 font-medium tracking-wide">Technology Partner</span>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-gray-50 backdrop-blur-md">
+              <FaMeta className="text-blue-600 text-lg" />
+              <span className="text-xs text-gray-600 font-medium tracking-wide">Technology Partner</span>
             </div>
           </motion.div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold leading-[1.1] tracking-tight">
-            <span className="block bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-100 to-gray-400">
+            <span className="block bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600">
               Automatiza tus ventas
             </span>
-            <span className="block mt-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
+            <span className="block mt-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
               con Inteligencia Artificial
             </span>
           </h1>
@@ -108,7 +87,7 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.8 }}
-            className="mt-4 sm:mt-6 max-w-2xl mx-auto text-gray-400 text-sm sm:text-base md:text-lg leading-relaxed px-2"
+            className="mt-4 sm:mt-6 max-w-2xl mx-auto text-gray-500 text-sm sm:text-base md:text-lg leading-relaxed px-2"
           >
             Conecta Instagram, Telegram, WhatsApp y Google Calendar.
             Tu negocio responde, vende y agenda — las 24 horas, los 7 días.
@@ -128,7 +107,7 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
             </button>
             <a
               href="#planes"
-              className="px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl border border-white/10 text-gray-300 font-medium text-sm hover:bg-white/5 hover:border-white/20 active:scale-95 transition-all duration-300 text-center"
+              className="px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl border border-gray-300 text-gray-700 font-medium text-sm hover:bg-gray-50 hover:border-gray-400 active:scale-95 transition-all duration-300 text-center"
             >
               Ver planes
             </a>
@@ -141,14 +120,14 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
           transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           className="absolute bottom-10 left-1/2 -translate-x-1/2"
         >
-          <div className="w-5 h-8 rounded-full border-2 border-white/20 flex items-start justify-center p-1">
-            <div className="w-1 h-2 rounded-full bg-white/50" />
+          <div className="w-5 h-8 rounded-full border-2 border-gray-300 flex items-start justify-center p-1">
+            <div className="w-1 h-2 rounded-full bg-gray-400" />
           </div>
         </motion.div>
       </motion.section>
 
       {/* ════════════ CHANNELS / FEATURES ════════════ */}
-      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6">
+      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 bg-[#F8FAFC]">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial="hidden"
@@ -159,11 +138,11 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
           >
             <motion.h2 variants={fadeUp} custom={0} className="text-2xl sm:text-3xl md:text-5xl font-bold">
               Todos tus canales.{' '}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
                 Un solo cerebro IA.
               </span>
             </motion.h2>
-            <motion.p variants={fadeUp} custom={1} className="mt-4 text-gray-500 max-w-xl mx-auto">
+            <motion.p variants={fadeUp} custom={1} className="mt-4 text-gray-600 max-w-xl mx-auto">
               Cada mensaje que llega se responde con contexto, inteligencia y el tono de tu marca.
             </motion.p>
           </motion.div>
@@ -180,13 +159,13 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
                 key={ch.label}
                 variants={fadeUp}
                 custom={i}
-                className="group relative p-6 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm hover:border-white/15 hover:bg-white/[0.04] transition-all duration-500"
+                className="group relative p-6 rounded-2xl border border-gray-200 bg-white shadow-sm hover:border-indigo-300 hover:shadow-md transition-all duration-500"
               >
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${ch.color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                   <ch.Icon className="text-white text-xl" />
                 </div>
-                <h3 className="text-white font-semibold mb-1">{ch.label}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{ch.desc}</p>
+                <h3 className="text-gray-900 font-semibold mb-1">{ch.label}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">{ch.desc}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -194,7 +173,7 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
       </section>
 
       {/* ════════════ PLANS ════════════ */}
-      <section id="planes" className="relative z-10 py-16 sm:py-24 px-4 sm:px-6">
+      <section id="planes" className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial="hidden"
@@ -205,11 +184,11 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
           >
             <motion.h2 variants={fadeUp} custom={0} className="text-2xl sm:text-3xl md:text-5xl font-bold">
               Planes que{' '}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-500">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-orange-600">
                 impulsan tu negocio
               </span>
             </motion.h2>
-            <motion.p variants={fadeUp} custom={1} className="mt-4 text-gray-500 max-w-xl mx-auto">
+            <motion.p variants={fadeUp} custom={1} className="mt-4 text-gray-600 max-w-xl mx-auto">
               Sin contratos. Pagas por mes. Si no renuevas, vuelves al plan Semilla sin perder datos.
             </motion.p>
           </motion.div>
@@ -228,8 +207,8 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
                 custom={i}
                 className={`relative p-6 rounded-2xl flex flex-col ${
                   plan.highlight
-                    ? 'border-2 border-indigo-500/60 bg-gradient-to-b from-indigo-950/40 to-gray-900 shadow-[0_8px_40px_rgba(99,102,241,0.15)]'
-                    : 'border border-white/5 bg-white/[0.02]'
+                    ? 'border-2 border-indigo-400 bg-indigo-50 shadow-[0_8px_40px_rgba(99,102,241,0.12)]'
+                    : 'border border-gray-200 bg-white shadow-sm'
                 } ${plan.blocked ? 'opacity-70' : ''}`}
               >
                 {plan.highlight && (
@@ -249,7 +228,7 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
                   <span className="text-sm text-gray-500 font-normal"> /mes</span>
                 </div>
 
-                <ul className="mt-5 space-y-2 text-sm text-gray-400 flex-1">
+                <ul className="mt-5 space-y-2 text-sm text-gray-600 flex-1">
                   <li className="flex items-center gap-2">
                     <span className="text-green-500">✓</span> {plan.products} productos
                   </li>
@@ -263,10 +242,10 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
                   disabled={plan.blocked}
                   className={`mt-6 w-full py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
                     plan.blocked
-                      ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       : plan.highlight
                       ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg'
-                      : 'border border-white/10 text-gray-300 hover:bg-white/5'
+                      : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   {plan.cta}
@@ -278,7 +257,7 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
       </section>
 
       {/* ════════════ CTA FINAL ════════════ */}
-      <section className="relative z-10 py-20 sm:py-32 px-4 sm:px-6">
+      <section className="relative z-10 py-20 sm:py-32 px-4 sm:px-6 bg-[#F8FAFC]">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -286,16 +265,16 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="max-w-3xl mx-auto text-center"
         >
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] sm:w-[400px] sm:h-[400px] md:w-[500px] md:h-[500px] rounded-full bg-gradient-to-br from-purple-600/10 to-indigo-600/5 blur-[80px] md:blur-[100px] pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] sm:w-[400px] sm:h-[400px] md:w-[500px] md:h-[500px] rounded-full bg-gradient-to-br from-purple-500/[0.05] to-indigo-500/[0.03] blur-[80px] md:blur-[100px] pointer-events-none" />
 
           <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold leading-tight relative">
             Tu negocio nunca duerme.
             <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
               Tu IA tampoco.
             </span>
           </h2>
-          <p className="mt-4 sm:mt-6 text-gray-500 text-base sm:text-lg px-2">
+          <p className="mt-4 sm:mt-6 text-gray-600 text-base sm:text-lg px-2">
             Empieza gratis hoy y automatiza tu primer canal en menos de 5 minutos.
           </p>
           <button
@@ -307,8 +286,8 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
         </motion.div>
       </section>
 
-      {/* ════════════ FOOTER ════════════ */}
-      <footer className="relative z-10 border-t border-white/5 bg-black/60 backdrop-blur-sm px-6 py-8">
+      {/* ════════════ FOOTER (stays dark for contrast) ════════════ */}
+      <footer className="relative z-10 border-t border-slate-800 bg-slate-900 px-6 py-8">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="text-lg font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
@@ -319,7 +298,7 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
             </div>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-500">
+          <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-400">
             <button onClick={() => setLegalView('terms')} className="hover:text-white transition-colors">
               Términos
             </button>
@@ -334,7 +313,7 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
             </button>
           </div>
 
-          <p className="text-[10px] text-gray-600 font-mono tracking-widest uppercase">
+          <p className="text-[10px] text-gray-500 font-mono tracking-widest uppercase">
             © 2026 • Santiago, CL
           </p>
         </div>
