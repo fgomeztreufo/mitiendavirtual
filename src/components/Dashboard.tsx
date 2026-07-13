@@ -90,6 +90,22 @@ export default function Dashboard({ session }: { session: Session }) {
 
   useEffect(() => { getData() }, [])
 
+  useEffect(() => {
+    if (!profile) return
+    if (!isInTrial(profile) || !profile.trial_plan) return
+    const key = 'trial_welcome_' + session.user.id
+    if (localStorage.getItem(key)) return
+    localStorage.setItem(key, '1')
+    const days = trialDaysLeft(profile)
+    Swal.fire({
+      icon: 'success',
+      title: '¡Bienvenido a MiTiendaVirtual!',
+      html: `Tienes un <b>período de prueba de ${days} días</b> del plan <b>Pro</b>.<br><br>Conecta tus canales y prueba todas las funcionalidades.`,
+      confirmButtonText: '¡Empezar!',
+      confirmButtonColor: '#6366f1',
+    })
+  }, [profile])
+
   async function getData() {
     try {
       const { data: profileData } = await supabase
