@@ -1,4 +1,4 @@
-export type BusinessType = 'ecommerce' | 'inmobiliaria' | 'clinica' | 'servicios'
+export type BusinessType = 'ecommerce' | 'inmobiliaria' | 'clinica' | 'servicios' | 'restaurant'
 
 interface BusinessLabels {
   catalog: string
@@ -91,6 +91,24 @@ const LABELS: Record<BusinessType, BusinessLabels> = {
     categoryLabel: 'Categoría',
     categoryPlaceholder: 'Ej: Cortes, Tratamientos, Coloración',
     uploadSuccess: 'Tu IA ya conoce este servicio.',
+  },
+  restaurant: {
+    catalog: 'Mi Carta',
+    product: 'Plato',
+    products: 'Platos',
+    inventory: 'Menú',
+    addProduct: 'Agregar Plato',
+    namePlaceholder: 'Ej: Lomo saltado',
+    nameLabel: 'Nombre del Plato',
+    descLabel: 'Descripción del Plato',
+    descPlaceholder: 'Detalla ingredientes, preparación, acompañamientos...',
+    priceLabel: 'Precio ($ CLP)',
+    pricePlaceholder: '8990',
+    showBrand: false,
+    showCategory: true,
+    categoryLabel: 'Categoría',
+    categoryPlaceholder: 'Ej: Entradas, Platos de fondo, Postres, Bebestibles',
+    uploadSuccess: 'Tu IA ya conoce este plato.',
   },
 }
 

@@ -104,6 +104,7 @@ export const BUSINESS_TYPES: Record<string, string> = {
   inmobiliaria: 'Inmobiliaria',
   clinica: 'Clínica / Salud',
   servicios: 'Servicios / Barbería',
+  restaurant: 'Restaurant / Comida',
 }
 
 export function getBusinessType(profile: any): string {
