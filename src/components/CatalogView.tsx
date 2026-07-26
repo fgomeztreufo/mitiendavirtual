@@ -232,15 +232,15 @@ export default function CatalogView({ session, profile, onProductAdded, goToPlan
           )}
         </div>
 
-        <div className={`p-4 rounded-2xl w-full md:w-64 border transition-all ${planCode === 'full' ? 'bg-yellow-500/5 border-yellow-500/30' : 'bg-gray-900 border-gray-800'}`}>
+        <div className="p-4 rounded-2xl w-full md:w-64 border transition-all bg-gray-900 border-gray-800">
           <div className="flex justify-between text-[10px] font-black mb-2 tracking-widest uppercase">
             <span className="text-gray-500">Capacidad</span>
             <span className="text-white">{`${currentCount} / ${limit.toLocaleString('es-CL')}`}</span>
           </div>
           <div className="h-1.5 w-full bg-black rounded-full overflow-hidden">
             <div
-              className={`h-full transition-all duration-1000 ${planCode === 'full' ? 'bg-gradient-to-r from-yellow-600 to-orange-400' : isFull ? 'bg-red-500' : 'bg-blue-600'}`}
-              style={{ width: `${planCode === 'full' ? 100 : percentage}%` }}
+              className={`h-full transition-all duration-1000 ${isFull ? 'bg-red-500' : percentage > 80 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+              style={{ width: `${percentage}%` }}
             />
           </div>
         </div>
