@@ -102,7 +102,7 @@ const LABELS: Record<BusinessType, BusinessLabels> = {
     product: 'Plato',
     products: 'Platos',
     inventory: 'Menú',
-    services: 'Servicios',
+    services: 'Reservas',
     addProduct: 'Agregar Plato',
     namePlaceholder: 'Ej: Lomo saltado',
     nameLabel: 'Nombre del Plato',
