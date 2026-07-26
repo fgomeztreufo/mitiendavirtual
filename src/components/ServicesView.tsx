@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../supabaseClient'
 import Swal from 'sweetalert2'
 import { Session } from '@supabase/supabase-js'
+import { getLabels } from '../utils/businessLabels'
 
 interface Service {
   id: string
@@ -19,11 +20,13 @@ interface ServicesViewProps {
   profile: any
   onUpdate?: () => void
   goToPlans?: () => void
+  businessType?: string
 }
 
 const EMPTY_FORM = { name: '', description: '', duration_minutes: '30', price: '', buffer_minutes: '0' }
 
-export default function ServicesView({ session, profile, onUpdate }: ServicesViewProps) {
+export default function ServicesView({ session, profile, onUpdate, businessType }: ServicesViewProps) {
+  const bLabels = getLabels(businessType)
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -95,7 +98,7 @@ export default function ServicesView({ session, profile, onUpdate }: ServicesVie
 
         Swal.fire({
           icon: 'success',
-          title: 'Servicio actualizado',
+          title: `${bLabels.product} actualizado`,
           background: '#111827', color: '#fff',
           timer: 2000, showConfirmButton: false,
         })
@@ -107,8 +110,8 @@ export default function ServicesView({ session, profile, onUpdate }: ServicesVie
 
         Swal.fire({
           icon: 'success',
-          title: '¡Servicio creado!',
-          text: 'Tu IA ya conoce este servicio.',
+          title: `¡${bLabels.product} creado!`,
+          text: bLabels.uploadSuccess,
           background: '#111827', color: '#fff',
           timer: 2500, showConfirmButton: false,
         })
@@ -118,7 +121,7 @@ export default function ServicesView({ session, profile, onUpdate }: ServicesVie
       fetchServices()
       if (onUpdate) onUpdate()
     } catch (err: any) {
-      Swal.fire('Error', err.message || 'No se pudo guardar el servicio.', 'error')
+      Swal.fire('Error', err.message || `No se pudo guardar el ${bLabels.product.toLowerCase()}.`, 'error')
     } finally {
       setSaving(false)
     }
@@ -161,7 +164,7 @@ export default function ServicesView({ session, profile, onUpdate }: ServicesVie
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter uppercase">Mis Servicios</h1>
+          <h1 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter uppercase">{bLabels.services}</h1>
         </div>
         <div className="p-4 rounded-2xl w-full md:w-auto bg-gray-900 border border-gray-800">
           <div className="flex items-center gap-4 text-xs">
@@ -190,13 +193,13 @@ export default function ServicesView({ session, profile, onUpdate }: ServicesVie
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left">
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Nombre del Servicio</label>
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Nombre del {bLabels.product}</label>
                 <input
                   required
                   className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all text-sm"
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Ej: Corte de pelo, Consulta médica"
+                  placeholder={bLabels.namePlaceholder}
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -263,7 +266,7 @@ export default function ServicesView({ session, profile, onUpdate }: ServicesVie
                 className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all text-sm h-24 resize-none"
                 value={formData.description}
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Detalla qué incluye el servicio, para quién es ideal, materiales, etc."
+                placeholder={bLabels.descPlaceholder}
               />
             </div>
 
@@ -278,7 +281,7 @@ export default function ServicesView({ session, profile, onUpdate }: ServicesVie
                     : 'bg-blue-600 hover:bg-blue-500 hover:scale-[1.01] shadow-blue-900/20'
               }`}
             >
-              {saving ? 'Guardando...' : editingService ? 'Actualizar Servicio' : '🚀 Guardar Servicio'}
+              {saving ? 'Guardando...' : editingService ? `Actualizar ${bLabels.product}` : `🚀 ${bLabels.addProduct}`}
             </button>
           </form>
         </div>
@@ -296,13 +299,13 @@ export default function ServicesView({ session, profile, onUpdate }: ServicesVie
               <div className="space-y-4">
                 <div className="flex justify-end">
                   <div className="bg-indigo-600 text-white text-[9px] px-3 py-2 rounded-2xl rounded-tr-none max-w-[80%]">
-                    Me interesa <strong>{formData.name || 'conocer sus servicios'}</strong>, ¿cuánto cuesta?
+                    Me interesa <strong>{formData.name || `conocer sus ${bLabels.products.toLowerCase()}`}</strong>, ¿cuánto cuesta?
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <div className="w-6 h-6 bg-purple-600 rounded-full flex-shrink-0 flex items-center justify-center text-[10px]">🤖</div>
                   <div className="bg-[#1f2937] text-gray-200 text-[9px] px-3 py-2 rounded-2xl rounded-tl-none space-y-1.5">
-                    <p>¡Hola! Tenemos <strong>{formData.name || 'ese servicio'}</strong> disponible.</p>
+                    <p>¡Hola! Tenemos <strong>{formData.name || `ese ${bLabels.product.toLowerCase()}`}</strong> disponible.</p>
                     {formData.price && <p>Valor: <strong>${parseInt(formData.price).toLocaleString('es-CL')}</strong></p>}
                     {parseInt(formData.duration_minutes) > 0 && showSchedulingConfig && (
                       <p>Duración: <strong>{formData.duration_minutes} minutos</strong></p>
@@ -320,7 +323,7 @@ export default function ServicesView({ session, profile, onUpdate }: ServicesVie
           {/* LISTA DE SERVICIOS */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Servicios ({services.length})</p>
+              <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{bLabels.services} ({services.length})</p>
             </div>
 
             {loading ? (
@@ -331,7 +334,7 @@ export default function ServicesView({ session, profile, onUpdate }: ServicesVie
             ) : services.length === 0 ? (
               <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-8 text-center">
                 <span className="text-2xl mb-2 block">📋</span>
-                <p className="text-gray-500 text-xs">Aún no tienes servicios. Crea tu primer servicio con el formulario.</p>
+                <p className="text-gray-500 text-xs">Aún no tienes {bLabels.products.toLowerCase()}. Crea tu primer {bLabels.product.toLowerCase()} con el formulario.</p>
               </div>
             ) : (
               <div className="grid gap-2 max-h-[400px] overflow-y-auto pr-1">

@@ -509,6 +509,7 @@ export default function Dashboard({ session }: { session: Session }) {
                 profile={profile}
                 onUpdate={getData}
                 goToPlans={() => setActiveTab('plans')}
+                businessType={businessType}
               />
             )}
             {activeTab === 'scheduling' && (
