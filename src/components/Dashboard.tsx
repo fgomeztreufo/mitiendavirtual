@@ -343,7 +343,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <button
               onClick={() => setKnowledgeOpen(!knowledgeOpen)}
               className={`w-full flex items-center gap-2.5 p-3 text-sm transition-all duration-200 ${
-                activeTab === 'faqs' || activeTab === 'knowlower' || activeTab === 'catalog' || activeTab === 'inventory' || activeTab === 'services'
+                activeTab === 'faqs' || activeTab === 'knowlower' || activeTab === 'catalog' || activeTab === 'inventory'
                   ? 'text-purple-300'
                   : 'text-gray-300 hover:text-purple-300'
               }`}
@@ -370,9 +370,6 @@ export default function Dashboard({ session }: { session: Session }) {
                     {bLabels.inventory}
                   </button>
                 )}
-                <button onClick={() => setActiveTab('services')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'services' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
-                  {bLabels.services}
-                </button>
               </div>
             )}
           </div>
