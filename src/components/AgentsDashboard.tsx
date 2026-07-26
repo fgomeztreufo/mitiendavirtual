@@ -50,13 +50,24 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
   const [calendarConnected, setCalendarConnected] = useState(false);
   const [calendarStats, setCalendarStats] = useState<CalendarStats>({ total: 0, confirmed: 0, today: 0 });
   const [loading, setLoading] = useState(true);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [filterBranch, setFilterBranch] = useState('all');
+
+  useEffect(() => {
+    supabase.from('branches').select('id, name').eq('user_id', session.user.id).eq('is_active', true)
+      .order('sort_order').then(({ data }) => { if (data) setBranches(data); });
+  }, [session.user.id]);
 
   const fetchStats: () => Promise<void> = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      let leadsQuery = supabase
         .from('leads')
         .select('status, created_at, sistema')
         .eq('user_id', session.user.id);
+      if (filterBranch !== 'all') {
+        leadsQuery = leadsQuery.eq('branch_id', filterBranch);
+      }
+      const { data, error } = await leadsQuery;
 
       if (error) {
         throw error;
@@ -126,10 +137,14 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
       }
 
       try {
-        const { data: appts, error: apptError } = await supabase
+        let apptQuery = supabase
           .from('appointments')
           .select('status, starts_at')
           .eq('user_id', session.user.id);
+        if (filterBranch !== 'all') {
+          apptQuery = apptQuery.eq('branch_id', filterBranch);
+        }
+        const { data: appts, error: apptError } = await apptQuery;
 
         if (!apptError && appts) {
           const todayStr = new Date().toISOString().split('T')[0];
@@ -159,11 +174,11 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
     } finally {
       setLoading(false);
     }
-  }, [session.user.id]);
+  }, [session.user.id, filterBranch]);
 
   useEffect(() => {
     fetchStats();
-  }, [session.user.id, fetchStats]);
+  }, [session.user.id, fetchStats, filterBranch]);
 
   const messagesUsed = profile?.messages_used || 0;
   const messagesUsedTelegram = profile?.messages_used_tl || 0;
@@ -284,13 +299,25 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-white">
-          Panel de Agentes <span className="text-blue-400">IA</span>
-        </h1>
-        <p className="text-gray-400 text-sm mt-1">
-          Monitorea el rendimiento de tus agentes inteligentes • Plan {planType}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-white">
+            Panel de Agentes <span className="text-blue-400">IA</span>
+          </h1>
+          <p className="text-gray-400 text-sm mt-1">
+            Monitorea el rendimiento de tus agentes inteligentes • Plan {planType}
+          </p>
+        </div>
+        {branches.length > 0 && (
+          <select
+            value={filterBranch}
+            onChange={e => setFilterBranch(e.target.value)}
+            className="px-3 py-2 text-xs rounded-xl bg-white/[0.03] border border-white/10 text-gray-300 w-fit"
+          >
+            <option value="all">Todas las sucursales</option>
+            {branches.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+          </select>
+        )}
       </div>
 
       {/* Agentes */}

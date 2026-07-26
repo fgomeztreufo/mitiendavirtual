@@ -7,12 +7,19 @@ export default function TelegramLeadsView({ onClose, userId }: Readonly<{ onClos
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('todos');
   const [days, setDays] = useState(30);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [filterBranch, setFilterBranch] = useState('all');
+
+  useEffect(() => {
+    supabase.from('branches').select('id, name').eq('user_id', userId).eq('is_active', true)
+      .order('sort_order').then(({ data }) => { if (data) setBranches(data); });
+  }, [userId]);
 
   useEffect(() => {
     if (userId) {
       fetchLeads();
     }
-  }, [userId, filterStatus, days]);
+  }, [userId, filterStatus, days, filterBranch]);
 
   const fetchLeads = async () => {
     setLoading(true);
@@ -22,7 +29,7 @@ export default function TelegramLeadsView({ onClose, userId }: Readonly<{ onClos
 
       let query = supabase
         .from('leads')
-        .select('*')
+        .select('*, branches(name)')
         .eq('user_id', userId)
         .ilike('sistema', 'telegram')
         .gte('created_at', dateLimit.toISOString())
@@ -30,6 +37,9 @@ export default function TelegramLeadsView({ onClose, userId }: Readonly<{ onClos
 
       if (filterStatus !== 'todos') {
         query = query.eq('status', filterStatus);
+      }
+      if (filterBranch !== 'all') {
+        query = query.eq('branch_id', filterBranch);
       }
 
       const { data, error } = await query;
@@ -102,6 +112,17 @@ export default function TelegramLeadsView({ onClose, userId }: Readonly<{ onClos
             <option value={30}>Últimos 30 días</option>
             <option value={90}>Últimos 90 días</option>
           </select>
+
+          {branches.length > 0 && (
+            <select
+              value={filterBranch}
+              onChange={(e) => setFilterBranch(e.target.value)}
+              className="bg-black border border-zinc-800 text-zinc-300 text-xs rounded-lg px-3 py-2 outline-none focus:border-teal-500/50"
+            >
+              <option value="all">Todas las sucursales</option>
+              {branches.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          )}
 
           {loading && <FiLoader className="animate-spin text-amber-500 ml-auto" />}
         </div>

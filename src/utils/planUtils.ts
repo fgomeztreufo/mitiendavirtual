@@ -39,10 +39,34 @@ export function normalizePlanType(input?: string | null): string {
 // ESTA ES LA CLAVE: Asegúrate de que diga EXPORT
 export const PLAN_PERMISSIONS: Record<string, string[]> = {
   free: ['email', 'push', 'whatsapp'],
-  basic: ['email', 'telegram', 'push', 'whatsapp'],
-  pro: ['email', 'telegram', 'push', 'whatsapp'],
-  full: ['email', 'telegram', 'push', 'whatsapp', 'scheduling']
+  basic: ['email', 'telegram', 'push', 'whatsapp', 'branches'],
+  pro: ['email', 'telegram', 'push', 'whatsapp', 'branches'],
+  full: ['email', 'telegram', 'push', 'whatsapp', 'scheduling', 'branches']
 };
+
+export const PLAN_BRANCHES_LIMIT: Record<string, number | null> = {
+  free: 0,
+  basic: 2,
+  pro: 5,
+  full: null,
+};
+
+export function branchesLimit(profile: any): number | null {
+  const code = effectivePlan(profile);
+  const limit = PLAN_BRANCHES_LIMIT[code];
+  return limit === undefined ? 0 : limit;
+}
+
+export function hasBranches(profile: any): boolean {
+  const limit = branchesLimit(profile);
+  return limit === null || limit > 0;
+}
+
+export function canCreateBranch(profile: any, currentCount: number): boolean {
+  const limit = branchesLimit(profile);
+  if (limit === null) return true;
+  return currentCount < limit;
+}
 
 export function planDisplayToCode(display?: string) {
   return normalizePlanType(display);

@@ -2,7 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react'
 import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
-import { normalizePlanType, isInTrial, trialDaysLeft, effectivePlan } from '../utils/planUtils'
+import { normalizePlanType, isInTrial, trialDaysLeft, effectivePlan, hasBranches } from '../utils/planUtils'
 import { FaInstagram, FaTelegram, FaWhatsapp, FaGoogle } from 'react-icons/fa'
 import { FaMeta } from 'react-icons/fa6'
 
@@ -26,6 +26,7 @@ const ServicesView = lazy(() => import('./ServicesView'))
 const WhatsAppMessagesView = lazy(() => import('./WhatsAppMessagesView'))
 const WhatsAppLeadsView = lazy(() => import('./WhatsAppLeadsView'))
 const ContabilidadView = lazy(() => import('./ContabilidadView'))
+const BranchesView = lazy(() => import('./BranchesView'))
 
 const LazyFallback = () => (
   <div className="flex items-center justify-center h-64">
@@ -51,6 +52,7 @@ export default function Dashboard({ session }: { session: Session }) {
   const hasTelegram = ['basic', 'pro', 'full'].includes(planCode)
   const hasWhatsApp = ['pro', 'full'].includes(planCode)
   const hasScheduling = planCode === 'full'
+  const hasBranchesAccess = hasBranches(profile)
   const isAdmin = profile?.is_admin === true
 
   // Manejo de alertas por URL (Pagos o Conexiones)
@@ -161,6 +163,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} locked={!hasWhatsApp} lockLabel="Pro+" onClick={() => { if (hasWhatsApp) { setActiveTab('whatsapp'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
             {hasWhatsApp && <MobileNavBtn label="Leads WhatsApp" active={activeTab === 'wpp-leads'} onClick={() => { setActiveTab('wpp-leads'); setMobileMenuOpen(false); }} />}
             <MobileNavBtn label="Agendamiento" active={activeTab === 'scheduling'} locked={!hasScheduling} lockLabel="Full" onClick={() => { if (hasScheduling) { setActiveTab('scheduling'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
+            <MobileNavBtn label="Sucursales" active={activeTab === 'branches'} locked={!hasBranchesAccess} lockLabel="Básico+" onClick={() => { if (hasBranchesAccess) { setActiveTab('branches'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
             <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-4 mb-2 tracking-widest">Configuración</p>
             <MobileNavBtn label="Notificaciones" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Configura tu Instagram" active={activeTab === 'instagram'} onClick={() => { setActiveTab('instagram'); setMobileMenuOpen(false); }} />
@@ -277,6 +280,16 @@ export default function Dashboard({ session }: { session: Session }) {
             onClick={() => hasScheduling ? (setActiveTab('scheduling'), setLegalView(null)) : setActiveTab('plans')}
             locked={!hasScheduling}
             lockLabel="Full"
+          />
+
+          {/* Sucursales — desde plan Básico */}
+          <SidebarBtn
+            label="Sucursales"
+            icon={<svg className="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+            active={activeTab === 'branches'}
+            onClick={() => hasBranchesAccess ? (setActiveTab('branches'), setLegalView(null)) : setActiveTab('plans')}
+            locked={!hasBranchesAccess}
+            lockLabel="Básico+"
           />
 
           {profile && isInTrial(profile) && (
@@ -462,6 +475,13 @@ export default function Dashboard({ session }: { session: Session }) {
                 profile={profile}
                 instance={instance}
                 onUpdate={getData}
+                goToPlans={() => setActiveTab('plans')}
+              />
+            )}
+            {activeTab === 'branches' && (
+              <BranchesView
+                session={session}
+                profile={profile}
                 goToPlans={() => setActiveTab('plans')}
               />
             )}

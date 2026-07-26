@@ -12,6 +12,12 @@ interface SchedulingViewProps {
   goToPlans?: () => void
 }
 
+interface Branch {
+  id: string
+  name: string
+  is_active: boolean
+}
+
 interface StaffMember {
   id: string
   name: string
@@ -21,6 +27,8 @@ interface StaffMember {
   is_active: boolean
   sort_order: number
   google_calendar_id: string | null
+  branch_id: string | null
+  specialty: string | null
 }
 
 interface Service {
@@ -46,8 +54,10 @@ interface Appointment {
   source: string
   notes: string | null
   created_at: string
+  branch_id: string | null
   staff_members?: { name: string }
   services?: { name: string; duration_minutes: number; price: number | null }
+  branches?: { name: string }
 }
 
 interface Schedule {
@@ -103,6 +113,7 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
   const [schedules, setSchedules] = useState<Schedule[]>([])
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [overrides, setOverrides] = useState<ScheduleOverride[]>([])
+  const [branches, setBranches] = useState<Branch[]>([])
   const [selectedStaffId, setSelectedStaffId] = useState<string>('')
 
   const planCode = effectivePlan(profile)
@@ -112,19 +123,20 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
     if (!userId) return
     setLoading(true)
     try {
-      const [svcRes, staffRes, ssRes, schedRes, apptRes, overRes] = await Promise.all([
+      const [svcRes, staffRes, ssRes, schedRes, apptRes, overRes, branchRes] = await Promise.all([
         supabase.from('services').select('*').eq('user_id', userId).order('sort_order'),
         supabase.from('staff_members').select('*').eq('user_id', userId).order('sort_order'),
         supabase.from('staff_services').select('*'),
         supabase.from('schedules').select('*'),
         supabase.from('appointments')
-          .select('*, staff_members(name), services(name, duration_minutes, price)')
+          .select('*, staff_members(name), services(name, duration_minutes, price), branches(name)')
           .eq('user_id', userId)
           .order('starts_at', { ascending: false })
           .limit(50),
         supabase.from('schedule_overrides').select('*')
           .gte('override_date', new Date().toISOString().slice(0, 10))
           .order('override_date'),
+        supabase.from('branches').select('id, name, is_active').eq('user_id', userId).eq('is_active', true).order('sort_order'),
       ])
       if (svcRes.data) setServices(svcRes.data)
       if (staffRes.data) setStaff(staffRes.data)
@@ -132,6 +144,7 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
       if (schedRes.data) setSchedules(schedRes.data)
       if (apptRes.data) setAppointments(apptRes.data)
       if (overRes.data) setOverrides(overRes.data)
+      if (branchRes.data) setBranches(branchRes.data)
     } catch (err) {
       console.error('Error loading scheduling data:', err)
     } finally {
@@ -216,6 +229,7 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
           staffServices={staffServices}
           userId={userId}
           onRefresh={loadAll}
+          branches={branches}
         />
       )}
       {subTab === 'schedules' && (
@@ -235,6 +249,7 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
           services={services}
           userId={userId}
           onRefresh={loadAll}
+          branches={branches}
         />
       )}
       {subTab === 'calendar' && (
@@ -380,15 +395,21 @@ function ServicesPanel({ services, userId, onRefresh }: { services: Service[]; u
 }
 
 /* ==================== STAFF PANEL ==================== */
-function StaffPanel({ staff, services, staffServices, userId, onRefresh }: {
-  staff: StaffMember[]; services: Service[]; staffServices: StaffService[]; userId: string; onRefresh: () => void
+function StaffPanel({ staff, services, staffServices, userId, onRefresh, branches }: {
+  staff: StaffMember[]; services: Service[]; staffServices: StaffService[]; userId: string; onRefresh: () => void; branches: Branch[]
 }) {
   const addStaff = async () => {
+    const branchOptions = branches.length > 0
+      ? `<select id="swal-branch" class="swal2-select"><option value="">Sin sucursal</option>${branches.map(b => `<option value="${b.id}">${escHtml(b.name)}</option>`).join('')}</select>`
+      : ''
+
     const { value: formValues } = await Swal.fire({
       title: 'Nuevo Profesional',
       html: `
         <input id="swal-name" class="swal2-input" placeholder="Nombre completo">
         <input id="swal-role" class="swal2-input" placeholder="Rol (ej: Barbero, Estilista)">
+        <input id="swal-specialty" class="swal2-input" placeholder="Especialidad (ej: Dermatología, Ventas)">
+        ${branchOptions}
         <input id="swal-phone" class="swal2-input" placeholder="Teléfono (opcional)">
         <input id="swal-email" class="swal2-input" placeholder="Email (opcional)">
       `,
@@ -399,9 +420,12 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh }: {
       preConfirm: () => {
         const name = (document.getElementById('swal-name') as HTMLInputElement).value.trim()
         if (!name) { Swal.showValidationMessage('El nombre es obligatorio'); return false }
+        const branchEl = document.getElementById('swal-branch') as HTMLSelectElement | null
         return {
           name,
           role: (document.getElementById('swal-role') as HTMLInputElement).value.trim() || null,
+          specialty: (document.getElementById('swal-specialty') as HTMLInputElement).value.trim() || null,
+          branch_id: branchEl?.value || null,
           phone: (document.getElementById('swal-phone') as HTMLInputElement).value.trim() || null,
           email: (document.getElementById('swal-email') as HTMLInputElement).value.trim() || null,
         }
@@ -502,6 +526,10 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh }: {
                       <div>
                         <p className="text-sm font-bold text-white">{member.name}</p>
                         {member.role && <p className="text-[10px] text-gray-500 uppercase tracking-wider">{member.role}</p>}
+                        {member.specialty && <p className="text-[10px] text-emerald-400/70">{member.specialty}</p>}
+                        {member.branch_id && branches.length > 0 && (
+                          <p className="text-[10px] text-teal-400/70">{branches.find(b => b.id === member.branch_id)?.name}</p>
+                        )}
                       </div>
                     </div>
                     {memberServices.length > 0 && (
@@ -864,14 +892,15 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
 }
 
 /* ==================== APPOINTMENTS PANEL ==================== */
-function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }: {
-  appointments: Appointment[]; staff: StaffMember[]; services: Service[]; userId: string; onRefresh: () => void
+function AppointmentsPanel({ appointments, staff, services, userId, onRefresh, branches }: {
+  appointments: Appointment[]; staff: StaffMember[]; services: Service[]; userId: string; onRefresh: () => void; branches: Branch[]
 }) {
   const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [filterBranch, setFilterBranch] = useState<string>('all')
 
-  const filtered = filterStatus === 'all'
-    ? appointments
-    : appointments.filter(a => a.status === filterStatus)
+  const filtered = appointments
+    .filter(a => filterStatus === 'all' || a.status === filterStatus)
+    .filter(a => filterBranch === 'all' || a.branch_id === filterBranch)
 
   const updateStatus = async (appt: Appointment, newStatus: string) => {
     const labels: Record<string, string> = {
@@ -911,6 +940,10 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
       return
     }
 
+    const branchSelect = branches.length > 0
+      ? `<select id="swal-branch" class="swal2-select"><option value="">Sin sucursal</option>${branches.map(b => `<option value="${b.id}">${escHtml(b.name)}</option>`).join('')}</select>`
+      : ''
+
     const { value: formValues } = await Swal.fire({
       title: 'Nueva Cita Manual',
       html: `
@@ -920,8 +953,9 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
           ${activeServices.map(s => `<option value="${s.id}">${escHtml(s.name)} (${s.duration_minutes} min)</option>`).join('')}
         </select>
         <select id="swal-staff" class="swal2-select">
-          ${activeStaff.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join('')}
+          ${activeStaff.map(s => `<option value="${s.id}">${escHtml(s.name)}${s.specialty ? ` — ${escHtml(s.specialty)}` : ''}</option>`).join('')}
         </select>
+        ${branchSelect}
         <input id="swal-date" class="swal2-input" type="date">
         <input id="swal-time" class="swal2-input" type="time">
       `,
@@ -936,11 +970,12 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
         const staffId = (document.getElementById('swal-staff') as HTMLSelectElement).value
         const date = (document.getElementById('swal-date') as HTMLInputElement).value
         const time = (document.getElementById('swal-time') as HTMLInputElement).value
+        const branchEl = document.getElementById('swal-branch') as HTMLSelectElement | null
         if (!clientName || !clientPhone || !date || !time) {
           Swal.showValidationMessage('Todos los campos son obligatorios')
           return false
         }
-        return { clientName, clientPhone, serviceId, staffId, date, time }
+        return { clientName, clientPhone, serviceId, staffId, date, time, branchId: branchEl?.value || null }
       }
     })
     if (!formValues) return
@@ -959,6 +994,7 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
       ends_at: endsAt.toISOString(),
       source: 'dashboard',
       reminder_sent: true,
+      branch_id: formValues.branchId || null,
     }).select('id').single()
     if (error) {
       Swal.fire('Error', error.message, 'error')
@@ -1033,9 +1069,17 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh }:
             </button>
           ))}
         </div>
-        <button onClick={createManual} className="px-4 py-2 text-xs font-bold rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition-all w-fit">
-          + Cita manual
-        </button>
+        <div className="flex items-center gap-2">
+          {branches.length > 0 && (
+            <select value={filterBranch} onChange={e => setFilterBranch(e.target.value)} className="px-3 py-2 text-[10px] font-bold rounded-lg bg-white/[0.03] border border-white/5 text-gray-300">
+              <option value="all">Todas las sucursales</option>
+              {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          )}
+          <button onClick={createManual} className="px-4 py-2 text-xs font-bold rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition-all w-fit">
+            + Cita manual
+          </button>
+        </div>
       </div>
 
       {filtered.length === 0 ? (

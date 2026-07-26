@@ -198,23 +198,23 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                 const isTrialPlan = inTrial && activePlan === code
                 const isRealPlan = !inTrial && isCurrent
 
+                const isPendingMeta = code === 'pro' || code === 'full'
+
                 const label = isTrialPlan
                     ? 'Plan en Prueba'
                     : isRealPlan
                     ? 'Tu Plan Actual'
+                    : isPendingMeta
+                    ? 'Próximamente'
                     : code === 'free'
                     ? 'Plan Base'
-                    : code === 'pro'
-                    ? 'Potenciar mi Tienda'
-                    : code === 'full'
-                    ? 'Dominar el Mercado'
                     : ('Elegir ' + plan.display_name)
 
                 const planEmoji = code === 'free' ? '🌱' : code === 'pro' ? '💎' : code === 'full' ? '🔥' : '⚡'
 
                 const mostPopular = 'basic'
                 const buttonLabelComputed = label
-                const isButtonDisabled = isRealPlan || (code === 'free' && !inTrial)
+                const isButtonDisabled = isRealPlan || (code === 'free' && !inTrial) || isPendingMeta
 
                 return (
                     <div key={code} className={`${bgClass} ${borderClass} ${baseClasses}`}>
@@ -252,6 +252,18 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                                     )}
                                 </span>
                             </li>
+                            <li className={`flex items-start gap-2 text-xs ${plan.branches_limit === 0 ? 'text-gray-600' : 'text-gray-300'}`}>
+                                <span className={`font-bold mt-0.5 ${plan.branches_limit === 0 ? 'text-gray-600' : 'text-green-500'}`}>
+                                    {plan.branches_limit === 0 ? '✗' : '✓'}
+                                </span>
+                                <span>
+                                    {plan.branches_limit == null
+                                        ? 'Sucursales ilimitadas'
+                                        : plan.branches_limit === 0
+                                        ? 'Sin sucursales'
+                                        : `${plan.branches_limit} sucursales`}
+                                </span>
+                            </li>
                         </ul>
 
                         {/* Canales */}
@@ -272,6 +284,11 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                         >
                             {buttonLabelComputed}
                         </button>
+                        {isPendingMeta && !isRealPlan && (
+                            <p className="mt-2 text-[10px] text-amber-400/80 text-center">
+                                ⏳ Permisos de Meta en aprobación
+                            </p>
+                        )}
                     </div>
                 )
               })}
