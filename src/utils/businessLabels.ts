@@ -5,6 +5,7 @@ interface BusinessLabels {
   product: string
   products: string
   inventory: string
+  services: string
   addProduct: string
   namePlaceholder: string
   nameLabel: string
@@ -25,6 +26,7 @@ const LABELS: Record<BusinessType, BusinessLabels> = {
     product: 'Producto',
     products: 'Productos',
     inventory: 'Inventario',
+    services: 'Servicios',
     addProduct: 'Guardar en Catálogo',
     namePlaceholder: 'Ej: Zapatillas Adidas',
     nameLabel: 'Nombre del Producto',
@@ -43,6 +45,7 @@ const LABELS: Record<BusinessType, BusinessLabels> = {
     product: 'Propiedad',
     products: 'Propiedades',
     inventory: 'Portafolio',
+    services: 'Servicios',
     addProduct: 'Publicar Propiedad',
     namePlaceholder: 'Ej: Departamento 2D+1B Providencia',
     nameLabel: 'Nombre de la Propiedad',
@@ -61,6 +64,7 @@ const LABELS: Record<BusinessType, BusinessLabels> = {
     product: 'Servicio',
     products: 'Servicios',
     inventory: 'Catálogo de Servicios',
+    services: 'Prestaciones',
     addProduct: 'Agregar Servicio',
     namePlaceholder: 'Ej: Consulta Dermatológica',
     nameLabel: 'Nombre del Servicio',
@@ -79,6 +83,7 @@ const LABELS: Record<BusinessType, BusinessLabels> = {
     product: 'Servicio',
     products: 'Servicios',
     inventory: 'Catálogo',
+    services: 'Servicios',
     addProduct: 'Agregar Servicio',
     namePlaceholder: 'Ej: Corte de pelo clásico',
     nameLabel: 'Nombre del Servicio',
@@ -97,6 +102,7 @@ const LABELS: Record<BusinessType, BusinessLabels> = {
     product: 'Plato',
     products: 'Platos',
     inventory: 'Menú',
+    services: 'Servicios',
     addProduct: 'Agregar Plato',
     namePlaceholder: 'Ej: Lomo saltado',
     nameLabel: 'Nombre del Plato',

@@ -210,7 +210,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <MobileNavBtn label="Cerebro IA" active={activeTab === 'knowlower'} onClick={() => { setActiveTab('knowlower'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label={bLabels.catalog} active={activeTab === 'catalog'} onClick={() => { setActiveTab('catalog'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label={bLabels.inventory} active={activeTab === 'inventory'} onClick={() => { setActiveTab('inventory'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Servicios" active={activeTab === 'services'} onClick={() => { setActiveTab('services'); setMobileMenuOpen(false); }} />
+            <MobileNavBtn label={bLabels.services} active={activeTab === 'services'} onClick={() => { setActiveTab('services'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Planes" active={activeTab === 'plans'} onClick={() => { setActiveTab('plans'); setMobileMenuOpen(false); }} />
             {isAdmin && <MobileNavBtn label="Contabilidad" active={activeTab === 'contabilidad'} onClick={() => { setActiveTab('contabilidad'); setMobileMenuOpen(false); }} />}
             <div className="pt-3 border-t border-white/5 mt-3">
@@ -367,7 +367,7 @@ export default function Dashboard({ session }: { session: Session }) {
                   {bLabels.inventory}
                 </button>
                 <button onClick={() => setActiveTab('services')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'services' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
-                  Servicios
+                  {bLabels.services}
                 </button>
               </div>
             )}
