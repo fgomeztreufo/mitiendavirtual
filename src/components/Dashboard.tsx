@@ -109,16 +109,12 @@ export default function Dashboard({ session }: { session: Session }) {
     })
   }, [profile])
 
-  useEffect(() => {
-    if (!profile) return
-    if (profile.business_type) return
-    const key = 'btype_asked_' + session.user.id
-    if (localStorage.getItem(key)) return
-    localStorage.setItem(key, '1')
+  const pickBusinessType = async () => {
+    const current = profile?.business_type || 'ecommerce'
     const optionsHtml = Object.entries(BUSINESS_TYPES)
-      .map(([k, v]) => `<option value="${k}">${v}</option>`)
+      .map(([k, v]) => `<option value="${k}"${k === current ? ' selected' : ''}>${v}</option>`)
       .join('')
-    Swal.fire({
+    const { isConfirmed, value } = await Swal.fire({
       title: '¿Qué tipo de negocio tienes?',
       html: `<p style="color:#9ca3af;font-size:13px;margin-bottom:12px">Esto personaliza tu catálogo y la experiencia de la plataforma.</p><select id="swal-btype" class="swal2-select">${optionsHtml}</select>`,
       confirmButtonText: 'Confirmar',
@@ -127,12 +123,23 @@ export default function Dashboard({ session }: { session: Session }) {
       background: '#1a1a1a',
       color: '#fff',
       preConfirm: () => (document.getElementById('swal-btype') as HTMLSelectElement)?.value || 'ecommerce',
-    }).then(async (result) => {
-      if (result.isConfirmed && result.value) {
-        await supabase.from('profiles').update({ business_type: result.value }).eq('id', session.user.id)
-        setProfile((prev: any) => prev ? { ...prev, business_type: result.value } : prev)
-      }
     })
+    if (isConfirmed && value) {
+      await supabase.from('profiles').update({ business_type: value }).eq('id', session.user.id)
+      setProfile((prev: any) => prev ? { ...prev, business_type: value } : prev)
+    }
+  }
+
+  useEffect(() => {
+    if (!profile) return
+    const key = 'btype_chosen_' + session.user.id
+    if (localStorage.getItem(key)) return
+    if (profile.business_type && profile.business_type !== 'ecommerce') {
+      localStorage.setItem(key, '1')
+      return
+    }
+    localStorage.setItem(key, '1')
+    pickBusinessType()
   }, [profile])
 
   const businessType = getBusinessType(profile)
@@ -421,7 +428,11 @@ export default function Dashboard({ session }: { session: Session }) {
           )}
         </nav>
 
-        <div className="p-4 border-t border-white/5">
+        <div className="p-4 border-t border-white/5 space-y-1">
+            <button onClick={pickBusinessType} className="w-full text-left text-gray-500 p-2.5 hover:bg-white/5 rounded-xl flex items-center gap-2 transition-all text-xs">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+              <span>{BUSINESS_TYPES[businessType] || 'Tipo de negocio'}</span>
+            </button>
             <button onClick={() => supabase.auth.signOut({ scope: 'local' })} className="w-full text-left text-red-400/80 p-2.5 hover:bg-red-500/10 rounded-xl flex items-center gap-2 transition-all text-sm">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
               <span>Cerrar Sesión</span>
