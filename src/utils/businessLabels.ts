@@ -13,6 +13,7 @@ interface BusinessLabels {
   descPlaceholder: string
   priceLabel: string
   pricePlaceholder: string
+  showCatalog: boolean
   showBrand: boolean
   showCategory: boolean
   categoryLabel: string
@@ -34,6 +35,7 @@ const LABELS: Record<BusinessType, BusinessLabels> = {
     descPlaceholder: 'Detalla tallas, materiales y beneficios...',
     priceLabel: 'Precio ($ CLP)',
     pricePlaceholder: '9990',
+    showCatalog: true,
     showBrand: true,
     showCategory: true,
     categoryLabel: 'Categoría',
@@ -53,6 +55,7 @@ const LABELS: Record<BusinessType, BusinessLabels> = {
     descPlaceholder: 'Detalla ubicación, estado, amenidades, cercanías...',
     priceLabel: 'Precio ($ CLP)',
     pricePlaceholder: '85000000',
+    showCatalog: true,
     showBrand: false,
     showCategory: false,
     categoryLabel: 'Categoría',
@@ -72,6 +75,7 @@ const LABELS: Record<BusinessType, BusinessLabels> = {
     descPlaceholder: 'Detalla el servicio, duración, preparación...',
     priceLabel: 'Precio ($ CLP)',
     pricePlaceholder: '35000',
+    showCatalog: false,
     showBrand: false,
     showCategory: true,
     categoryLabel: 'Especialidad',
@@ -91,6 +95,7 @@ const LABELS: Record<BusinessType, BusinessLabels> = {
     descPlaceholder: 'Detalla el servicio, duración, incluye...',
     priceLabel: 'Precio ($ CLP)',
     pricePlaceholder: '15000',
+    showCatalog: false,
     showBrand: false,
     showCategory: true,
     categoryLabel: 'Categoría',
@@ -110,6 +115,7 @@ const LABELS: Record<BusinessType, BusinessLabels> = {
     descPlaceholder: 'Detalla ingredientes, preparación, acompañamientos...',
     priceLabel: 'Precio ($ CLP)',
     pricePlaceholder: '8990',
+    showCatalog: true,
     showBrand: false,
     showCategory: true,
     categoryLabel: 'Categoría',
