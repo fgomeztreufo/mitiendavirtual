@@ -1,0 +1,122 @@
+export type BusinessType = 'ecommerce' | 'inmobiliaria' | 'clinica' | 'servicios'
+
+interface BusinessLabels {
+  catalog: string
+  product: string
+  products: string
+  inventory: string
+  addProduct: string
+  namePlaceholder: string
+  nameLabel: string
+  descLabel: string
+  descPlaceholder: string
+  priceLabel: string
+  pricePlaceholder: string
+  showBrand: boolean
+  showCategory: boolean
+  categoryLabel: string
+  categoryPlaceholder: string
+  uploadSuccess: string
+}
+
+const LABELS: Record<BusinessType, BusinessLabels> = {
+  ecommerce: {
+    catalog: 'Mi Catálogo',
+    product: 'Producto',
+    products: 'Productos',
+    inventory: 'Inventario',
+    addProduct: 'Guardar en Catálogo',
+    namePlaceholder: 'Ej: Zapatillas Adidas',
+    nameLabel: 'Nombre del Producto',
+    descLabel: 'Descripción para la IA',
+    descPlaceholder: 'Detalla tallas, materiales y beneficios...',
+    priceLabel: 'Precio ($ CLP)',
+    pricePlaceholder: '9990',
+    showBrand: true,
+    showCategory: true,
+    categoryLabel: 'Categoría',
+    categoryPlaceholder: 'Ej: Calzado, Electrónica, Alimentos',
+    uploadSuccess: 'Tu IA ya conoce este producto.',
+  },
+  inmobiliaria: {
+    catalog: 'Mis Propiedades',
+    product: 'Propiedad',
+    products: 'Propiedades',
+    inventory: 'Portafolio',
+    addProduct: 'Publicar Propiedad',
+    namePlaceholder: 'Ej: Departamento 2D+1B Providencia',
+    nameLabel: 'Nombre de la Propiedad',
+    descLabel: 'Descripción de la Propiedad',
+    descPlaceholder: 'Detalla ubicación, estado, amenidades, cercanías...',
+    priceLabel: 'Precio ($ CLP)',
+    pricePlaceholder: '85000000',
+    showBrand: false,
+    showCategory: false,
+    categoryLabel: 'Categoría',
+    categoryPlaceholder: '',
+    uploadSuccess: 'Tu IA ya conoce esta propiedad.',
+  },
+  clinica: {
+    catalog: 'Mis Servicios',
+    product: 'Servicio',
+    products: 'Servicios',
+    inventory: 'Catálogo de Servicios',
+    addProduct: 'Agregar Servicio',
+    namePlaceholder: 'Ej: Consulta Dermatológica',
+    nameLabel: 'Nombre del Servicio',
+    descLabel: 'Descripción del Servicio',
+    descPlaceholder: 'Detalla el servicio, duración, preparación...',
+    priceLabel: 'Precio ($ CLP)',
+    pricePlaceholder: '35000',
+    showBrand: false,
+    showCategory: true,
+    categoryLabel: 'Especialidad',
+    categoryPlaceholder: 'Ej: Dermatología, Odontología',
+    uploadSuccess: 'Tu IA ya conoce este servicio.',
+  },
+  servicios: {
+    catalog: 'Mis Servicios',
+    product: 'Servicio',
+    products: 'Servicios',
+    inventory: 'Catálogo',
+    addProduct: 'Agregar Servicio',
+    namePlaceholder: 'Ej: Corte de pelo clásico',
+    nameLabel: 'Nombre del Servicio',
+    descLabel: 'Descripción del Servicio',
+    descPlaceholder: 'Detalla el servicio, duración, incluye...',
+    priceLabel: 'Precio ($ CLP)',
+    pricePlaceholder: '15000',
+    showBrand: false,
+    showCategory: true,
+    categoryLabel: 'Categoría',
+    categoryPlaceholder: 'Ej: Cortes, Tratamientos, Coloración',
+    uploadSuccess: 'Tu IA ya conoce este servicio.',
+  },
+}
+
+export function getLabels(businessType?: string | null): BusinessLabels {
+  const key = (businessType || 'ecommerce') as BusinessType
+  return LABELS[key] || LABELS.ecommerce
+}
+
+export const OPERATION_TYPES = [
+  { value: 'venta', label: 'Venta' },
+  { value: 'arriendo', label: 'Arriendo' },
+]
+
+export const PROPERTY_TYPES = [
+  { value: 'casa', label: 'Casa' },
+  { value: 'departamento', label: 'Departamento' },
+  { value: 'terreno', label: 'Terreno' },
+  { value: 'oficina', label: 'Oficina' },
+  { value: 'local', label: 'Local Comercial' },
+  { value: 'bodega', label: 'Bodega' },
+  { value: 'estacionamiento', label: 'Estacionamiento' },
+]
+
+export const PROPERTY_STATUSES = [
+  { value: 'disponible', label: 'Disponible' },
+  { value: 'reservado', label: 'Reservado' },
+  { value: 'vendido', label: 'Vendido' },
+  { value: 'arrendado', label: 'Arrendado' },
+]

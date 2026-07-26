@@ -98,3 +98,18 @@ export function effectivePlan(profile: any): string {
   }
   return normalizePlanType(profile?.plan_type);
 }
+
+export const BUSINESS_TYPES: Record<string, string> = {
+  ecommerce: 'E-commerce / Tienda',
+  inmobiliaria: 'Inmobiliaria',
+  clinica: 'Clínica / Salud',
+  servicios: 'Servicios / Barbería',
+}
+
+export function getBusinessType(profile: any): string {
+  return profile?.business_type || 'ecommerce';
+}
+
+export function isInmobiliaria(profile: any): boolean {
+  return getBusinessType(profile) === 'inmobiliaria';
+}

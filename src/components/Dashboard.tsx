@@ -2,7 +2,8 @@ import { useState, useEffect, lazy, Suspense } from 'react'
 import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
-import { normalizePlanType, isInTrial, trialDaysLeft, effectivePlan, hasBranches } from '../utils/planUtils'
+import { normalizePlanType, isInTrial, trialDaysLeft, effectivePlan, hasBranches, getBusinessType, BUSINESS_TYPES } from '../utils/planUtils'
+import { getLabels } from '../utils/businessLabels'
 import { FaInstagram, FaTelegram, FaWhatsapp, FaGoogle } from 'react-icons/fa'
 import { FaMeta } from 'react-icons/fa6'
 
@@ -108,6 +109,35 @@ export default function Dashboard({ session }: { session: Session }) {
     })
   }, [profile])
 
+  useEffect(() => {
+    if (!profile) return
+    if (profile.business_type) return
+    const key = 'btype_asked_' + session.user.id
+    if (localStorage.getItem(key)) return
+    localStorage.setItem(key, '1')
+    const optionsHtml = Object.entries(BUSINESS_TYPES)
+      .map(([k, v]) => `<option value="${k}">${v}</option>`)
+      .join('')
+    Swal.fire({
+      title: '¿Qué tipo de negocio tienes?',
+      html: `<p style="color:#9ca3af;font-size:13px;margin-bottom:12px">Esto personaliza tu catálogo y la experiencia de la plataforma.</p><select id="swal-btype" class="swal2-select">${optionsHtml}</select>`,
+      confirmButtonText: 'Confirmar',
+      confirmButtonColor: '#6366f1',
+      allowOutsideClick: false,
+      background: '#1a1a1a',
+      color: '#fff',
+      preConfirm: () => (document.getElementById('swal-btype') as HTMLSelectElement)?.value || 'ecommerce',
+    }).then(async (result) => {
+      if (result.isConfirmed && result.value) {
+        await supabase.from('profiles').update({ business_type: result.value }).eq('id', session.user.id)
+        setProfile((prev: any) => prev ? { ...prev, business_type: result.value } : prev)
+      }
+    })
+  }, [profile])
+
+  const businessType = getBusinessType(profile)
+  const bLabels = getLabels(businessType)
+
   async function getData() {
     try {
       const { data: profileData } = await supabase
@@ -171,8 +201,8 @@ export default function Dashboard({ session }: { session: Session }) {
             <MobileNavBtn label="Configura tu WhatsApp" active={activeTab === 'whatsapp'} locked={!hasWhatsApp} lockLabel="Pro+" onClick={() => { if (hasWhatsApp) { setActiveTab('whatsapp'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
             <MobileNavBtn label="Cargar FAQs" active={activeTab === 'faqs'} onClick={() => { setActiveTab('faqs'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Cerebro IA" active={activeTab === 'knowlower'} onClick={() => { setActiveTab('knowlower'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Subir Producto" active={activeTab === 'catalog'} onClick={() => { setActiveTab('catalog'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Inventario" active={activeTab === 'inventory'} onClick={() => { setActiveTab('inventory'); setMobileMenuOpen(false); }} />
+            <MobileNavBtn label={bLabels.catalog} active={activeTab === 'catalog'} onClick={() => { setActiveTab('catalog'); setMobileMenuOpen(false); }} />
+            <MobileNavBtn label={bLabels.inventory} active={activeTab === 'inventory'} onClick={() => { setActiveTab('inventory'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Servicios" active={activeTab === 'services'} onClick={() => { setActiveTab('services'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Planes" active={activeTab === 'plans'} onClick={() => { setActiveTab('plans'); setMobileMenuOpen(false); }} />
             {isAdmin && <MobileNavBtn label="Contabilidad" active={activeTab === 'contabilidad'} onClick={() => { setActiveTab('contabilidad'); setMobileMenuOpen(false); }} />}
@@ -324,10 +354,10 @@ export default function Dashboard({ session }: { session: Session }) {
                   Cerebro IA
                 </button>
                 <button onClick={() => setActiveTab('catalog')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'catalog' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
-                  Subir Producto
+                  {bLabels.catalog}
                 </button>
                 <button onClick={() => setActiveTab('inventory')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'inventory' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
-                  Inventario
+                  {bLabels.inventory}
                 </button>
                 <button onClick={() => setActiveTab('services')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'services' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
                   Servicios
@@ -453,14 +483,15 @@ export default function Dashboard({ session }: { session: Session }) {
             {/* RENDER DE LA NUEVA VISTA */}
             {activeTab === 'notifications' && <NotificationsView session={session} profile={profile} />}
             {activeTab === 'catalog' && (
-              <CatalogView 
-                session={session} 
-                profile={profile} 
-                onProductAdded={getData} 
-                goToPlans={() => setActiveTab('plans')} 
+              <CatalogView
+                session={session}
+                profile={profile}
+                onProductAdded={getData}
+                goToPlans={() => setActiveTab('plans')}
+                businessType={businessType}
               />
             )}
-            {activeTab === 'inventory' && <ProductsListView session={session} onUpdate={getData} />}
+            {activeTab === 'inventory' && <ProductsListView session={session} onUpdate={getData} businessType={businessType} />}
             {activeTab === 'services' && (
               <ServicesView
                 session={session}
