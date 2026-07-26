@@ -438,6 +438,46 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh, branche
     onRefresh()
   }
 
+  const editStaff = async (member: StaffMember) => {
+    const branchOptions = branches.length > 0
+      ? `<select id="swal-branch" class="swal2-select">${[`<option value="">Sin sucursal</option>`, ...branches.map(b => `<option value="${b.id}"${b.id === member.branch_id ? ' selected' : ''}>${escHtml(b.name)}</option>`)].join('')}</select>`
+      : ''
+
+    const { value: formValues } = await Swal.fire({
+      title: 'Editar Profesional',
+      html: `
+        <input id="swal-name" class="swal2-input" placeholder="Nombre completo" value="${escHtml(member.name)}">
+        <input id="swal-role" class="swal2-input" placeholder="Rol (ej: Barbero, Estilista)" value="${escHtml(member.role || '')}">
+        <input id="swal-specialty" class="swal2-input" placeholder="Especialidad (ej: Dermatología, Ventas)" value="${escHtml(member.specialty || '')}">
+        ${branchOptions}
+        <input id="swal-phone" class="swal2-input" placeholder="Teléfono (opcional)" value="${escHtml(member.phone || '')}">
+        <input id="swal-email" class="swal2-input" placeholder="Email (opcional)" value="${escHtml(member.email || '')}">
+      `,
+      background: '#1a1a1a', color: '#fff',
+      confirmButtonText: 'Guardar',
+      confirmButtonColor: '#6366f1',
+      showCancelButton: true,
+      preConfirm: () => {
+        const name = (document.getElementById('swal-name') as HTMLInputElement).value.trim()
+        if (!name) { Swal.showValidationMessage('El nombre es obligatorio'); return false }
+        const branchEl = document.getElementById('swal-branch') as HTMLSelectElement | null
+        return {
+          name,
+          role: (document.getElementById('swal-role') as HTMLInputElement).value.trim() || null,
+          specialty: (document.getElementById('swal-specialty') as HTMLInputElement).value.trim() || null,
+          branch_id: branchEl?.value || null,
+          phone: (document.getElementById('swal-phone') as HTMLInputElement).value.trim() || null,
+          email: (document.getElementById('swal-email') as HTMLInputElement).value.trim() || null,
+        }
+      }
+    })
+    if (!formValues) return
+
+    const { error } = await supabase.from('staff_members').update(formValues).eq('id', member.id)
+    if (error) { Swal.fire('Error', error.message, 'error'); return }
+    onRefresh()
+  }
+
   const assignServices = async (member: StaffMember) => {
     const assigned = staffServices.filter(ss => ss.staff_id === member.id).map(ss => ss.service_id)
     const activeServices = services.filter(s => s.is_active)
@@ -543,6 +583,9 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh, branche
                     )}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
+                    <button onClick={() => editStaff(member)} className="text-[10px] font-bold px-2 py-1 rounded-lg border border-blue-500/30 text-blue-400 hover:bg-blue-500/10 transition-all">
+                      Editar
+                    </button>
                     <button onClick={() => assignServices(member)} className="text-[10px] font-bold px-2 py-1 rounded-lg border border-purple-500/30 text-purple-400 hover:bg-purple-500/10 transition-all">
                       Servicios
                     </button>
