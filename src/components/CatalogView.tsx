@@ -90,6 +90,32 @@ export default function CatalogView({ session, profile, onProductAdded, goToPlan
     setExtraPreviews(prev => prev.filter((_, i) => i !== idx))
   }
 
+  const buildRagDescription = () => {
+    const parts: string[] = []
+
+    if (isRealEstate) {
+      if (formData.property_type) parts.push(formData.property_type)
+      if (formData.operation_type) parts.push(`en ${formData.operation_type}`)
+      const location = [formData.comuna, formData.address].filter(Boolean).join(', ')
+      if (location) parts.push(`- ${location}`)
+      const specs: string[] = []
+      if (formData.area_m2) specs.push(`${formData.area_m2}m²`)
+      if (formData.bedrooms) specs.push(`${formData.bedrooms} dormitorios`)
+      if (formData.bathrooms) specs.push(`${formData.bathrooms} baños`)
+      if (formData.parking_spots) specs.push(`${formData.parking_spots} estacionamientos`)
+      if (specs.length) parts.push(`- ${specs.join(', ')}`)
+    } else {
+      parts.push(formData.name)
+      if (formData.brand) parts.push(`- ${formData.brand}`)
+      if (formData.category) parts.push(`- Categoría: ${formData.category}`)
+    }
+
+    if (formData.price) parts.push(`- $${Number(formData.price).toLocaleString('es-CL')} CLP`)
+    if (formData.description.trim()) parts.push(`. ${formData.description.trim()}`)
+
+    return parts.join(' ')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -115,7 +141,7 @@ export default function CatalogView({ session, profile, onProductAdded, goToPlan
       data.append('user_id', session.user.id)
       data.append('name', formData.name)
       data.append('price', formData.price)
-      data.append('description', formData.description)
+      data.append('description', buildRagDescription())
       data.append('brand', formData.brand)
       data.append('category', isRealEstate ? formData.property_type : formData.category)
       data.append('foto', file)
