@@ -154,7 +154,7 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
 
   useEffect(() => { loadAll() }, [loadAll])
 
-  if (planCode !== 'full') {
+  if (planCode !== 'escala') {
     return (
       <div className="max-w-4xl mx-auto p-4 text-center space-y-6">
         <div className="w-16 h-16 mx-auto rounded-2xl bg-indigo-500/10 flex items-center justify-center">
@@ -163,7 +163,7 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
           </svg>
         </div>
         <h2 className="text-xl font-bold text-white">Agendamiento</h2>
-        <p className="text-sm text-gray-400">El sistema de agendamiento está disponible en el plan Full.</p>
+        <p className="text-sm text-gray-400">El sistema de agendamiento está disponible en el plan Escala.</p>
         <button
           onClick={() => goToPlans?.()}
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 transition-all"

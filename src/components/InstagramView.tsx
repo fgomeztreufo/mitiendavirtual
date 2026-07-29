@@ -257,7 +257,7 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
               <p className="text-[10px] text-amber-400 italic">Cerca del límite — considera actualizar tu plan</p>
             )}
           </div>
-          {planCode !== 'full' && (
+          {planCode !== 'escala' && (
             <button
               onClick={() => goToPlans?.()}
               className="w-full py-2 text-xs font-bold rounded-xl border border-pink-500/30 text-pink-400 hover:bg-pink-500/10 transition-all"

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
+import { effectivePlan, planCodeToDisplay } from '../utils/planUtils';
 import AgentsOfficeScene from './AgentsOfficeScene';
 
 interface UserSession {
@@ -182,7 +183,7 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
   const aiCredits = profile?.ai_credits_used || 0;
   const isConnected = !!instance?.provider_id;
   const [whatsappConnected, setWhatsappConnected] = useState(false);
-  const planType = (profile?.plan_type || 'basic').toUpperCase();
+  const planType = planCodeToDisplay(effectivePlan(profile)).toUpperCase();
 
   useEffect(() => {
     async function checkWpp() {

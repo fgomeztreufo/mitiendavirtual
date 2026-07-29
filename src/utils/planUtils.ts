@@ -1,15 +1,21 @@
 // src/utils/planUtils.ts
 
 export const PLAN_CODE_MAP: Record<string, string> = {
-  free: 'basic',
-  semilla: 'basic',
-  básico: 'basic',
-  basico: 'basic',
-  emprendedor: 'basic',
+  free: 'inicial',
+  semilla: 'inicial',
+  básico: 'inicial',
+  basico: 'inicial',
+  basic: 'inicial',
+  emprendedor: 'inicial',
+  inicial: 'inicial',
+  pyme: 'pyme',
   pro: 'pro',
   crecimiento: 'pro',
-  full: 'full',
-  completo: 'full'
+  empresario: 'pro',
+  full: 'escala',
+  completo: 'escala',
+  escala: 'escala',
+  corporativo: 'escala',
 };
 
 function sanitize(input?: string) {
@@ -25,28 +31,30 @@ function sanitize(input?: string) {
 
 export function normalizePlanType(input?: string | null): string {
   const s = sanitize(input ?? '');
-  if (!s) return 'basic';
+  if (!s) return 'inicial';
 
-  if (s.includes('free') || s.includes('semilla')) return 'basic';
-  if (s.includes('basi') || s.includes('emprend')) return 'basic';
-  if (s.includes('empres') || s === 'pro' || s.includes('crecimiento')) return 'pro';
-  if (s.includes('full') || s.includes('complet')) return 'full';
+  if (s.includes('free') || s.includes('semilla')) return 'inicial';
+  if (s.includes('basi') || s.includes('emprend') || s.includes('inicial')) return 'inicial';
+  if (s === 'pyme') return 'pyme';
+  if (s === 'pro' || s.includes('crecimiento') || s.includes('empres')) return 'pro';
+  if (s.includes('full') || s.includes('complet') || s.includes('escala') || s.includes('corporat')) return 'escala';
 
   const key = Object.keys(PLAN_CODE_MAP).find(k => s === k || s.includes(k));
-  return key ? PLAN_CODE_MAP[key] : 'basic';
+  return key ? PLAN_CODE_MAP[key] : 'inicial';
 }
 
-// ESTA ES LA CLAVE: Asegúrate de que diga EXPORT
 export const PLAN_PERMISSIONS: Record<string, string[]> = {
-  basic: ['email', 'telegram', 'push', 'branches'],
-  pro: ['email', 'telegram', 'push', 'whatsapp', 'branches'],
-  full: ['email', 'telegram', 'push', 'whatsapp', 'scheduling', 'branches']
+  inicial: ['email', 'telegram', 'push', 'branches'],
+  pyme:    ['email', 'telegram', 'push', 'whatsapp', 'branches'],
+  pro:     ['email', 'telegram', 'push', 'whatsapp', 'branches'],
+  escala:  ['email', 'telegram', 'push', 'whatsapp', 'scheduling', 'branches'],
 };
 
 export const PLAN_BRANCHES_LIMIT: Record<string, number | null> = {
-  basic: 2,
-  pro: 5,
-  full: null,
+  inicial: 2,
+  pyme: 5,
+  pro: 10,
+  escala: null,
 };
 
 export function branchesLimit(profile: any): number | null {
@@ -72,15 +80,47 @@ export function planDisplayToCode(display?: string) {
 
 export function planCodeToDisplay(code: string) {
   switch (code) {
-    case 'basic': return 'Básico';
+    case 'inicial': return 'Inicial';
+    case 'pyme': return 'Pyme';
     case 'pro': return 'Pro';
-    case 'full': return 'Full';
-    default: return 'Básico';
+    case 'escala': return 'Escala';
+    default: return 'Inicial';
   }
 }
 
 export function aiCreditsUsed(profile: any): number {
   return profile?.ai_credits_used ?? 0;
+}
+
+export function hasWhatsAppAccess(planCode: string): boolean {
+  const perms = PLAN_PERMISSIONS[planCode];
+  return !!perms && perms.includes('whatsapp');
+}
+
+export function hasSchedulingAccess(planCode: string): boolean {
+  const perms = PLAN_PERMISSIONS[planCode];
+  return !!perms && perms.includes('scheduling');
+}
+
+export function isTopPlan(planCode: string): boolean {
+  return planCode === 'escala';
+}
+
+export function totalCreditLimit(profile: any, planMessagesLimit: number | null): number | null {
+  if (planMessagesLimit === null) return null;
+  return planMessagesLimit + (profile?.bonus_credits ?? 0);
+}
+
+export function remainingCredits(profile: any, planMessagesLimit: number | null): number | null {
+  const total = totalCreditLimit(profile, planMessagesLimit);
+  if (total === null) return null;
+  return Math.max(0, total - (profile?.ai_credits_used ?? 0));
+}
+
+export function isLowCredits(profile: any, planMessagesLimit: number | null, threshold = 50): boolean {
+  const remaining = remainingCredits(profile, planMessagesLimit);
+  if (remaining === null) return false;
+  return remaining < threshold;
 }
 
 export function isInTrial(profile: any): boolean {

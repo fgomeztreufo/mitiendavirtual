@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../supabaseClient'
 import Swal from 'sweetalert2'
-import { effectivePlan } from '../utils/planUtils'
+import { effectivePlan, planCodeToDisplay } from '../utils/planUtils'
 import AgentPersonalitySection from './AgentPersonalitySection'
 import { Session } from '@supabase/supabase-js'
 
@@ -445,7 +445,7 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
         <div className={`rounded-2xl bg-white/[0.03] border p-5 space-y-4 backdrop-blur-sm ${limitReached ? 'border-red-500/40' : 'border-white/5'}`}>
           <p className="text-[11px] font-bold tracking-[0.18em] text-gray-500 uppercase text-center">Créditos Mensuales</p>
           <div className={`rounded-xl border p-4 text-center space-y-3 ${limitReached ? 'bg-red-950/30 border-red-500/30' : 'bg-gray-900/60 border-white/5'}`}>
-            <p className="text-4xl font-black tracking-tight text-white italic">{(profile?.plan_type || 'FREE').toUpperCase()}</p>
+            <p className="text-4xl font-black tracking-tight text-white italic">{planCodeToDisplay(planCode).toUpperCase()}</p>
             <div className="flex justify-between text-xs text-gray-400 px-1">
               <span>USO</span>
               <span className="font-mono text-white">
@@ -472,7 +472,7 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
               <p className="text-[10px] text-amber-400 italic">Cerca del límite — considera actualizar tu plan</p>
             )}
           </div>
-          {planCode !== 'full' && (
+          {planCode !== 'escala' && (
             <button
               onClick={() => goToPlans?.()}
               className="w-full py-2 text-xs font-bold rounded-xl border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition-all"

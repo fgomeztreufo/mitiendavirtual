@@ -30,9 +30,10 @@ const CHANNELS = [
 ]
 
 const PLANS = [
-  { name: 'Básico', emoji: '⚡', price: '14.990', products: '50', messages: '500', channels: 'Instagram + Telegram', highlight: true, cta: 'Comenzar' },
-  { name: 'Pro',    emoji: '💎', price: '44.990', products: '500', messages: '2.000', channels: 'Instagram + Telegram + WhatsApp', highlight: false, cta: 'Elegir Pro' },
-  { name: 'Full',   emoji: '🔥', price: '79.990', products: '2.000', messages: '5.000', channels: 'Todos los canales + Agendamiento', highlight: false, cta: 'Elegir Full' },
+  { name: 'Inicial',  emoji: '⚡', price: '19.900',  products: '50',    messages: '1.000',  channels: 'Instagram + Telegram',                 highlight: false, cta: 'Comenzar' },
+  { name: 'Pyme',     emoji: '💼', price: '39.900',  products: '200',   messages: '3.000',  channels: 'Instagram + Telegram + WhatsApp',       highlight: true,  cta: 'Elegir Pyme' },
+  { name: 'Pro',      emoji: '💎', price: '79.900',  products: '1.000', messages: '8.000',  channels: 'IG + TG + WhatsApp',                    highlight: false, cta: 'Elegir Pro' },
+  { name: 'Escala',   emoji: '🔥', price: '149.900', products: '5.000', messages: '20.000', channels: 'Todos los canales + Agendamiento',      highlight: false, cta: 'Elegir Escala' },
 ]
 
 /* ─── Component ─── */

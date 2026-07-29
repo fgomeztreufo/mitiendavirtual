@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
-import { normalizePlanType, isInTrial, trialDaysLeft, effectivePlan, hasBranches, getBusinessType, BUSINESS_TYPES } from '../utils/planUtils'
+import { normalizePlanType, isInTrial, trialDaysLeft, effectivePlan, hasBranches, getBusinessType, BUSINESS_TYPES, hasWhatsAppAccess, hasSchedulingAccess } from '../utils/planUtils'
 import { getLabels } from '../utils/businessLabels'
 import { FaInstagram, FaTelegram, FaWhatsapp, FaGoogle } from 'react-icons/fa'
 import { FaMeta } from 'react-icons/fa6'
@@ -51,8 +51,8 @@ export default function Dashboard({ session }: { session: Session }) {
 
   // Plan access helpers (evaluated after profile loads)
   const planCode = effectivePlan(profile)
-  const hasWhatsApp = planCode === 'pro' || planCode === 'full'
-  const hasScheduling = planCode === 'full'
+  const hasWhatsApp = hasWhatsAppAccess(planCode)
+  const hasScheduling = hasSchedulingAccess(planCode)
   const hasBranchesAccess = hasBranches(profile)
   const isAdmin = profile?.is_admin === true
 
@@ -220,10 +220,10 @@ export default function Dashboard({ session }: { session: Session }) {
             <MobileNavBtn label="Ventas Capturadas" active={activeTab === 'leads'} onClick={() => { setActiveTab('leads'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Telegram" active={activeTab === 'telegram'} onClick={() => { setActiveTab('telegram'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Leads Telegram" active={activeTab === 'telegram-leads'} onClick={() => { setActiveTab('telegram-leads'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} locked={!hasWhatsApp} lockLabel="Pro+" onClick={() => { if (hasWhatsApp) { setActiveTab('whatsapp'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
-            <MobileNavBtn label="Leads WhatsApp" active={activeTab === 'wpp-leads'} locked={!hasWhatsApp} lockLabel="Pro+" onClick={() => { if (hasWhatsApp) { setActiveTab('wpp-leads'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
-            <MobileNavBtn label="Agendamiento" active={activeTab === 'scheduling'} locked={!hasScheduling} lockLabel="Full" onClick={() => { if (hasScheduling) { setActiveTab('scheduling'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
-            <MobileNavBtn label="Sucursales" active={activeTab === 'branches'} locked={!hasBranchesAccess} lockLabel="Básico+" onClick={() => { if (hasBranchesAccess) { setActiveTab('branches'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
+            <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} locked={!hasWhatsApp} lockLabel="Pyme+" onClick={() => { if (hasWhatsApp) { setActiveTab('whatsapp'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
+            <MobileNavBtn label="Leads WhatsApp" active={activeTab === 'wpp-leads'} locked={!hasWhatsApp} lockLabel="Pyme+" onClick={() => { if (hasWhatsApp) { setActiveTab('wpp-leads'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
+            <MobileNavBtn label="Agendamiento" active={activeTab === 'scheduling'} locked={!hasScheduling} lockLabel="Escala" onClick={() => { if (hasScheduling) { setActiveTab('scheduling'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
+            <MobileNavBtn label="Sucursales" active={activeTab === 'branches'} locked={!hasBranchesAccess} lockLabel="Inicial+" onClick={() => { if (hasBranchesAccess) { setActiveTab('branches'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
             <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-4 mb-2 tracking-widest">Configuración</p>
             <MobileNavBtn label="Notificaciones" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Configura tu Instagram" active={activeTab === 'instagram'} onClick={() => { setActiveTab('instagram'); setMobileMenuOpen(false); }} />
@@ -313,7 +313,7 @@ export default function Dashboard({ session }: { session: Session }) {
             isParent={hasWhatsApp}
             isOpen={whatsappMenuOpen}
             locked={!hasWhatsApp}
-            lockLabel="Pro+"
+            lockLabel="Pyme+"
           />
           {hasWhatsApp && whatsappMenuOpen && (
             <div className="ml-4 border-l border-white/5 pl-4 space-y-1">
@@ -337,7 +337,7 @@ export default function Dashboard({ session }: { session: Session }) {
             active={activeTab === 'scheduling'}
             onClick={() => hasScheduling ? (setActiveTab('scheduling'), setLegalView(null)) : setActiveTab('plans')}
             locked={!hasScheduling}
-            lockLabel="Full"
+            lockLabel="Escala"
           />
 
           {/* Sucursales — desde plan Básico */}
@@ -347,7 +347,7 @@ export default function Dashboard({ session }: { session: Session }) {
             active={activeTab === 'branches'}
             onClick={() => hasBranchesAccess ? (setActiveTab('branches'), setLegalView(null)) : setActiveTab('plans')}
             locked={!hasBranchesAccess}
-            lockLabel="Básico+"
+            lockLabel="Inicial+"
           />
 
           {profile && isInTrial(profile) && (
@@ -418,7 +418,7 @@ export default function Dashboard({ session }: { session: Session }) {
                   <FaTelegram className="text-sm text-sky-400" /> Telegram
                 </button>
                 <button onClick={() => hasWhatsApp ? setActiveTab('whatsapp') : setActiveTab('plans')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${!hasWhatsApp ? 'text-gray-600 opacity-50' : activeTab === 'whatsapp' ? 'text-green-400 bg-green-500/10' : 'text-gray-500 hover:text-green-400 hover:bg-green-500/5'}`}>
-                  <FaWhatsapp className="text-sm text-green-400" /> WhatsApp {!hasWhatsApp && <span className="ml-auto text-[9px] text-gray-600 font-bold">Pro+</span>}
+                  <FaWhatsapp className="text-sm text-green-400" /> WhatsApp {!hasWhatsApp && <span className="ml-auto text-[9px] text-gray-600 font-bold">Pyme+</span>}
                 </button>
               </div>
             )}

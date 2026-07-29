@@ -9,6 +9,7 @@ import { supabase } from '../supabaseClient'
 interface Profile {
     plan_type?: string;
     plan_expires_at?: string;
+    bonus_credits?: number;
 }
 
 interface PlansViewProps {
@@ -16,7 +17,6 @@ interface PlansViewProps {
     profile: Profile | null;
 }
 
-// Colores de marca para cada canal
 const CHANNEL_COLORS: Record<string, string> = {
     instagram: 'text-pink-500',
     telegram: 'text-sky-400',
@@ -31,12 +31,17 @@ interface PlanChannel {
     available: boolean;
 }
 
-// Canales y features por plan (refleja la lógica de negocio)
 const PLAN_CHANNELS: Record<string, PlanChannel[]> = {
-    basic: [
+    inicial: [
         { id: 'instagram',       Icon: FaInstagram, label: 'Bot IA en Instagram',       available: true  },
         { id: 'telegram',        Icon: FaTelegram,  label: 'Bot IA en Telegram',         available: true  },
         { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: false },
+        { id: 'google_calendar', Icon: FaGoogle,    label: 'Agenda con Google Calendar', available: false },
+    ],
+    pyme: [
+        { id: 'instagram',       Icon: FaInstagram, label: 'Bot IA en Instagram',       available: true  },
+        { id: 'telegram',        Icon: FaTelegram,  label: 'Bot IA en Telegram',         available: true  },
+        { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: true  },
         { id: 'google_calendar', Icon: FaGoogle,    label: 'Agenda con Google Calendar', available: false },
     ],
     pro: [
@@ -45,7 +50,7 @@ const PLAN_CHANNELS: Record<string, PlanChannel[]> = {
         { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: true  },
         { id: 'google_calendar', Icon: FaGoogle,    label: 'Agenda con Google Calendar', available: false },
     ],
-    full: [
+    escala: [
         { id: 'instagram',       Icon: FaInstagram, label: 'Bot IA en Instagram',       available: true  },
         { id: 'telegram',        Icon: FaTelegram,  label: 'Bot IA en Telegram',         available: true  },
         { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: true  },
@@ -53,13 +58,22 @@ const PLAN_CHANNELS: Record<string, PlanChannel[]> = {
     ],
 }
 
+interface CreditPack {
+    code: string;
+    display_name: string;
+    credits: number;
+    price_clp: number;
+}
+
 export default function PlansView({ session, profile }: PlansViewProps) {
 
     const [plans, setPlans] = useState<any[]>([])
+    const [packs, setPacks] = useState<CreditPack[]>([])
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
         fetchPlans()
+        fetchPacks()
     }, [])
 
     async function fetchPlans() {
@@ -80,16 +94,25 @@ export default function PlansView({ session, profile }: PlansViewProps) {
         }
     }
 
+    async function fetchPacks() {
+        const { data } = await supabase
+            .from('credit_packs')
+            .select('*')
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true })
+        if (data) setPacks(data)
+    }
+
     const handleBuyPlan = async (planName: string, amount: number) => {
         try {
             Swal.fire({
                 title: 'Generando Pago...',
-                text: 'Conectando con Mercado Pago 🔒',
+                text: 'Conectando con Mercado Pago',
                 didOpen: () => Swal.showLoading()
             });
-    
+
             const { user } = session;
-    
+
             const response = await fetch(`${import.meta.env.VITE_WEBHOOK_BASE_URL || 'https://webhook.mitiendavirtual.cl'}/webhook/create-payment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -101,7 +124,7 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                         email: user.email
                     })
             });
-    
+
             if (!response.ok) {
                 throw new Error(`Error del servidor (${response.status})`);
             }
@@ -113,7 +136,7 @@ export default function PlansView({ session, profile }: PlansViewProps) {
             } else {
                 throw new Error('No se recibió el link de pago');
             }
-    
+
         } catch (error) {
             console.error(error);
             Swal.fire({
@@ -124,11 +147,56 @@ export default function PlansView({ session, profile }: PlansViewProps) {
         }
     };
 
+    const handleBuyCreditPack = async (pack: CreditPack) => {
+        try {
+            Swal.fire({
+                title: 'Generando Pago...',
+                text: `Comprando ${pack.display_name} (${pack.credits.toLocaleString('es-CL')} créditos)`,
+                didOpen: () => Swal.showLoading()
+            });
+
+            const { user } = session;
+
+            const response = await fetch(`${import.meta.env.VITE_WEBHOOK_BASE_URL || 'https://webhook.mitiendavirtual.cl'}/webhook/create-payment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'credit_pack',
+                    pack_code: pack.code,
+                    credits: pack.credits,
+                    plan_name: pack.display_name,
+                    amount: pack.price_clp,
+                    user_id: user.id,
+                    email: user.email,
+                })
+            });
+
+            if (!response.ok) throw new Error(`Error del servidor (${response.status})`);
+
+            const data = await response.json();
+
+            if (data?.init_point) {
+                window.location.href = data.init_point;
+            } else {
+                throw new Error('No se recibió el link de pago');
+            }
+        } catch (error) {
+            console.error(error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Ups...',
+                text: 'Hubo un error al generar el pago. Intenta de nuevo.'
+            });
+        }
+    };
+
+    const bonusCredits = (profile as any)?.bonus_credits ?? 0
+
     return (
         <div className="animate-fade-in-up p-4 max-w-7xl mx-auto">
             <div className="text-center mb-16">
                 <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-                    Elige el motor de tu crecimiento 🚀
+                    Elige el motor de tu crecimiento
                 </h1>
                 <p className="text-gray-400 max-w-2xl mx-auto text-base">
                     Automatiza tus ventas con IA en todos tus canales. Sin contratos amarrados, pagas por mes.
@@ -143,6 +211,16 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                   <p className="text-xs text-amber-300/70">Te quedan {trialDaysLeft(profile)} días de prueba</p>
                 </div>
                 <span className="text-2xl">🎁</span>
+              </div>
+            )}
+
+            {bonusCredits > 0 && (
+              <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-emerald-400">Créditos de recarga disponibles</p>
+                  <p className="text-xs text-emerald-300/70">{bonusCredits.toLocaleString('es-CL')} créditos extra acumulados</p>
+                </div>
+                <span className="text-2xl">💰</span>
               </div>
             )}
 
@@ -161,27 +239,32 @@ export default function PlansView({ session, profile }: PlansViewProps) {
 
                 const baseClasses = `rounded-2xl p-6 flex flex-col h-full relative`
                 let borderClass = 'border border-gray-800'
-                if (code === 'pro') {
-                    borderClass = 'border-2 border-purple-500/60 shadow-[0_10px_30px_rgba(124,58,237,0.16)]'
-                } else if (code === 'full') {
-                    borderClass = 'border-2 border-orange-500/50 shadow-[0_10px_30px_rgba(249,115,22,0.10)]'
-                } else if (code === 'basic') {
-                    // Borde celeste (light blue) para el plan Básico
+                if (code === 'inicial') {
                     borderClass = 'border-2 border-sky-400/70 shadow-[0_8px_20px_rgba(56,189,248,0.06)]'
+                } else if (code === 'pyme') {
+                    borderClass = 'border-2 border-indigo-500/60 shadow-[0_10px_30px_rgba(99,102,241,0.16)]'
+                } else if (code === 'pro') {
+                    borderClass = 'border-2 border-purple-500/60 shadow-[0_10px_30px_rgba(124,58,237,0.16)]'
+                } else if (code === 'escala') {
+                    borderClass = 'border-2 border-orange-500/50 shadow-[0_10px_30px_rgba(249,115,22,0.10)]'
                 } else if (isCurrent) {
                     borderClass = 'border border-blue-500'
                 }
-                const bgClass = code === 'pro'
+                const bgClass = code === 'pyme'
+                    ? 'bg-gradient-to-b from-gray-900 via-gray-900 to-indigo-950/20'
+                    : code === 'pro'
                     ? 'bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800'
-                    : code === 'full'
+                    : code === 'escala'
                     ? 'bg-gradient-to-b from-gray-900 via-gray-900 to-orange-950/20'
                     : 'bg-gray-900'
 
                 const buttonDefault = 'w-full py-2 text-sm font-bold rounded-xl transition-all'
                 const buttonDisabled = 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                const buttonPrimary = code === 'pro'
+                const buttonPrimary = code === 'pyme'
+                    ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg'
+                    : code === 'pro'
                     ? 'bg-purple-500 hover:bg-purple-400 text-white shadow-lg'
-                    : code === 'full'
+                    : code === 'escala'
                     ? 'border border-orange-500 text-orange-400 bg-transparent hover:bg-orange-500/10'
                     : 'bg-blue-600 hover:bg-blue-500 text-white'
 
@@ -189,21 +272,16 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                 const isTrialPlan = inTrial && activePlan === code
                 const isRealPlan = !inTrial && isCurrent
 
-                const isPendingMeta = code === 'pro' || code === 'full'
-
                 const label = isTrialPlan
                     ? 'Plan en Prueba'
                     : isRealPlan
                     ? 'Tu Plan Actual'
-                    : isPendingMeta
-                    ? 'Próximamente'
                     : ('Elegir ' + plan.display_name)
 
-                const planEmoji = code === 'pro' ? '💎' : code === 'full' ? '🔥' : '⚡'
+                const planEmoji = code === 'inicial' ? '⚡' : code === 'pyme' ? '💼' : code === 'pro' ? '💎' : '🔥'
 
-                const mostPopular = 'basic'
-                const buttonLabelComputed = label
-                const isButtonDisabled = isRealPlan || isPendingMeta
+                const mostPopular = 'pyme'
+                const isButtonDisabled = isRealPlan
 
                 return (
                     <div key={code} className={`${bgClass} ${borderClass} ${baseClasses}`}>
@@ -271,25 +349,47 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                             className={`${buttonDefault} ${isButtonDisabled ? buttonDisabled : buttonPrimary}`}
                             disabled={isButtonDisabled}
                         >
-                            {buttonLabelComputed}
+                            {label}
                         </button>
-                        {isPendingMeta && !isRealPlan && (
-                            <p className="mt-2 text-[10px] text-amber-400/80 text-center">
-                                ⏳ Permisos de Meta en aprobación
-                            </p>
-                        )}
                     </div>
                 )
               })}
             </div>
 
+            {/* BOLSAS DE RECARGA */}
+            {packs.length > 0 && (
+              <div className="mt-16">
+                <div className="text-center mb-8">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Bolsas de Recarga</h2>
+                  <p className="text-gray-400 text-sm">Créditos extra que no vencen mientras tengas suscripción activa</p>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {packs.map((pack) => (
+                    <div key={pack.code} className="rounded-2xl border border-white/10 bg-gray-900/80 p-5 flex flex-col items-center text-center space-y-3 hover:border-emerald-500/40 transition-all">
+                      <p className="text-2xl font-black text-white">{pack.credits.toLocaleString('es-CL')}</p>
+                      <p className="text-[11px] text-gray-400 uppercase tracking-wider">créditos IA</p>
+                      <p className="text-lg font-bold text-emerald-400">${pack.price_clp.toLocaleString('es-CL')}</p>
+                      <p className="text-[10px] text-gray-500">${(pack.price_clp / pack.credits).toFixed(1)} por crédito</p>
+                      <button
+                        onClick={() => handleBuyCreditPack(pack)}
+                        className="w-full py-2 text-xs font-bold rounded-xl border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition-all"
+                      >
+                        Comprar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <footer className="mt-16 text-center space-y-2">
                 <p className="text-gray-500 text-[10px] italic">
                     *Los mensajes IA ilimitados están sujetos a política de "uso justo" para garantizar la estabilidad del servicio.<br/>
                     Los mensajes de todos los canales (Instagram, Telegram, WhatsApp) comparten el pool del plan.
+                    Los créditos de recarga se consumen después de los créditos del plan y no vencen.
                 </p>
                 <p className="text-gray-400 text-xs">
-                    🔒 Pagos procesados de forma segura vía Mercado Pago.
+                    Pagos procesados de forma segura vía Mercado Pago.
                 </p>
             </footer>
         </div>

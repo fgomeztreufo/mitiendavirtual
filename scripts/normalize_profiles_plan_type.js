@@ -44,11 +44,12 @@ function sanitize(input) {
 
 function normalizePlanType(input) {
   const s = sanitize(input || '')
-  if (!s) return 'free'
-  if (s.includes('free') || s.includes('semilla') || s.includes('gratis')) return 'free'
-  if (s.includes('basi') || s.includes('basico') || s.includes('emprend')) return 'basic'
+  if (!s) return 'inicial'
+  if (s.includes('free') || s.includes('semilla') || s.includes('gratis')) return 'inicial'
+  if (s.includes('basi') || s.includes('basico') || s.includes('emprend') || s.includes('inicial')) return 'inicial'
+  if (s === 'pyme') return 'pyme'
   if (s.includes('empres') || s === 'pro' || s.includes('crecim') || s.includes('crecimiento')) return 'pro'
-  if (s.includes('full') || s.includes('complet') || s.includes('completo')) return 'full'
+  if (s.includes('full') || s.includes('complet') || s.includes('completo') || s.includes('escala') || s.includes('corporat')) return 'escala'
   return s
 }
 
