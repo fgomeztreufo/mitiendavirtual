@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '../../supabaseClient'
-import { effectivePlan } from '../../utils/planUtils'
 import StepWelcome from './steps/StepWelcome'
 import StepBusinessType from './steps/StepBusinessType'
 import StepInstagram from './steps/StepInstagram'
@@ -22,17 +21,14 @@ interface OnboardingWizardProps {
 type StepId = 'welcome' | 'business' | 'instagram' | 'whatsapp' | 'personality' | 'content' | 'done'
 
 export default function OnboardingWizard({ session, profile, instance, onComplete, onRefreshData }: OnboardingWizardProps) {
-  const planCode = effectivePlan(profile)
-  const hasWhatsApp = ['pro', 'full'].includes(planCode)
   const hasInstance = !!instance?.id
 
   const steps: StepId[] = useMemo(() => {
-    const base: StepId[] = ['welcome', 'business', 'instagram']
-    if (hasWhatsApp) base.push('whatsapp')
+    const base: StepId[] = ['welcome', 'business', 'instagram', 'whatsapp']
     if (hasInstance || base.includes('instagram')) base.push('personality')
     base.push('content', 'done')
     return base
-  }, [hasWhatsApp, hasInstance])
+  }, [hasInstance])
 
   const [currentStepIndex, setCurrentStepIndex] = useState(() => {
     const saved = sessionStorage.getItem('onboarding_step')

@@ -24,7 +24,7 @@ export default function CatalogView({ session, profile, onProductAdded, goToPlan
 
   const [planLimit, setPlanLimit] = useState<number | null>(null)
 
-  const capacityMap: Record<string, number> = { free: 10, basic: 50, pro: 500, full: 2000 }
+  const capacityMap: Record<string, number> = { basic: 50, pro: 500, full: 2000 }
 
   useEffect(() => {
     let mounted = true

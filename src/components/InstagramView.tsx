@@ -142,13 +142,13 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
   if (!profile || !instance) return <div className="p-10 text-center text-gray-500 animate-pulse uppercase font-black">Cargando...</div>
 
   // Credits
-  const messagesUsed = Number(profile?.messages_used ?? 0)
-  const messagesLimit: number | null = planMessagesLimit
-  const usagePct = messagesLimit ? Math.min((messagesUsed / messagesLimit) * 100, 100) : 0
+  const creditsUsed = Number(profile?.ai_credits_used ?? 0)
+  const creditsLimit: number | null = planMessagesLimit
+  const usagePct = creditsLimit ? Math.min((creditsUsed / creditsLimit) * 100, 100) : 0
   let barColor = '#E1306C'
   if (usagePct > 85) barColor = '#ef4444'
   else if (usagePct > 60) barColor = '#f59e0b'
-  const limitReached = messagesLimit !== null && messagesUsed >= messagesLimit
+  const limitReached = creditsLimit !== null && creditsUsed >= creditsLimit
 
   // Status
   const isConnected = !!instance.provider_id
@@ -234,26 +234,26 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
             <div className="flex justify-between text-xs text-gray-400 px-1">
               <span>USO</span>
               <span className="font-mono text-white">
-                {messagesUsed.toLocaleString('es-CL')} / {messagesLimit ? messagesLimit.toLocaleString('es-CL') : '∞'}
+                {creditsUsed.toLocaleString('es-CL')} / {creditsLimit ? creditsLimit.toLocaleString('es-CL') : '∞'}
               </span>
             </div>
             <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"
                 style={{
-                  width: messagesLimit ? `${usagePct}%` : '100%',
-                  background: messagesLimit ? barColor : '#E1306C',
-                  opacity: messagesLimit ? 1 : 0.4
+                  width: creditsLimit ? `${usagePct}%` : '100%',
+                  background: creditsLimit ? barColor : '#E1306C',
+                  opacity: creditsLimit ? 1 : 0.4
                 }}
               />
             </div>
-            {!messagesLimit && (
-              <p className="text-[10px] text-pink-400/70 italic">Mensajes ilimitados bajo política de uso justo</p>
+            {!creditsLimit && (
+              <p className="text-[10px] text-pink-400/70 italic">Créditos ilimitados bajo política de uso justo</p>
             )}
             {limitReached && (
               <p className="text-[10px] text-red-400 font-bold tracking-wide uppercase">Límite alcanzado — bot pausado</p>
             )}
-            {!limitReached && messagesLimit && usagePct > 85 && (
+            {!limitReached && creditsLimit && usagePct > 85 && (
               <p className="text-[10px] text-amber-400 italic">Cerca del límite — considera actualizar tu plan</p>
             )}
           </div>
@@ -419,7 +419,7 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
           <div className="text-3xl">🚫</div>
           <p className="text-red-400 font-bold text-base">Bot pausado — límite mensual alcanzado</p>
           <p className="text-gray-400 text-sm max-w-sm mx-auto">
-            Has usado todos tus mensajes de Instagram este mes. El bot no responderá hasta que actualices tu plan.
+            Has usado todos tus créditos IA este mes. El bot no responderá hasta que actualices tu plan.
           </p>
           <button
             onClick={() => goToPlans?.()}

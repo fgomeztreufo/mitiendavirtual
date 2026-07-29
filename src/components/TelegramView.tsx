@@ -96,7 +96,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
       // Show alert and auto-disconnect
       Swal.fire({
         title: 'Bot propio desconectado',
-        html: `<p>Tu plan actual (<b>${planCode === 'free' ? 'Semilla' : 'Básico'}</b>) no incluye bot propio.</p><p>Tu bot <b>@${ownBotInfo.bot_username}</b> ha sido desconectado automáticamente.</p><p>Para volver a usarlo, actualiza tu plan.</p>`,
+        html: `<p>Tu plan actual no incluye bot propio.</p><p>Tu bot <b>@${ownBotInfo.bot_username}</b> ha sido desconectado automáticamente.</p><p>Para volver a usarlo, actualiza tu plan.</p>`,
         icon: 'warning',
         confirmButtonText: 'Ver planes',
         showCancelButton: true,
@@ -471,18 +471,16 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   const telegramConfig = configs.find(c => c.channel_type === 'telegram')
 
   // ── Créditos ────────────────────────────────────────────────
-  const messagesUsedTl = profile?.messages_used_tl ?? 0
-  const messagesLimit: number | null = planMessagesLimit
-  const usagePct = messagesLimit ? Math.min((messagesUsedTl / messagesLimit) * 100, 100) : 0
+  const creditsUsed = profile?.ai_credits_used ?? 0
+  const creditsLimit: number | null = planMessagesLimit
+  const usagePct = creditsLimit ? Math.min((creditsUsed / creditsLimit) * 100, 100) : 0
   let barColor = '#6366f1'
   if (usagePct > 85) barColor = '#ef4444'
   else if (usagePct > 60) barColor = '#f59e0b'
   const hasNotificationChat = !!telegramConfig?.telegram_chat_id
   const hasOwnBot = ownBotInfo?.bot_type === 'own' && ownBotInfo?.bot_username
-  // También consideramos conectado si existe un token en telegram_link_tokens
-  // con used = true y telegram_username = 'admin' (regla solicitada).
   const isTelegramConnected = !!hasOwnBot || tokenConnected
-  const limitReached = messagesLimit !== null && messagesUsedTl >= messagesLimit
+  const limitReached = creditsLimit !== null && creditsUsed >= creditsLimit
   const canDisconnectOwnBot = !!hasOwnBot
 
   // Clases del card Estado del Bot (evita ternarios anidados en JSX)
@@ -573,22 +571,22 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
             <div className="flex justify-between text-xs text-gray-400 px-1">
               <span>USO</span>
               <span className="font-mono text-white">
-                {messagesUsedTl.toLocaleString('es-CL')} / {messagesLimit ? messagesLimit.toLocaleString('es-CL') : '∞'}
+                {creditsUsed.toLocaleString('es-CL')} / {creditsLimit ? creditsLimit.toLocaleString('es-CL') : '∞'}
               </span>
             </div>
             <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"
-                style={{ width: messagesLimit ? `${usagePct}%` : '100%', background: messagesLimit ? barColor : '#6366f1', opacity: messagesLimit ? 1 : 0.4 }}
+                style={{ width: creditsLimit ? `${usagePct}%` : '100%', background: creditsLimit ? barColor : '#6366f1', opacity: creditsLimit ? 1 : 0.4 }}
               />
             </div>
-            {!messagesLimit && (
-              <p className="text-[10px] text-indigo-400/70 italic">Mensajes ilimitados bajo política de uso justo</p>
+            {!creditsLimit && (
+              <p className="text-[10px] text-indigo-400/70 italic">Créditos ilimitados bajo política de uso justo</p>
             )}
             {limitReached && (
               <p className="text-[10px] text-red-400 font-bold tracking-wide uppercase">Límite alcanzado — bot pausado</p>
             )}
-            {!limitReached && messagesLimit && usagePct > 85 && (
+            {!limitReached && creditsLimit && usagePct > 85 && (
               <p className="text-[10px] text-amber-400 italic">Cerca del límite — considera actualizar tu plan</p>
             )}
           </div>
@@ -614,7 +612,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
           <div className="text-3xl">🚫</div>
           <p className="text-red-400 font-bold text-base">Bot pausado — límite mensual alcanzado</p>
           <p className="text-gray-400 text-sm max-w-sm mx-auto">
-            Has usado todos tus mensajes de Telegram este mes. El bot no responderá hasta que actualices tu plan.
+            Has usado todos tus créditos IA este mes. El bot no responderá hasta que actualices tu plan.
           </p>
           <button
             onClick={() => goToPlans?.()}
@@ -625,17 +623,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
         </div>
       )}
 
-      {planCode === 'free' ? (
-        <div className="p-6 rounded-2xl bg-gray-900 border border-gray-800">
-          <p className="text-sm text-gray-300 mb-4">El bot de ventas IA no está disponible en el plan Semilla.</p>
-          <div className="flex gap-3">
-            <button onClick={() => (goToPlans ? goToPlans() : window.dispatchEvent(new CustomEvent('changeTab', { detail: 'plans' })))} className="py-2 px-4 bg-blue-600 text-white rounded-xl">Ver planes</button>
-          </div>
-        </div>
-      ) : (
-        <div className="grid gap-4">
-          
-          {['basic', 'pro', 'full'].includes(planCode) && (
+      <div className="grid gap-4">
             <div className="p-5 rounded-2xl border bg-gray-900 transition-all border-gray-800">
               <div className="mb-3">
                 <div className="text-white font-medium">Bot de Ventas IA en Telegram</div>
@@ -772,9 +760,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
                 </>
               )}
             </div>
-          )}
         </div>
-      )}
 
       {/* PERSONALITY SECTION */}
       {instance?.id && (

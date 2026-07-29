@@ -30,8 +30,7 @@ const CHANNELS = [
 ]
 
 const PLANS = [
-  { name: 'Semilla', emoji: '🌱', price: '0', products: '10', messages: '50', highlight: false, cta: 'Empezar Gratis' },
-  { name: 'Básico', emoji: '⚡', price: '14.990', products: '50', messages: '500', highlight: true, cta: 'Elegir Básico' },
+  { name: 'Básico', emoji: '⚡', price: '14.990', products: '50', messages: '500', highlight: true, cta: 'Comenzar' },
   { name: 'Pro',    emoji: '💎', price: '44.990', products: '500', messages: '2.000', highlight: false, cta: 'Elegir Pro' },
   { name: 'Full',   emoji: '🔥', price: '79.990', products: '2.000', messages: '5.000', highlight: false, cta: 'Elegir Full' },
 ]
@@ -189,7 +188,7 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
               </span>
             </motion.h2>
             <motion.p variants={fadeUp} custom={1} className="mt-4 text-gray-600 max-w-xl mx-auto">
-              Sin contratos. Pagas por mes. Si no renuevas, vuelves al plan Semilla sin perder datos.
+              Sin contratos. Pagas por mes. Todos los planes incluyen 14 días de prueba gratis.
             </motion.p>
           </motion.div>
 
@@ -233,7 +232,7 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
                     <span className="text-green-500">✓</span> {plan.products} productos
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span> {plan.messages} msg IA/mes
+                    <span className="text-green-500">✓</span> {plan.messages} créditos IA/mes
                   </li>
                 </ul>
 

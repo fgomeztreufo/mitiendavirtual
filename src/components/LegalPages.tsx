@@ -72,7 +72,7 @@ export const TermsOfService = ({ onClose }: { onClose: () => void }) => {
                 <td className="px-6 py-4 font-bold text-white uppercase">{plan.display_name}</td>
                 <td className="px-6 py-4">{plan.monthly_price_clp === 0 ? '$0 (Costo Cero)' : `$${Number(plan.monthly_price_clp).toLocaleString('es-CL')} CLP`}</td>
                 <td className="px-6 py-4">Hasta {Number(plan.products_limit).toLocaleString('es-CL')} productos</td>
-                <td className="px-6 py-4">{plan.messages_limit ? `${Number(plan.messages_limit).toLocaleString('es-CL')} mensajes` : 'Ilimitados*'}</td>
+                <td className="px-6 py-4">{plan.messages_limit ? `${Number(plan.messages_limit).toLocaleString('es-CL')} créditos IA` : 'Ilimitados*'}</td>
               </tr>
             ))}
           </tbody>
@@ -82,7 +82,7 @@ export const TermsOfService = ({ onClose }: { onClose: () => void }) => {
       <div className="bg-blue-500/10 border border-blue-500/20 p-5 rounded-2xl text-xs space-y-3">
         <p className="text-white font-bold uppercase">Aviso de Agotamiento de Cupo:</p>
         <p className="leading-relaxed">
-          Si el usuario consume la totalidad de sus mensajes asignados antes del cierre de su ciclo mensual, el servicio pasará automáticamente al estado de <strong>Plan Free</strong>. Las funciones correspondientes al plan originalmente contratado se reactivarán únicamente tras el pago de un nuevo ciclo o la renovación automática del periodo.
+          Si el usuario consume la totalidad de sus créditos IA asignados antes del cierre de su ciclo mensual, el bot de IA será pausado hasta la renovación del plan. Las funciones correspondientes al plan originalmente contratado se reactivarán únicamente tras el pago de un nuevo ciclo o la renovación automática del periodo.
         </p>
       </div>
     </section>
@@ -108,7 +108,7 @@ export const TermsOfService = ({ onClose }: { onClose: () => void }) => {
           <strong>Política de "No Reembolso":</strong> Dado que el servicio ofrece acceso inmediato a infraestructura digital y modelos de inteligencia artificial, MiTiendaVirtual <strong>no realiza devoluciones de dinero</strong> una vez procesado el pago mensual.
         </p>
         <p>
-          Usted podrá cancelar su suscripción en cualquier momento para evitar futuros cobros, manteniendo el servicio activo hasta el último día del periodo ya pagado. El Plan Free es gratuito de por vida mientras el usuario no exceda los límites establecidos.
+          Usted podrá cancelar su suscripción en cualquier momento para evitar futuros cobros, manteniendo el servicio activo hasta el último día del periodo ya pagado.
         </p>
       </div>
     </section>

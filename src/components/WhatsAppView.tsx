@@ -330,12 +330,12 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
   }
 
   // Credits
-  const messagesUsed = profile?.messages_used_wpp ?? 0
-  const usagePct = planMessagesLimit ? Math.min((messagesUsed / planMessagesLimit) * 100, 100) : 0
+  const creditsUsed = profile?.ai_credits_used ?? 0
+  const usagePct = planMessagesLimit ? Math.min((creditsUsed / planMessagesLimit) * 100, 100) : 0
   let barColor = '#25D366'
   if (usagePct > 85) barColor = '#ef4444'
   else if (usagePct > 60) barColor = '#f59e0b'
-  const limitReached = planMessagesLimit !== null && messagesUsed >= planMessagesLimit
+  const limitReached = planMessagesLimit !== null && creditsUsed >= planMessagesLimit
 
   // Status styling
   let statusCardBg: string
@@ -449,7 +449,7 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
             <div className="flex justify-between text-xs text-gray-400 px-1">
               <span>USO</span>
               <span className="font-mono text-white">
-                {messagesUsed.toLocaleString('es-CL')} / {planMessagesLimit ? planMessagesLimit.toLocaleString('es-CL') : '∞'}
+                {creditsUsed.toLocaleString('es-CL')} / {planMessagesLimit ? planMessagesLimit.toLocaleString('es-CL') : '∞'}
               </span>
             </div>
             <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
@@ -463,7 +463,7 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
               />
             </div>
             {!planMessagesLimit && (
-              <p className="text-[10px] text-emerald-400/70 italic">Mensajes ilimitados bajo política de uso justo</p>
+              <p className="text-[10px] text-emerald-400/70 italic">Créditos ilimitados bajo política de uso justo</p>
             )}
             {limitReached && (
               <p className="text-[10px] text-red-400 font-bold tracking-wide uppercase">Límite alcanzado — bot pausado</p>

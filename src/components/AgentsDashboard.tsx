@@ -9,8 +9,7 @@ interface UserSession {
 }
 
 interface UserProfile {
-  messages_used?: number;
-  messages_used_tl?: number;
+  ai_credits_used?: number;
   plan_type?: string;
 }
 
@@ -180,12 +179,10 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
     fetchStats();
   }, [session.user.id, fetchStats, filterBranch]);
 
-  const messagesUsed = profile?.messages_used || 0;
-  const messagesUsedTelegram = profile?.messages_used_tl || 0;
-  const messagesUsedWpp = profile?.messages_used_wpp || 0;
+  const aiCredits = profile?.ai_credits_used || 0;
   const isConnected = !!instance?.provider_id;
   const [whatsappConnected, setWhatsappConnected] = useState(false);
-  const planType = (profile?.plan_type || 'free').toUpperCase();
+  const planType = (profile?.plan_type || 'basic').toUpperCase();
 
   useEffect(() => {
     async function checkWpp() {
@@ -217,7 +214,7 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
         </svg>
       ),
       stats: [
-        { label: 'Mensajes respondidos', value: messagesUsed },
+        { label: 'Créditos IA usados', value: aiCredits },
         { label: 'Ventas capturadas', value: agentLeadStats.instagram.total },
         { label: 'Ventas cerradas', value: agentLeadStats.instagram.completed },
         { label: 'Leads hoy', value: agentLeadStats.instagram.today },
@@ -239,7 +236,7 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
         </svg>
       ),
       stats: [
-        { label: 'Mensajes respondidos', value: messagesUsedWpp },
+        { label: 'Créditos IA usados', value: aiCredits },
         { label: 'Ventas capturadas', value: agentLeadStats.whatsapp.total },
         { label: 'Ventas cerradas', value: agentLeadStats.whatsapp.completed },
         { label: 'Leads hoy', value: agentLeadStats.whatsapp.today },
@@ -261,7 +258,7 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
         </svg>
       ),
       stats: [
-        { label: 'Mensajes respondidos', value: messagesUsedTelegram },
+        { label: 'Créditos IA usados', value: aiCredits },
         { label: 'Leads capturados', value: agentLeadStats.telegram.total },
         { label: 'Ventas cerradas', value: agentLeadStats.telegram.completed },
         { label: 'Leads hoy', value: agentLeadStats.telegram.today },
@@ -381,7 +378,7 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
         tgActive={telegramConnected}
         calActive={calendarConnected}
         stats={{
-          messages: messagesUsed + messagesUsedTelegram + messagesUsedWpp,
+          messages: aiCredits,
           leads: leadsTotal,
           sales: leadsCompleted,
           appointments: calendarStats.total,

@@ -33,16 +33,10 @@ interface PlanChannel {
 
 // Canales y features por plan (refleja la lógica de negocio)
 const PLAN_CHANNELS: Record<string, PlanChannel[]> = {
-    free: [
-        { id: 'instagram',       Icon: FaInstagram, label: 'Bot IA en Instagram',       available: true  },
-        { id: 'telegram',        Icon: FaTelegram,  label: 'Bot IA en Telegram',         available: false },
-        { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: false },
-        { id: 'google_calendar', Icon: FaGoogle,    label: 'Agenda con Google Calendar', available: false },
-    ],
     basic: [
         { id: 'instagram',       Icon: FaInstagram, label: 'Bot IA en Instagram',       available: true  },
         { id: 'telegram',        Icon: FaTelegram,  label: 'Bot IA en Telegram',         available: true  },
-        { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: false },
+        { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: true  },
         { id: 'google_calendar', Icon: FaGoogle,    label: 'Agenda con Google Calendar', available: false },
     ],
     pro: [
@@ -174,9 +168,6 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                 } else if (code === 'basic') {
                     // Borde celeste (light blue) para el plan Básico
                     borderClass = 'border-2 border-sky-400/70 shadow-[0_8px_20px_rgba(56,189,248,0.06)]'
-                } else if (code === 'free') {
-                    // Borde verde para el plan Semilla
-                    borderClass = 'border-2 border-emerald-500/70 shadow-[0_8px_20px_rgba(16,185,129,0.06)]'
                 } else if (isCurrent) {
                     borderClass = 'border border-blue-500'
                 }
@@ -206,15 +197,13 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                     ? 'Tu Plan Actual'
                     : isPendingMeta
                     ? 'Próximamente'
-                    : code === 'free'
-                    ? 'Plan Base'
                     : ('Elegir ' + plan.display_name)
 
-                const planEmoji = code === 'free' ? '🌱' : code === 'pro' ? '💎' : code === 'full' ? '🔥' : '⚡'
+                const planEmoji = code === 'pro' ? '💎' : code === 'full' ? '🔥' : '⚡'
 
                 const mostPopular = 'basic'
                 const buttonLabelComputed = label
-                const isButtonDisabled = isRealPlan || (code === 'free' && !inTrial) || isPendingMeta
+                const isButtonDisabled = isRealPlan || isPendingMeta
 
                 return (
                     <div key={code} className={`${bgClass} ${borderClass} ${baseClasses}`}>
@@ -245,8 +234,8 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                                 <span className="text-green-500 font-bold mt-0.5">✓</span>
                                 <span>
                                     {plan.messages_limit
-                                        ? `${plan.messages_limit.toLocaleString('es-CL')} mensajes IA / mes`
-                                        : 'Mensajes IA ilimitados'}
+                                        ? `${plan.messages_limit.toLocaleString('es-CL')} créditos IA / mes`
+                                        : 'Créditos IA ilimitados'}
                                     {plan.messages_limit && (
                                         <span className="text-gray-500 text-[10px] ml-1">(todos los canales)</span>
                                     )}
