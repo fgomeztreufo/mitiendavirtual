@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../supabaseClient'
 import Swal from 'sweetalert2'
-import { effectivePlan } from '../utils/planUtils'
+import { effectivePlan, hasSchedulingAccess } from '../utils/planUtils'
 import { Session } from '@supabase/supabase-js'
 
 interface SchedulingViewProps {
@@ -154,7 +154,7 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
 
   useEffect(() => { loadAll() }, [loadAll])
 
-  if (planCode !== 'escala') {
+  if (!hasSchedulingAccess(planCode)) {
     return (
       <div className="max-w-4xl mx-auto p-4 text-center space-y-6">
         <div className="w-16 h-16 mx-auto rounded-2xl bg-indigo-500/10 flex items-center justify-center">
@@ -163,7 +163,7 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
           </svg>
         </div>
         <h2 className="text-xl font-bold text-white">Agendamiento</h2>
-        <p className="text-sm text-gray-400">El sistema de agendamiento está disponible en el plan Escala.</p>
+        <p className="text-sm text-gray-400">El sistema de agendamiento está disponible desde el plan Pro.</p>
         <button
           onClick={() => goToPlans?.()}
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 transition-all"

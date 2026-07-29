@@ -222,7 +222,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <MobileNavBtn label="Leads Telegram" active={activeTab === 'telegram-leads'} onClick={() => { setActiveTab('telegram-leads'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} locked={!hasWhatsApp} lockLabel="Pyme+" onClick={() => { if (hasWhatsApp) { setActiveTab('whatsapp'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
             <MobileNavBtn label="Leads WhatsApp" active={activeTab === 'wpp-leads'} locked={!hasWhatsApp} lockLabel="Pyme+" onClick={() => { if (hasWhatsApp) { setActiveTab('wpp-leads'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
-            <MobileNavBtn label="Agendamiento" active={activeTab === 'scheduling'} locked={!hasScheduling} lockLabel="Escala" onClick={() => { if (hasScheduling) { setActiveTab('scheduling'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
+            <MobileNavBtn label="Agendamiento" active={activeTab === 'scheduling'} locked={!hasScheduling} lockLabel="Pro+" onClick={() => { if (hasScheduling) { setActiveTab('scheduling'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
             <MobileNavBtn label="Sucursales" active={activeTab === 'branches'} locked={!hasBranchesAccess} lockLabel="Inicial+" onClick={() => { if (hasBranchesAccess) { setActiveTab('branches'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
             <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-4 mb-2 tracking-widest">Configuración</p>
             <MobileNavBtn label="Notificaciones" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false); }} />
@@ -337,7 +337,7 @@ export default function Dashboard({ session }: { session: Session }) {
             active={activeTab === 'scheduling'}
             onClick={() => hasScheduling ? (setActiveTab('scheduling'), setLegalView(null)) : setActiveTab('plans')}
             locked={!hasScheduling}
-            lockLabel="Escala"
+            lockLabel="Pro+"
           />
 
           {/* Sucursales — desde plan Básico */}

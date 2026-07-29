@@ -46,7 +46,7 @@ export function normalizePlanType(input?: string | null): string {
 export const PLAN_PERMISSIONS: Record<string, string[]> = {
   inicial: ['email', 'telegram', 'push', 'branches'],
   pyme:    ['email', 'telegram', 'push', 'whatsapp', 'branches'],
-  pro:     ['email', 'telegram', 'push', 'whatsapp', 'branches'],
+  pro:     ['email', 'telegram', 'push', 'whatsapp', 'scheduling', 'branches'],
   escala:  ['email', 'telegram', 'push', 'whatsapp', 'scheduling', 'branches'],
 };
 
