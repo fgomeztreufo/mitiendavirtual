@@ -30,9 +30,9 @@ const CHANNELS = [
 ]
 
 const PLANS = [
-  { name: 'Básico', emoji: '⚡', price: '14.990', products: '50', messages: '500', highlight: true, cta: 'Comenzar' },
-  { name: 'Pro',    emoji: '💎', price: '44.990', products: '500', messages: '2.000', highlight: false, cta: 'Elegir Pro' },
-  { name: 'Full',   emoji: '🔥', price: '79.990', products: '2.000', messages: '5.000', highlight: false, cta: 'Elegir Full' },
+  { name: 'Básico', emoji: '⚡', price: '14.990', products: '50', messages: '500', channels: 'Instagram + Telegram', highlight: true, cta: 'Comenzar' },
+  { name: 'Pro',    emoji: '💎', price: '44.990', products: '500', messages: '2.000', channels: 'Instagram + Telegram + WhatsApp', highlight: false, cta: 'Elegir Pro' },
+  { name: 'Full',   emoji: '🔥', price: '79.990', products: '2.000', messages: '5.000', channels: 'Todos los canales + Agendamiento', highlight: false, cta: 'Elegir Full' },
 ]
 
 /* ─── Component ─── */
@@ -233,6 +233,9 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-green-500">✓</span> {plan.messages} créditos IA/mes
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-500">✓</span> {plan.channels}
                   </li>
                 </ul>
 

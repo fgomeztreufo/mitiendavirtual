@@ -36,7 +36,7 @@ const PLAN_CHANNELS: Record<string, PlanChannel[]> = {
     basic: [
         { id: 'instagram',       Icon: FaInstagram, label: 'Bot IA en Instagram',       available: true  },
         { id: 'telegram',        Icon: FaTelegram,  label: 'Bot IA en Telegram',         available: true  },
-        { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: true  },
+        { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: false },
         { id: 'google_calendar', Icon: FaGoogle,    label: 'Agenda con Google Calendar', available: false },
     ],
     pro: [

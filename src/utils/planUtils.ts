@@ -38,7 +38,7 @@ export function normalizePlanType(input?: string | null): string {
 
 // ESTA ES LA CLAVE: Asegúrate de que diga EXPORT
 export const PLAN_PERMISSIONS: Record<string, string[]> = {
-  basic: ['email', 'telegram', 'push', 'whatsapp', 'branches'],
+  basic: ['email', 'telegram', 'push', 'branches'],
   pro: ['email', 'telegram', 'push', 'whatsapp', 'branches'],
   full: ['email', 'telegram', 'push', 'whatsapp', 'scheduling', 'branches']
 };
