@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
@@ -9,6 +9,7 @@ import { FaMeta } from 'react-icons/fa6'
 
 import { PrivacyPolicy, TermsOfService, DataDeletion, SupportPage } from './LegalPages'
 import FloatingWhatsAppButton from './FloatingWhatsAppButton'
+import OnboardingWizard from './onboarding/OnboardingWizard'
 
 const InstagramView = lazy(() => import('./InstagramView'))
 const CatalogView = lazy(() => import('./CatalogView'))
@@ -56,33 +57,56 @@ export default function Dashboard({ session }: { session: Session }) {
   const hasBranchesAccess = hasBranches(profile)
   const isAdmin = profile?.is_admin === true
 
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  const shouldOnboard = useMemo(() => {
+    if (!profile) return false
+    if (localStorage.getItem('onboarding_completed_' + session.user.id)) return false
+    if (profile.onboarding_completed_at) return false
+    return !instance?.provider_id
+      || !profile.business_type
+      || profile.business_type === 'ecommerce'
+  }, [profile, instance, session.user.id])
+
+  useEffect(() => {
+    if (shouldOnboard) setShowOnboarding(true)
+  }, [shouldOnboard])
+
   // Manejo de alertas por URL (Pagos o Conexiones)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const inOnboarding = !!sessionStorage.getItem('onboarding_step')
     if (params.get('connected') === 'true') {
-      Swal.fire({ title: '¡Conexión Exitosa!', icon: 'success', confirmButtonColor: '#10B981', timer: 3000 });
       window.history.replaceState({}, document.title, window.location.pathname);
-      getData(); setActiveTab('instagram'); 
+      getData();
+      if (!inOnboarding) {
+        Swal.fire({ title: '¡Conexión Exitosa!', icon: 'success', confirmButtonColor: '#10B981', timer: 3000 });
+        setActiveTab('instagram');
+      }
     }
     if (params.get('ig_error') === 'already_used') {
-      Swal.fire({
-        icon: 'error',
-        title: 'Instagram ya vinculado',
-        text: 'Esta cuenta de Instagram ya está conectada a otra tienda en Mi Tienda Virtual.',
-        confirmButtonColor: '#D4AF37'
-      });
       window.history.replaceState({}, document.title, window.location.pathname);
-      setActiveTab('instagram');
+      if (!inOnboarding) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Instagram ya vinculado',
+          text: 'Esta cuenta de Instagram ya está conectada a otra tienda en Mi Tienda Virtual.',
+          confirmButtonColor: '#D4AF37'
+        });
+        setActiveTab('instagram');
+      }
     }
-      if (params.get('ig_error') === 'cancelled') {
-      Swal.fire({
-        icon: 'error',
-        title: 'Instagram ya no vinculado',
-        text: 'Esta cuenta de Instagram no se pudo vincular a Mi Tienda Virtual. Por favor, intenta nuevamente, con otra cuenta.',
-        confirmButtonColor: '#D4AF37'
-      });
+    if (params.get('ig_error') === 'cancelled') {
       window.history.replaceState({}, document.title, window.location.pathname);
-      setActiveTab('instagram');
+      if (!inOnboarding) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Instagram ya no vinculado',
+          text: 'Esta cuenta de Instagram no se pudo vincular a Mi Tienda Virtual. Por favor, intenta nuevamente, con otra cuenta.',
+          confirmButtonColor: '#D4AF37'
+        });
+        setActiveTab('instagram');
+      }
     }
     if (params.get('payment') === 'success') {
         Swal.fire({ title: '¡Pago Recibido!', icon: 'success', confirmButtonColor: '#10B981' });
@@ -94,7 +118,7 @@ export default function Dashboard({ session }: { session: Session }) {
   useEffect(() => { getData() }, [])
 
   useEffect(() => {
-    if (!profile) return
+    if (!profile || showOnboarding) return
     if (!isInTrial(profile) || !profile.trial_plan) return
     const key = 'trial_welcome_' + session.user.id
     if (localStorage.getItem(key)) return
@@ -107,7 +131,7 @@ export default function Dashboard({ session }: { session: Session }) {
       confirmButtonText: '¡Empezar!',
       confirmButtonColor: '#6366f1',
     })
-  }, [profile])
+  }, [profile, showOnboarding])
 
   const pickBusinessType = async () => {
     const current = profile?.business_type || 'ecommerce'
@@ -131,7 +155,7 @@ export default function Dashboard({ session }: { session: Session }) {
   }
 
   useEffect(() => {
-    if (!profile) return
+    if (!profile || showOnboarding) return
     const key = 'btype_chosen_' + session.user.id
     if (localStorage.getItem(key)) return
     if (profile.business_type && profile.business_type !== 'ecommerce') {
@@ -140,7 +164,7 @@ export default function Dashboard({ session }: { session: Session }) {
     }
     localStorage.setItem(key, '1')
     pickBusinessType()
-  }, [profile])
+  }, [profile, showOnboarding])
 
   const businessType = getBusinessType(profile)
   const bLabels = getLabels(businessType)
@@ -561,6 +585,20 @@ export default function Dashboard({ session }: { session: Session }) {
         {legalView === 'data-deletion' && <DataDeletion onClose={() => setLegalView(null)} />}
         {legalView === 'support' && <SupportPage onClose={() => setLegalView(null)} />}
       </main>
+
+      {showOnboarding && (
+        <OnboardingWizard
+          session={session}
+          profile={profile}
+          instance={instance}
+          onComplete={() => {
+            localStorage.setItem('onboarding_completed_' + session.user.id, '1')
+            setShowOnboarding(false)
+            getData()
+          }}
+          onRefreshData={getData}
+        />
+      )}
     </div>
   )
 }
