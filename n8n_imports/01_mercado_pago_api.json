@@ -1,0 +1,145 @@
+{
+  "id": "u7Yj8nQneu2cJvSDmp_ST",
+  "name": "Mercado Pago API",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "create-payment",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "145e4336-8125-4ce1-aaa2-47b5017c6f9d",
+      "name": "Webhook - Recibir Orden",
+      "webhookId": "7d1eb20d-4133-499b-8b20-057b38154078"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mercadopago.com/checkout/preferences",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "items",
+              "value": "={{ [\n  {\n    \"title\": $json.body.plan_name,\n    \"quantity\": 1,\n    \"currency_id\": \"CLP\",\n    \"unit_price\": parseInt($json.body.amount)\n  }\n] }}"
+            },
+            {
+              "name": "back_urls",
+              "value": "={{ {\n\"success\": \"https://mitiendavirtual.cl/payment-result?state=success\",\n\"failure\": \"https://mitiendavirtual.cl/payment-result?state=failure\",\n\"pending\": \"https://mitiendavirtual.cl/payment-result?state=pending\"\n} }}"
+            },
+            {
+              "name": "auto_return",
+              "value": "approved"
+            },
+            {
+              "name": "external_reference",
+              "value": "={{ JSON.stringify({ user_id: $json.body.user_id, plan_code: $json.body.plan_code || $json.body.plan_name, type: $json.body.type || \"plan\", credits: $json.body.credits || 0 }) }}"
+            },
+            {
+              "name": "statement_descriptor",
+              "value": "miitiendavirtualcl"
+            },
+            {
+              "name": "notification_url",
+              "value": "https://webhook.mitiendavirtual.cl/webhook/payment-notification"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "531da429-9ea2-4ec3-8587-96cd75cbd373",
+      "name": "MercadoPago API",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Raq5ot35F9zaYSp4",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Recibir Orden": {
+      "main": [
+        [
+          {
+            "node": "MercadoPago API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "Webhook - Recibir Orden": [
+      {
+        "json": {
+          "headers": {
+            "host": "webhook.mitiendavirtual.cl",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+            "content-length": "135",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "es-419,es;q=0.9,en;q=0.8",
+            "cdn-loop": "cloudflare; loops=1",
+            "cf-connecting-ip": "200.120.62.118",
+            "cf-ipcountry": "CL",
+            "cf-ray": "9f582184dbde1e88-EZE",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-warp-tag-id": "25fb36c4-be2f-495a-ad47-f72146c5307a",
+            "connection": "keep-alive",
+            "content-type": "application/json",
+            "origin": "https://www.mitiendavirtual.cl",
+            "priority": "u=1, i",
+            "referer": "https://www.mitiendavirtual.cl/",
+            "sec-ch-ua": "\"Google Chrome\";v=\"147\", \"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"147\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-site",
+            "x-forwarded-for": "200.120.62.118",
+            "x-forwarded-proto": "https"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "plan_name": "Pro",
+            "plan_code": "pro",
+            "amount": 39990,
+            "user_id": "dcbbe3e4-b3d9-4359-9cea-97446e86351b",
+            "email": "test@mitiendavirtual.cl"
+          },
+          "webhookUrl": "https://webhook.mitiendavirtual.cl/webhook/create-payment",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "active": true,
+  "tags": []
+}

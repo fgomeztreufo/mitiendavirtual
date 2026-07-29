@@ -364,12 +364,16 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                   <p className="text-gray-400 text-sm">Créditos extra que no vencen mientras tengas suscripción activa</p>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  {packs.map((pack) => (
-                    <div key={pack.code} className="rounded-2xl border border-white/10 bg-gray-900/80 p-5 flex flex-col items-center text-center space-y-3 hover:border-emerald-500/40 transition-all">
+                  {packs.map((pack) => {
+                    const sizeLabel = pack.code === 'pack_s' ? 'S' : pack.code === 'pack_m' ? 'M' : pack.code === 'pack_l' ? 'L' : pack.code === 'pack_xl' ? 'XL' : '';
+                    const isPopular = pack.code === 'pack_m';
+                    return (
+                    <div key={pack.code} className={`rounded-2xl border ${isPopular ? 'border-emerald-500/60 ring-1 ring-emerald-500/30' : 'border-white/10'} bg-gray-900/80 p-5 flex flex-col items-center text-center space-y-3 hover:border-emerald-500/40 transition-all relative`}>
+                      {isPopular && <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold text-black bg-emerald-400 px-3 py-0.5 rounded-full whitespace-nowrap">Más popular</span>}
+                      {sizeLabel && <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-0.5 rounded-full">Bolsa {sizeLabel}</span>}
                       <p className="text-2xl font-black text-white">{pack.credits.toLocaleString('es-CL')}</p>
                       <p className="text-[11px] text-gray-400 uppercase tracking-wider">créditos IA</p>
                       <p className="text-lg font-bold text-emerald-400">${pack.price_clp.toLocaleString('es-CL')}</p>
-                      <p className="text-[10px] text-gray-500">${(pack.price_clp / pack.credits).toFixed(1)} por crédito</p>
                       <button
                         onClick={() => handleBuyCreditPack(pack)}
                         className="w-full py-2 text-xs font-bold rounded-xl border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition-all"
@@ -377,7 +381,8 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                         Comprar
                       </button>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

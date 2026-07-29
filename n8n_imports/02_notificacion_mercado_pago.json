@@ -1,0 +1,1114 @@
+{
+  "id": "jDT6Nivq7hYtuTW6UHCMR",
+  "name": "notificacion mercado pago",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "payment-notification",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        1968
+      ],
+      "id": "63c251a8-fe31-4e9e-a29d-97ad84c1c11f",
+      "name": "Webhook - Notificaci\u00f3n MP",
+      "webhookId": "COLOCA_TU_CLAVE_AQUI"
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://api.mercadopago.com/v1/payments/' + $json.body.data.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -80,
+        1952
+      ],
+      "id": "ac1ae4ab-0f39-46e1-820e-eeb76421f56c",
+      "name": "Consultar Estado Pago"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "value2": "approved"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        368,
+        1952
+      ],
+      "id": "3d226273-2ac9-4a10-9b54-4713fd006244",
+      "name": "Es Aprobado?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2966a885-b064-4f2e-80af-73caea93a5fd",
+              "leftValue": "={{ $json.body.data.id }}",
+              "rightValue": "={{ 'payment'}}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -304,
+        1968
+      ],
+      "id": "4ba36dd6-ca06-489c-ae5b-e6971fbec977",
+      "name": "filter-payments"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).plan_code }}",
+                    "rightValue": "inicial",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "switch-inicial"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).plan_code }}",
+                    "rightValue": "pyme",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "switch-pyme"
+                  },
+                  {
+                    "leftValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).plan_code }}",
+                    "rightValue": "pro",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "switch-pro"
+                  }
+                ],
+                "combinator": "or"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).plan_code }}",
+                    "rightValue": "escala",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "switch-escala"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        592,
+        1920
+      ],
+      "id": "800bacae-5545-47cd-8606-e5d60cc94664",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "tableId": "payment_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ JSON.parse($json.external_reference).user_id }}"
+            },
+            {
+              "fieldId": "payment_id",
+              "fieldValue": "={{ $json.id.toString() }}"
+            },
+            {
+              "fieldId": "amount",
+              "fieldValue": "={{ $json.transaction_amount }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.status }}"
+            },
+            {
+              "fieldId": "plan_name",
+              "fieldValue": "={{ JSON.parse($json.external_reference).plan_code}}"
+            },
+            {
+              "fieldId": "payment_date",
+              "fieldValue": "={{ $json.date_approved }}"
+            },
+            {
+              "fieldId": "authorization_code",
+              "fieldValue": "={{ $json.authorization_code }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        144,
+        1952
+      ],
+      "id": "fbec56da-8df0-4308-8204-bdb541084285",
+      "name": "Guardar en Payment Logs"
+    },
+    {
+      "parameters": {
+        "content": "##falta el flujo de rechazo o sin saldo revisar"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        368,
+        1760
+      ],
+      "typeVersion": 1,
+      "id": "46e2b95a-8fbc-41d4-bea2-f0d908239ed4",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "plans",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "code",
+              "keyValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).plan_code}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        800,
+        1568
+      ],
+      "id": "64bda0df-49c7-4b48-8b75-1cf90f5ab5c4",
+      "name": "Get Plan By Code"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "plans",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "code",
+              "keyValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).plan_code}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        816,
+        1952
+      ],
+      "id": "706aca7e-a788-4a7d-bfb2-32366cc9a75e",
+      "name": "Get Plan Pro"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "plans",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "code",
+              "keyValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).plan_code}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        816,
+        2144
+      ],
+      "id": "e7e2b59a-c37b-46fe-b195-7292f54d9bcd",
+      "name": "Get Plan Full"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "profiles",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).user_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "plan_type",
+              "fieldValue": "={{ $json.code }}"
+            },
+            {
+              "fieldId": "messages_used",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "plan_expires_at",
+              "fieldValue": "={{ $now.plus(($('Get Plan By Code').item.json.duration_days || 30), 'days') }}"
+            },
+            {
+              "fieldId": "messages_used_tl",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "messages_used_wpp",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "ai_credits_used",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "trial_plan",
+              "fieldValue": ""
+            },
+            {
+              "fieldId": "trial_ends_at",
+              "fieldValue": ""
+            },
+            {
+              "fieldId": "original_plan",
+              "fieldValue": ""
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        1568
+      ],
+      "id": "029dc793-d1db-4bf4-9002-23f3a9d9178d",
+      "name": "Activar Plan en Basico"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "profiles",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).user_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "plan_type",
+              "fieldValue": "={{ $json.code }}"
+            },
+            {
+              "fieldId": "messages_used",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "plan_expires_at",
+              "fieldValue": "={{ $now.plus(($('Get Plan Pro').item.json.duration_days || 30), 'days') }}"
+            },
+            {
+              "fieldId": "messages_used_tl",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "messages_used_wpp",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "ai_credits_used",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "trial_plan",
+              "fieldValue": ""
+            },
+            {
+              "fieldId": "trial_ends_at",
+              "fieldValue": ""
+            },
+            {
+              "fieldId": "original_plan",
+              "fieldValue": ""
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        1952
+      ],
+      "id": "8d6dc34d-cd49-4c5e-a4f9-23a1f60af02d",
+      "name": "Activar Plan en Pro"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "profiles",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).user_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "plan_type",
+              "fieldValue": "={{ $json.code }}"
+            },
+            {
+              "fieldId": "messages_used",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "plan_expires_at",
+              "fieldValue": "={{ $now.plus(($('Get Plan Full').item.json.duration_days || 30), 'days') }}"
+            },
+            {
+              "fieldId": "messages_used_tl",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "messages_used_wpp",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "ai_credits_used",
+              "fieldValue": "0"
+            },
+            {
+              "fieldId": "trial_plan",
+              "fieldValue": ""
+            },
+            {
+              "fieldId": "trial_ends_at",
+              "fieldValue": ""
+            },
+            {
+              "fieldId": "original_plan",
+              "fieldValue": ""
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        2144
+      ],
+      "id": "dd6bd867-c66f-41a8-9925-67cc191ff9d6",
+      "name": "Activar Plan en Full"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://iesmzunoepfwkxilvxdv.supabase.co/rest/v1/rpc/reactivate_all_products",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_user_id",
+              "value": "={{ $('Guardar en Payment Logs').item.json.user_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1312,
+        1568
+      ],
+      "id": "43158eb9-aae3-494d-a8af-74f6e26babba",
+      "name": "Reactivar Productos Basico",
+      "notes": "Al activar plan B\u00e1sico, reactiva todos los productos del usuario (hasta 50 podr\u00e1n subirse)."
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "instances",
+        "limit": 1,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        1776
+      ],
+      "id": "fc28028f-4d60-4a2d-803c-2a4d5e9d2d7a",
+      "name": "Obtener Instancia (downgrade)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://iesmzunoepfwkxilvxdv.supabase.co/rest/v1/rpc/get_decrypted_credential' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_user_id\": \"{{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).user_id }}\",\n  \"p_instance_id\": \"{{ $('Obtener Instancia (downgrade)').item.json.id }}\",\n  \"p_provider\": \"telegram\",\n  \"p_credential_type\": \"bot_token\",\n  \"p_encrypt_key\": \"{{ $env.SUPABASE_ENCRYPT_KEY }}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1552,
+        1776
+      ],
+      "id": "1397cff7-b3f4-4f37-b2ab-215701eba44f",
+      "name": "Obtener Bot Token (downgrade)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const payload = $input.first().json || {};\nconst decrypted = typeof payload.data === 'string' ? payload.data.trim() : '';\nconst hasToken = !!(decrypted && decrypted.includes(':'));\nreturn [{ json: { bot_token: decrypted, has_token: hasToken } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1776,
+        1776
+      ],
+      "id": "861f20ed-8ce6-4854-a266-01ecfaed67d4",
+      "name": "Descifrar Token (downgrade)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "downgrade-has-token-check",
+              "leftValue": "={{ $json.has_token }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1984,
+        1776
+      ],
+      "id": "0e24fcd9-8419-4ecd-83c6-004cdf4f5a9f",
+      "name": "\u00bfTiene bot propio?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $json.bot_token }}/deleteWebhook",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"drop_pending_updates\": false}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2224,
+        1760
+      ],
+      "id": "c00053a9-d547-4534-915d-b7a520f7dc57",
+      "name": "Delete Webhook Telegram (downgrade)"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://iesmzunoepfwkxilvxdv.supabase.co/rest/v1/instances?id=eq.{{ $('Obtener Instancia (downgrade)').item.json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channels\": {\n    \"telegram\": {\n      \"bot_type\": \"platform\",\n      \"bot_id\": null,\n      \"bot_username\": null,\n      \"disconnected_at\": \"{{ $now.toISO() }}\",\n      \"downgrade_reason\": \"plan_basico\"\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2448,
+        1760
+      ],
+      "id": "35e1c833-60b0-4a6e-889f-9b62ceef6042",
+      "name": "Limpiar channels.telegram (downgrade)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://iesmzunoepfwkxilvxdv.supabase.co/rest/v1/rpc/reactivate_all_products",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_user_id",
+              "value": "={{ $('Guardar en Payment Logs').item.json.user_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1328,
+        1952
+      ],
+      "id": "510740e2-6ee7-4b9b-9716-c96b1db48d6b",
+      "name": "Reactivar Productos Pro",
+      "notes": "Al activar plan Pro, reactiva todos los productos del usuario (hasta 500 podr\u00e1n subirse)."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://iesmzunoepfwkxilvxdv.supabase.co/rest/v1/rpc/reactivate_all_products",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_user_id",
+              "value": "={{ $('Guardar en Payment Logs').item.json.user_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1328,
+        2144
+      ],
+      "id": "dbd31e7b-1acf-4953-b634-abde70bd99b0",
+      "name": "Reactivar Productos Full",
+      "notes": "Al activar plan Full, reactiva todos los productos del usuario (sin l\u00edmite)."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "credit-pack-check",
+              "leftValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).type }}",
+              "rightValue": "credit_pack",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        472,
+        1920
+      ],
+      "id": "141225c9-8cbc-4d3e-b4f5-a82d7b551f7d",
+      "name": "Es Credit Pack?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://iesmzunoepfwkxilvxdv.supabase.co/rest/v1/rpc/add_bonus_credits",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_user_id",
+              "value": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).user_id }}"
+            },
+            {
+              "name": "p_credits",
+              "value": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).credits }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        592,
+        2320
+      ],
+      "id": "bed8eaff-9253-471a-8543-f469a1db755a",
+      "name": "Agregar Bonus Credits",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bRPHwOivYfq5D2ib",
+          "name": "supa base secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "credit_purchases",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).user_id }}"
+            },
+            {
+              "fieldId": "pack_code",
+              "fieldValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).plan_code }}"
+            },
+            {
+              "fieldId": "credits",
+              "fieldValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).credits }}"
+            },
+            {
+              "fieldId": "amount_clp",
+              "fieldValue": "={{ $('Consultar Estado Pago').item.json.transaction_amount }}"
+            },
+            {
+              "fieldId": "payment_id",
+              "fieldValue": "={{ $('Consultar Estado Pago').item.json.id.toString() }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "completed"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        832,
+        2320
+      ],
+      "id": "4efdcb90-b6be-40c7-90dd-7676ffc65ee2",
+      "name": "Registrar Credit Purchase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4hWqjffSDMk2pC8i",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Notificaci\u00f3n MP": {
+      "main": [
+        [
+          {
+            "node": "filter-payments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar Estado Pago": {
+      "main": [
+        [
+          {
+            "node": "Guardar en Payment Logs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es Aprobado?": {
+      "main": [
+        [
+          {
+            "node": "Es Credit Pack?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter-payments": {
+      "main": [
+        [
+          {
+            "node": "Consultar Estado Pago",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get Plan By Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Plan Pro",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Plan Full",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Plan By Code": {
+      "main": [
+        [
+          {
+            "node": "Activar Plan en Basico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Plan Pro": {
+      "main": [
+        [
+          {
+            "node": "Activar Plan en Pro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Plan Full": {
+      "main": [
+        [
+          {
+            "node": "Activar Plan en Full",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar en Payment Logs": {
+      "main": [
+        [
+          {
+            "node": "Es Aprobado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Activar Plan en Basico": {
+      "main": [
+        [
+          {
+            "node": "Reactivar Productos Basico",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Obtener Instancia (downgrade)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener Instancia (downgrade)": {
+      "main": [
+        [
+          {
+            "node": "Obtener Bot Token (downgrade)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener Bot Token (downgrade)": {
+      "main": [
+        [
+          {
+            "node": "Descifrar Token (downgrade)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descifrar Token (downgrade)": {
+      "main": [
+        [
+          {
+            "node": "\u00bfTiene bot propio?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\u00bfTiene bot propio?": {
+      "main": [
+        [
+          {
+            "node": "Delete Webhook Telegram (downgrade)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Webhook Telegram (downgrade)": {
+      "main": [
+        [
+          {
+            "node": "Limpiar channels.telegram (downgrade)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Activar Plan en Pro": {
+      "main": [
+        [
+          {
+            "node": "Reactivar Productos Pro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Activar Plan en Full": {
+      "main": [
+        [
+          {
+            "node": "Reactivar Productos Full",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es Credit Pack?": {
+      "main": [
+        [
+          {
+            "node": "Agregar Bonus Credits",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agregar Bonus Credits": {
+      "main": [
+        [
+          {
+            "node": "Registrar Credit Purchase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "active": true,
+  "tags": []
+}
