@@ -259,6 +259,79 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
         </div>
       </section>
 
+      {/* ════════════ BOLSAS DE RECARGA ════════════ */}
+      <section className="relative z-10 py-16 sm:py-20 px-4 sm:px-6 bg-gradient-to-b from-white to-gray-50">
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={stagger}
+            className="text-center mb-12"
+          >
+            <motion.h2 variants={fadeUp} custom={0} className="text-2xl sm:text-3xl md:text-4xl font-bold">
+              Necesitas más créditos?{' '}
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-600">
+                Recarga al instante
+              </span>
+            </motion.h2>
+            <motion.p variants={fadeUp} custom={1} className="mt-4 text-gray-600 max-w-xl mx-auto">
+              Compra bolsas de créditos IA que <strong>no vencen</strong> mientras tengas suscripción activa.
+              Se suman a tu plan y se consumen solo cuando los necesitas.
+            </motion.p>
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.15 }}
+            variants={stagger}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
+          >
+            {[
+              { size: 'S', credits: '250', price: '$6.990' },
+              { size: 'M', credits: '500', price: '$11.990', popular: true },
+              { size: 'L', credits: '1.500', price: '$29.990' },
+              { size: 'XL', credits: '3.000', price: '$49.990' },
+            ].map((pack, i) => (
+              <motion.div
+                key={pack.size}
+                variants={fadeUp}
+                custom={i}
+                className={`relative p-5 sm:p-6 rounded-2xl flex flex-col items-center text-center ${
+                  pack.popular
+                    ? 'border-2 border-emerald-400 bg-emerald-50 shadow-[0_8px_32px_rgba(16,185,129,0.10)]'
+                    : 'border border-gray-200 bg-white shadow-sm'
+                }`}
+              >
+                {pack.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-bold tracking-wider whitespace-nowrap">
+                    MÁS POPULAR
+                  </div>
+                )}
+                <span className={`text-xs font-bold px-3 py-0.5 rounded-full mb-3 ${
+                  pack.popular ? 'text-emerald-700 bg-emerald-100' : 'text-gray-600 bg-gray-100'
+                }`}>Bolsa {pack.size}</span>
+                <p className="text-2xl sm:text-3xl font-black text-gray-900">{pack.credits}</p>
+                <p className="text-[11px] text-gray-500 uppercase tracking-wider mt-1">créditos IA</p>
+                <p className={`text-lg font-bold mt-3 ${pack.popular ? 'text-emerald-600' : 'text-gray-900'}`}>{pack.price}</p>
+                <p className="text-[10px] text-gray-400 mt-1">No vencen</p>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+            className="text-center mt-8 text-sm text-gray-500"
+          >
+            Los créditos de recarga se consumen después de los créditos de tu plan mensual.
+          </motion.p>
+        </div>
+      </section>
+
       {/* ════════════ CTA FINAL ════════════ */}
       <section className="relative z-10 py-20 sm:py-32 px-4 sm:px-6 bg-[#F8FAFC]">
         <motion.div
