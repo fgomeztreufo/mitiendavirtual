@@ -134,9 +134,44 @@ export default function StepWhatsApp({ session, onNext, onSkip, onBack, onRefres
       <h2 className="text-2xl font-black text-white mb-2 text-center">
         Conecta WhatsApp Business
       </h2>
-      <p className="text-gray-500 text-sm mb-8 text-center">
+      <p className="text-gray-500 text-sm mb-6 text-center">
         Vincula tu numero de WhatsApp Business para responder clientes automaticamente.
       </p>
+
+      {sdkStatus !== 'connected' && sdkStatus !== 'connecting' && sdkStatus !== 'exchanging' && (
+        <div className="w-full max-w-sm mb-6 rounded-2xl bg-amber-500/5 border border-amber-500/20 p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+            <div>
+              <p className="text-sm font-semibold text-amber-300">Antes de continuar</p>
+              <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                Al conectar WhatsApp Business, seras redirigido a <span className="text-white font-medium">Meta (Facebook)</span> donde deberas:
+              </p>
+            </div>
+          </div>
+          <ul className="space-y-2 pl-8">
+            <li className="flex items-start gap-2">
+              <span className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-gray-400">1</span>
+              <span className="text-xs text-gray-400">Seleccionar o crear tu cuenta de WhatsApp Business</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-gray-400">2</span>
+              <span className="text-xs text-gray-400">Verificar tu numero de telefono</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="w-5 h-5 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-amber-400">3</span>
+              <span className="text-xs text-gray-300">
+                <span className="text-amber-300 font-medium">Agregar un metodo de pago</span> — Meta cobra directamente por el uso de la API de WhatsApp Business (las primeras 1.000 conversaciones/mes son gratis)
+              </span>
+            </li>
+          </ul>
+          <p className="text-[10px] text-gray-600 pl-8">
+            Este cobro es de Meta, no de MiTiendaVirtual. Puedes revisar los costos en business.whatsapp.com/products/platform-pricing
+          </p>
+        </div>
+      )}
 
       {sdkStatus === 'connected' ? (
         <div className="w-full max-w-xs space-y-4">

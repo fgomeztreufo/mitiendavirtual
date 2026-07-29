@@ -33,9 +33,27 @@ export default function StepInstagram({ session, instance, onNext, onSkip, onBac
       <h2 className="text-2xl font-black text-white mb-2 text-center">
         Conecta tu Instagram
       </h2>
-      <p className="text-gray-500 text-sm mb-8 text-center">
+      <p className="text-gray-500 text-sm mb-6 text-center">
         Vincula tu cuenta de Instagram Business para que tu bot responda comentarios y DMs automaticamente.
       </p>
+
+      {!isConnected && (
+        <div className="w-full max-w-sm mb-6 rounded-2xl bg-blue-500/5 border border-blue-500/20 p-4">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
+            <div>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                Seras redirigido a <span className="text-white font-medium">Meta</span> para autorizar el acceso a tu cuenta de Instagram Business. No tiene costo. Al finalizar, volveras aqui automaticamente.
+              </p>
+              <p className="text-[10px] text-gray-600 mt-2">
+                Necesitas una cuenta de Instagram conectada a una Pagina de Facebook.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isConnected ? (
         <div className="w-full max-w-xs space-y-4">

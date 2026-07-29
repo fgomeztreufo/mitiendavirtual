@@ -118,7 +118,7 @@ export default function Dashboard({ session }: { session: Session }) {
   useEffect(() => { getData() }, [])
 
   useEffect(() => {
-    if (!profile || showOnboarding) return
+    if (!profile || shouldOnboard) return
     if (!isInTrial(profile) || !profile.trial_plan) return
     const key = 'trial_welcome_' + session.user.id
     if (localStorage.getItem(key)) return
@@ -131,7 +131,7 @@ export default function Dashboard({ session }: { session: Session }) {
       confirmButtonText: '¡Empezar!',
       confirmButtonColor: '#6366f1',
     })
-  }, [profile, showOnboarding])
+  }, [profile, shouldOnboard])
 
   const pickBusinessType = async () => {
     const current = profile?.business_type || 'ecommerce'
@@ -155,7 +155,7 @@ export default function Dashboard({ session }: { session: Session }) {
   }
 
   useEffect(() => {
-    if (!profile || showOnboarding) return
+    if (!profile || shouldOnboard) return
     const key = 'btype_chosen_' + session.user.id
     if (localStorage.getItem(key)) return
     if (profile.business_type && profile.business_type !== 'ecommerce') {
@@ -164,7 +164,7 @@ export default function Dashboard({ session }: { session: Session }) {
     }
     localStorage.setItem(key, '1')
     pickBusinessType()
-  }, [profile, showOnboarding])
+  }, [profile, shouldOnboard])
 
   const businessType = getBusinessType(profile)
   const bLabels = getLabels(businessType)
