@@ -44,6 +44,7 @@ export function normalizePlanType(input?: string | null): string {
 }
 
 export const PLAN_PERMISSIONS: Record<string, string[]> = {
+  expired: ['email', 'push'],
   inicial: ['email', 'telegram', 'push', 'branches'],
   pyme:    ['email', 'telegram', 'push', 'whatsapp', 'branches'],
   pro:     ['email', 'telegram', 'push', 'whatsapp', 'scheduling', 'branches'],
@@ -51,6 +52,7 @@ export const PLAN_PERMISSIONS: Record<string, string[]> = {
 };
 
 export const PLAN_BRANCHES_LIMIT: Record<string, number | null> = {
+  expired: 0,
   inicial: 2,
   pyme: 5,
   pro: 10,
@@ -80,6 +82,7 @@ export function planDisplayToCode(display?: string) {
 
 export function planCodeToDisplay(code: string) {
   switch (code) {
+    case 'expired': return 'Sin plan';
     case 'inicial': return 'Inicial';
     case 'pyme': return 'Pyme';
     case 'pro': return 'Pro';

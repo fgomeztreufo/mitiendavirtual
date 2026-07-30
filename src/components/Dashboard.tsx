@@ -478,6 +478,22 @@ export default function Dashboard({ session }: { session: Session }) {
         {/* Subtle glow in content area */}
         <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-gradient-to-bl from-indigo-600/5 to-transparent blur-[100px] pointer-events-none" />
         <div className="max-w-5xl mx-auto p-4 sm:p-6 md:p-10 w-full flex-grow relative z-10">
+          {/* Banner plan expirado o créditos agotados */}
+          {planCode === 'expired' && (
+            <div className="mb-6 p-4 rounded-2xl border border-red-500/20 bg-red-500/5 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-red-400">Tu plan ha expirado</p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {(profile?.bonus_credits ?? 0) > 0
+                    ? `Te quedan ${(profile.bonus_credits).toLocaleString('es-CL')} créditos de recarga. Renueva tu plan para seguir operando.`
+                    : 'No tienes créditos disponibles. Contrata un plan o compra una bolsa de recarga.'}
+                </p>
+              </div>
+              <button onClick={() => setActiveTab('plans')} className="px-4 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-500 hover:to-purple-500 transition-all whitespace-nowrap">
+                Ver planes
+              </button>
+            </div>
+          )}
           <Suspense fallback={<LazyFallback />}>
             {activeTab === 'home' && (
               <AgentsDashboard
