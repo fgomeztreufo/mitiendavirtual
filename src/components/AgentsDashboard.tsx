@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import { effectivePlan, planCodeToDisplay } from '../utils/planUtils';
 import AgentsOfficeScene from './AgentsOfficeScene';
@@ -52,6 +52,12 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
   const [loading, setLoading] = useState(true);
   const [branches, setBranches] = useState<any[]>([]);
   const [filterBranch, setFilterBranch] = useState('all');
+  const AWAKE_TIMEOUT = 2 * 60 * 1000; // 5 minutos sin actividad → vuelve a dormir
+  const [channelLastActive, setChannelLastActive] = useState<Record<string, number>>({
+    instagram: 0, whatsapp: 0, telegram: 0, calendar: 0,
+  });
+  const [, setTick] = useState(0); // force re-render para timeout check
+  const channelLastActiveRef = useRef(channelLastActive);
 
   useEffect(() => {
     supabase.from('branches').select('id, name').eq('user_id', session.user.id).eq('is_active', true)
@@ -117,6 +123,17 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
       setLeadsToday(todayCount);
       setAgentLeadStats(nextAgentStats);
 
+      // Seed channelLastActive: si hay leads de hoy, marcar como activo ahora
+      const now = Date.now();
+      setChannelLastActive(prev => {
+        const next = { ...prev };
+        if (nextAgentStats.instagram.today > 0 && prev.instagram === 0) next.instagram = now;
+        if (nextAgentStats.whatsapp.today > 0 && prev.whatsapp === 0) next.whatsapp = now;
+        if (nextAgentStats.telegram.today > 0 && prev.telegram === 0) next.telegram = now;
+        channelLastActiveRef.current = next;
+        return next;
+      });
+
       // Comprobar si el usuario tiene un token de Telegram usado (vinculado)
       try {
         const { count: tgCount, error: tgError } = await supabase
@@ -154,6 +171,16 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
             if (typeof a.starts_at === 'string' && a.starts_at >= todayStr) stats.today++;
           });
           setCalendarStats(stats);
+          if (stats.today > 0) {
+            setChannelLastActive(prev => {
+              if (prev.calendar === 0) {
+                const next = { ...prev, calendar: Date.now() };
+                channelLastActiveRef.current = next;
+                return next;
+              }
+              return prev;
+            });
+          }
         }
       } catch (e) {
         console.error('Error fetching appointment stats', e);
@@ -179,6 +206,109 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
   useEffect(() => {
     fetchStats();
   }, [session.user.id, fetchStats, filterBranch]);
+
+  // Refs para detectar qué canal consumió créditos comparando contadores per-channel
+  const lastMsgCountsRef = useRef({ ig: 0, tg: 0, wpp: 0 });
+
+  // Realtime: leads INSERT, appointments INSERT, profiles UPDATE (per-channel), whatsapp_messages INSERT
+  useEffect(() => {
+    // Cargar contadores iniciales
+    supabase.from('profiles').select('messages_used, messages_used_tl, messages_used_wpp').eq('id', session.user.id).single()
+      .then(({ data }) => {
+        if (data) {
+          lastMsgCountsRef.current = {
+            ig: (data as any).messages_used || 0,
+            tg: (data as any).messages_used_tl || 0,
+            wpp: (data as any).messages_used_wpp || 0,
+          };
+        }
+      });
+
+    const wakeChannel = (key: string) => {
+      const now = Date.now();
+      setChannelLastActive(prev => {
+        const next = { ...prev, [key]: now };
+        channelLastActiveRef.current = next;
+        return next;
+      });
+    };
+
+    const channel = supabase
+      .channel('dashboard-realtime')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'leads',
+        filter: `user_id=eq.${session.user.id}`,
+      }, (payload) => {
+        const sistema = String((payload.new as any)?.sistema || '').toLowerCase();
+        if (sistema === 'instagram' || sistema === 'whatsapp' || sistema === 'telegram') {
+          wakeChannel(sistema);
+        }
+        fetchStats();
+      })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'appointments',
+        filter: `user_id=eq.${session.user.id}`,
+      }, () => {
+        wakeChannel('calendar');
+        fetchStats();
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
+        filter: `id=eq.${session.user.id}`,
+      }, (payload) => {
+        const row = payload.new as any;
+        const newIg = row?.messages_used || 0;
+        const newTg = row?.messages_used_tl || 0;
+        const newWpp = row?.messages_used_wpp || 0;
+        const prev = lastMsgCountsRef.current;
+
+        if (newIg > prev.ig) wakeChannel('instagram');
+        if (newTg > prev.tg) wakeChannel('telegram');
+        if (newWpp > prev.wpp) wakeChannel('whatsapp');
+
+        lastMsgCountsRef.current = { ig: newIg, tg: newTg, wpp: newWpp };
+        fetchStats();
+      })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'whatsapp_messages',
+        filter: `user_id=eq.${session.user.id}`,
+      }, () => {
+        wakeChannel('whatsapp');
+        fetchStats();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [session.user.id, fetchStats]);
+
+  // Interval: cada 30s re-evalúa si algún canal debe volver a dormir
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const ref = channelLastActiveRef.current;
+      const anyExpired = Object.values(ref).some(ts => ts > 0 && (now - ts) >= AWAKE_TIMEOUT);
+      if (anyExpired) {
+        setChannelLastActive(prev => {
+          const next = { ...prev };
+          for (const key of Object.keys(next)) {
+            if (next[key] > 0 && (now - next[key]) >= AWAKE_TIMEOUT) next[key] = 0;
+          }
+          channelLastActiveRef.current = next;
+          return next;
+        });
+      }
+      setTick(t => t + 1);
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [AWAKE_TIMEOUT]);
 
   const aiCredits = profile?.ai_credits_used || 0;
   const isConnected = !!instance?.provider_id;
@@ -382,6 +512,10 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
         waActive={whatsappConnected}
         tgActive={telegramConnected}
         calActive={calendarConnected}
+        igMessage={channelLastActive.instagram > 0 && (Date.now() - channelLastActive.instagram) < AWAKE_TIMEOUT}
+        waMessage={channelLastActive.whatsapp > 0 && (Date.now() - channelLastActive.whatsapp) < AWAKE_TIMEOUT}
+        tgMessage={channelLastActive.telegram > 0 && (Date.now() - channelLastActive.telegram) < AWAKE_TIMEOUT}
+        calMessage={channelLastActive.calendar > 0 && (Date.now() - channelLastActive.calendar) < AWAKE_TIMEOUT}
         stats={{
           messages: aiCredits,
           leads: leadsTotal,
