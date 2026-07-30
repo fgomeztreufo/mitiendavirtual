@@ -145,7 +145,7 @@ export default function ServicesView({ session, profile, onUpdate, businessType 
       confirmButtonColor: '#ef4444',
       confirmButtonText: 'Eliminar',
       cancelButtonText: 'Cancelar',
-      background: '#1a1a1a', color: '#fff',
+      
     })
     if (!isConfirmed) return
 

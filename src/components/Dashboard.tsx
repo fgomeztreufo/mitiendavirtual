@@ -128,24 +128,37 @@ export default function Dashboard({ session }: { session: Session }) {
       title: '¡Bienvenido a MiTiendaVirtual!',
       html: `Tienes un <b>período de prueba de ${days} días</b> del plan <b>Pro</b>.<br><br>Conecta tus canales y prueba todas las funcionalidades.`,
       confirmButtonText: '¡Empezar!',
-      confirmButtonColor: '#6366f1',
+      
     })
   }, [profile, shouldOnboard])
 
   const pickBusinessType = async () => {
     const current = profile?.business_type || 'ecommerce'
-    const optionsHtml = Object.entries(BUSINESS_TYPES)
-      .map(([k, v]) => `<option value="${k}"${k === current ? ' selected' : ''}>${v}</option>`)
+    const icons: Record<string, string> = {
+      ecommerce: '🛍️', inmobiliaria: '🏠', clinica: '🏥', servicios: '✂️', restaurant: '🍽️',
+    }
+    const cardsHtml = Object.entries(BUSINESS_TYPES)
+      .map(([k, v]) => `<button type="button" data-btype="${k}" class="btype-card" style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px;margin:6px 0;border-radius:12px;border:1px solid ${k === current ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.08)'};background:${k === current ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.03)'};color:#e5e7eb;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.15s;text-align:left"><span style="font-size:20px">${icons[k] || '📦'}</span><span>${v}</span></button>`)
       .join('')
     const { isConfirmed, value } = await Swal.fire({
       title: '¿Qué tipo de negocio tienes?',
-      html: `<p style="color:#9ca3af;font-size:13px;margin-bottom:12px">Esto personaliza tu catálogo y la experiencia de la plataforma.</p><select id="swal-btype" class="swal2-select">${optionsHtml}</select>`,
+      html: `<p style="color:#9ca3af;font-size:13px;margin-bottom:16px">Esto personaliza tu catálogo y la experiencia de la plataforma.</p><div id="btype-grid">${cardsHtml}</div><input type="hidden" id="swal-btype" value="${current}">`,
       confirmButtonText: 'Confirmar',
-      confirmButtonColor: '#6366f1',
       allowOutsideClick: false,
-      background: '#1a1a1a',
-      color: '#fff',
-      preConfirm: () => (document.getElementById('swal-btype') as HTMLSelectElement)?.value || 'ecommerce',
+      didOpen: () => {
+        document.querySelectorAll('.btype-card').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.btype-card').forEach(b => {
+              (b as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)';
+              (b as HTMLElement).style.background = 'rgba(255,255,255,0.03)';
+            });
+            (btn as HTMLElement).style.borderColor = 'rgba(99,102,241,0.5)';
+            (btn as HTMLElement).style.background = 'rgba(99,102,241,0.1)';
+            (document.getElementById('swal-btype') as HTMLInputElement).value = (btn as HTMLElement).dataset.btype || 'ecommerce';
+          })
+        })
+      },
+      preConfirm: () => (document.getElementById('swal-btype') as HTMLInputElement)?.value || 'ecommerce',
     })
     if (isConfirmed && value) {
       await supabase.from('profiles').update({ business_type: value }).eq('id', session.user.id)
@@ -188,7 +201,7 @@ export default function Dashboard({ session }: { session: Session }) {
         icon: 'error',
         title: 'Error de conexión',
         text: 'No se pudieron cargar tus datos. Intenta recargar la página.',
-        confirmButtonColor: '#6366f1',
+        
       })
     }
   }

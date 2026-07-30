@@ -77,8 +77,8 @@ export default function BranchesView({ session, profile, goToPlans }: BranchesVi
         icon: 'warning',
         title: 'Límite de sucursales',
         text: `Tu plan permite hasta ${limit} sucursales. Mejora tu plan para agregar más.`,
-        confirmButtonColor: '#6366f1',
-        background: '#1a1a1a', color: '#fff',
+        
+        
       })
       return
     }
@@ -93,9 +93,9 @@ export default function BranchesView({ session, profile, goToPlans }: BranchesVi
         <input id="swal-phone" class="swal2-input" placeholder="Teléfono (opcional)">
         <input id="swal-email" class="swal2-input" placeholder="Email (opcional)">
       `,
-      background: '#1a1a1a', color: '#fff',
+      
       confirmButtonText: 'Crear',
-      confirmButtonColor: '#6366f1',
+      
       showCancelButton: true,
       cancelButtonText: 'Cancelar',
       preConfirm: () => {
@@ -129,9 +129,9 @@ export default function BranchesView({ session, profile, goToPlans }: BranchesVi
         <input id="swal-phone" class="swal2-input" placeholder="Teléfono" value="${escHtml(branch.phone || '')}">
         <input id="swal-email" class="swal2-input" placeholder="Email" value="${escHtml(branch.email || '')}">
       `,
-      background: '#1a1a1a', color: '#fff',
+      
       confirmButtonText: 'Guardar',
-      confirmButtonColor: '#6366f1',
+      
       showCancelButton: true,
       cancelButtonText: 'Cancelar',
       preConfirm: () => {
@@ -168,7 +168,7 @@ export default function BranchesView({ session, profile, goToPlans }: BranchesVi
       confirmButtonColor: '#ef4444',
       confirmButtonText: 'Eliminar',
       cancelButtonText: 'Cancelar',
-      background: '#1a1a1a', color: '#fff',
+      
     })
     if (!isConfirmed) return
     await supabase.from('branches').delete().eq('id', branch.id)

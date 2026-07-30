@@ -271,9 +271,8 @@ function ServicesPanel({ services, userId, onRefresh }: { services: Service[]; u
         <input id="swal-price" class="swal2-input" type="number" placeholder="Precio CLP (opcional)">
         <input id="swal-buffer" class="swal2-input" type="number" placeholder="Buffer entre citas (min)" value="0">
       `,
-      background: '#1a1a1a', color: '#fff',
       confirmButtonText: 'Crear',
-      confirmButtonColor: '#6366f1',
+      
       showCancelButton: true,
       cancelButtonText: 'Cancelar',
       preConfirm: () => {
@@ -305,9 +304,8 @@ function ServicesPanel({ services, userId, onRefresh }: { services: Service[]; u
         <input id="swal-price" class="swal2-input" type="number" placeholder="Precio CLP (opcional)" value="${svc.price ?? ''}">
         <input id="swal-buffer" class="swal2-input" type="number" placeholder="Buffer entre citas (min)" value="${svc.buffer_minutes}">
       `,
-      background: '#1a1a1a', color: '#fff',
       confirmButtonText: 'Guardar',
-      confirmButtonColor: '#6366f1',
+      
       showCancelButton: true,
       cancelButtonText: 'Cancelar',
       preConfirm: () => {
@@ -340,7 +338,6 @@ function ServicesPanel({ services, userId, onRefresh }: { services: Service[]; u
       text: 'Se eliminará el servicio permanentemente.',
       icon: 'warning', showCancelButton: true,
       confirmButtonColor: '#ef4444', confirmButtonText: 'Eliminar',
-      background: '#1a1a1a', color: '#fff',
     })
     if (!isConfirmed) return
     await supabase.from('services').delete().eq('id', svc.id)
@@ -413,9 +410,8 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh, branche
         <input id="swal-phone" class="swal2-input" placeholder="Teléfono (opcional)">
         <input id="swal-email" class="swal2-input" placeholder="Email (opcional)">
       `,
-      background: '#1a1a1a', color: '#fff',
       confirmButtonText: 'Crear',
-      confirmButtonColor: '#6366f1',
+      
       showCancelButton: true,
       preConfirm: () => {
         const name = (document.getElementById('swal-name') as HTMLInputElement).value.trim()
@@ -453,9 +449,8 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh, branche
         <input id="swal-phone" class="swal2-input" placeholder="Teléfono (opcional)" value="${escHtml(member.phone || '')}">
         <input id="swal-email" class="swal2-input" placeholder="Email (opcional)" value="${escHtml(member.email || '')}">
       `,
-      background: '#1a1a1a', color: '#fff',
       confirmButtonText: 'Guardar',
-      confirmButtonColor: '#6366f1',
+      
       showCancelButton: true,
       preConfirm: () => {
         const name = (document.getElementById('swal-name') as HTMLInputElement).value.trim()
@@ -495,9 +490,8 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh, branche
           ${escHtml(s.name)} (${s.duration_minutes} min)
         </label>
       `).join(''),
-      background: '#1a1a1a', color: '#fff',
       confirmButtonText: 'Guardar',
-      confirmButtonColor: '#6366f1',
+      
       showCancelButton: true,
       preConfirm: () => {
         const checks = document.querySelectorAll<HTMLInputElement>('.swal2-checkbox-custom:checked')
@@ -527,7 +521,6 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh, branche
       text: 'Se eliminará el profesional y sus horarios.',
       icon: 'warning', showCancelButton: true,
       confirmButtonColor: '#ef4444', confirmButtonText: 'Eliminar',
-      background: '#1a1a1a', color: '#fff',
     })
     if (!isConfirmed) return
     await supabase.from('staff_members').delete().eq('id', member.id)
@@ -656,9 +649,8 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
           <p style="font-size:11px;color:#6b7280;margin:0">Formato 24 hrs</p>
         </div>
       `,
-      background: '#1a1a1a', color: '#fff',
       confirmButtonText: 'Agregar',
-      confirmButtonColor: '#6366f1',
+      
       showCancelButton: true,
       cancelButtonText: 'Cancelar',
       preConfirm: () => {
@@ -727,7 +719,6 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
           </div>
         </div>
       `,
-      background: '#1a1a1a', color: '#fff',
       confirmButtonText: 'Bloquear',
       confirmButtonColor: '#ef4444',
       showCancelButton: true,
@@ -757,9 +748,9 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
     })
     if (error) {
       if (error.code === '23505') {
-        Swal.fire({ icon: 'warning', title: 'Dia ya bloqueado', text: 'Ese dia ya esta bloqueado para este profesional.', background: '#1a1a1a', color: '#fff' })
+        Swal.fire({ icon: 'warning', title: 'Dia ya bloqueado', text: 'Ese dia ya esta bloqueado para este profesional.' })
       } else {
-        Swal.fire({ icon: 'error', title: 'Error', text: error.message, background: '#1a1a1a', color: '#fff' })
+        Swal.fire({ icon: 'error', title: 'Error', text: error.message })
       }
       return
     }
@@ -775,8 +766,7 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
       showCancelButton: true,
       confirmButtonText: 'Si, desbloquear',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#6366f1',
-      background: '#1a1a1a', color: '#fff',
+      
     })
     if (!isConfirmed) return
 
@@ -960,7 +950,6 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh, b
       confirmButtonText: 'Sí, confirmar',
       cancelButtonText: 'No, volver',
       confirmButtonColor: newStatus === 'cancelled' ? '#ef4444' : '#6366f1',
-      background: '#1a1a1a', color: '#fff',
     })
     if (!isConfirmed) return
 
@@ -1002,9 +991,8 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh, b
         <input id="swal-date" class="swal2-input" type="date">
         <input id="swal-time" class="swal2-input" type="time">
       `,
-      background: '#1a1a1a', color: '#fff',
       confirmButtonText: 'Crear cita',
-      confirmButtonColor: '#6366f1',
+      
       showCancelButton: true,
       preConfirm: () => {
         const clientName = (document.getElementById('swal-client-name') as HTMLInputElement).value.trim()
@@ -1081,7 +1069,7 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh, b
       }).catch(() => {})
     })
 
-    Swal.fire({ icon: 'success', title: 'Cita creada', timer: 2000, showConfirmButton: false, background: '#1a1a1a', color: '#fff' })
+    Swal.fire({ icon: 'success', title: 'Cita creada', timer: 2000, showConfirmButton: false })
     onRefresh()
   }
 
@@ -1239,8 +1227,6 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
         title: 'Google Calendar conectado',
         timer: 3000,
         showConfirmButton: false,
-        background: '#1a1a1a',
-        color: '#fff',
       })
       window.history.replaceState({}, '', window.location.pathname)
     } else if (gcal === 'error') {
@@ -1248,8 +1234,6 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
         icon: 'error',
         title: 'Error al conectar',
         text: `No se pudo conectar Google Calendar. ${params.get('reason') || ''}`,
-        background: '#1a1a1a',
-        color: '#fff',
       })
       window.history.replaceState({}, '', window.location.pathname)
     }
@@ -1281,8 +1265,6 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
       confirmButtonColor: '#ef4444',
       confirmButtonText: 'Desconectar',
       cancelButtonText: 'Cancelar',
-      background: '#1a1a1a',
-      color: '#fff',
     })
     if (!isConfirmed) return
 
