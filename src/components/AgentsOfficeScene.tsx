@@ -38,11 +38,11 @@ function RobotLogo({ type }: { type: string }) {
 
 export default function AgentsOfficeScene({ igActive, waActive, tgActive, calActive, stats }: AgentsOfficeSceneProps) {
   const agents = useMemo(() => [
-    { id: 'wa', label: 'WhatsApp', active: waActive, color: '#25D366', glow: '#25D36650', logo: 'whatsapp', x: 8, bobDelay: 0 },
-    { id: 'ig', label: 'Instagram', active: igActive, color: '#E1306C', glow: '#E1306C50', logo: 'instagram', x: 30, bobDelay: 0.8 },
-    { id: 'tg', label: 'Telegram', active: tgActive, color: '#0088cc', glow: '#0088cc50', logo: 'telegram', x: 55, bobDelay: 1.6 },
-    { id: 'cal', label: 'Calendar', active: calActive, color: '#4285F4', glow: '#4285F450', logo: 'calendar', x: 78, bobDelay: 2.4 },
-  ], [igActive, waActive, tgActive, calActive])
+    { id: 'wa', label: 'WhatsApp', active: waActive, color: '#25D366', glow: '#25D36650', logo: 'whatsapp', x: 8, bobDelay: 0, stat: stats.leads },
+    { id: 'ig', label: 'Instagram', active: igActive, color: '#E1306C', glow: '#E1306C50', logo: 'instagram', x: 30, bobDelay: 0.8, stat: stats.sales },
+    { id: 'tg', label: 'Telegram', active: tgActive, color: '#0088cc', glow: '#0088cc50', logo: 'telegram', x: 55, bobDelay: 1.6, stat: stats.messages },
+    { id: 'cal', label: 'Calendar', active: calActive, color: '#4285F4', glow: '#4285F450', logo: 'calendar', x: 78, bobDelay: 2.4, stat: stats.appointments },
+  ], [igActive, waActive, tgActive, calActive, stats])
 
   const onlineCount = [igActive, waActive, tgActive, calActive].filter(Boolean).length
 
@@ -65,14 +65,26 @@ export default function AgentsOfficeScene({ igActive, waActive, tgActive, calAct
       <div className="absolute top-4 right-1/4 w-24 h-24 rounded-full bg-purple-500/5 blur-3xl" />
 
       {/* Network connections between robots */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.12 }}>
+      <svg className="absolute inset-0 w-full h-full pointer-events-none">
         {agents.map((a, i) =>
-          agents.slice(i + 1).map(b => (
-            <line key={`${a.id}-${b.id}`} x1={`${a.x + 5}%`} y1="55%" x2={`${b.x + 5}%`} y2="55%"
-              stroke="#67e8f9" strokeWidth="0.5" strokeDasharray="4 4">
-              <animate attributeName="stroke-dashoffset" values="8;0" dur="2s" repeatCount="indefinite" />
-            </line>
-          ))
+          agents.slice(i + 1).map(b => {
+            const bothActive = a.active && b.active;
+            return (
+              <g key={`${a.id}-${b.id}`}>
+                <line x1={`${a.x + 5}%`} y1="55%" x2={`${b.x + 5}%`} y2="55%"
+                  stroke={bothActive ? '#67e8f9' : '#374151'} strokeWidth={bothActive ? 1 : 0.5}
+                  strokeDasharray="6 4" opacity={bothActive ? 0.35 : 0.08}>
+                  {bothActive && <animate attributeName="stroke-dashoffset" values="10;0" dur="1.5s" repeatCount="indefinite" />}
+                </line>
+                {bothActive && (
+                  <circle r="2" fill="#67e8f9" opacity="0.6">
+                    <animateMotion dur="3s" repeatCount="indefinite"
+                      path={`M${(a.x + 5) * 8},${260 * 0.55} L${(b.x + 5) * 8},${260 * 0.55}`} />
+                  </circle>
+                )}
+              </g>
+            );
+          })
         )}
       </svg>
 
@@ -117,15 +129,29 @@ export default function AgentsOfficeScene({ igActive, waActive, tgActive, calAct
           )}
 
           <div className="flex flex-col items-center">
-            {/* Notification bubble */}
+            {/* Scan ring */}
             {agent.active && (
+              <div
+                className="absolute z-10"
+                style={{
+                  width: 50, height: 50, top: 2, left: '50%', transform: 'translateX(-50%)',
+                  borderRadius: '50%',
+                  border: `1px solid ${agent.color}20`,
+                  animation: `eveScan 3s ease-out infinite`,
+                  animationDelay: `${agent.bobDelay}s`,
+                }}
+              />
+            )}
+
+            {/* Notification badge */}
+            {agent.active && agent.stat > 0 && (
               <div
                 className="absolute -top-5 -right-1 z-20"
                 style={{ animation: `eveNotif 3s ease-in-out infinite`, animationDelay: `${agent.bobDelay + 1}s` }}
               >
-                <div className="w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white"
-                  style={{ backgroundColor: agent.color, boxShadow: `0 0 8px ${agent.glow}` }}>
-                  !
+                <div className="min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[7px] font-bold text-white px-1"
+                  style={{ backgroundColor: agent.color, boxShadow: `0 0 10px ${agent.glow}` }}>
+                  {agent.stat > 99 ? '99+' : agent.stat}
                 </div>
               </div>
             )}
@@ -309,6 +335,10 @@ export default function AgentsOfficeScene({ igActive, waActive, tgActive, calAct
         @keyframes eveNotif {
           0%, 100% { transform: translateY(0) scale(1); opacity: 1; }
           50% { transform: translateY(-4px) scale(1.15); opacity: 0.7; }
+        }
+        @keyframes eveScan {
+          0% { transform: translateX(-50%) scale(1); opacity: 0.6; }
+          100% { transform: translateX(-50%) scale(2.2); opacity: 0; }
         }
         @keyframes eveParticle {
           0% { transform: translateY(260px); opacity: 0; }

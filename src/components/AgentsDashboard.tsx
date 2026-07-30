@@ -221,7 +221,7 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
         { label: 'Leads hoy', value: agentLeadStats.instagram.today },
       ],
       action: () => onNavigate('instagram'),
-      actionLabel: isConnected ? 'Configurar' : 'Conectar',
+      connected: isConnected,
     },
     {
       id: 'whatsapp',
@@ -243,7 +243,7 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
         { label: 'Leads hoy', value: agentLeadStats.whatsapp.today },
       ],
       action: () => onNavigate('whatsapp'),
-      actionLabel: whatsappConnected ? 'Configurar' : 'Conectar',
+      connected: whatsappConnected,
     },
     {
       id: 'telegram',
@@ -264,8 +264,8 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
         { label: 'Ventas cerradas', value: agentLeadStats.telegram.completed },
         { label: 'Leads hoy', value: agentLeadStats.telegram.today },
       ],
-      action: () => onNavigate('notifications'),
-      actionLabel: 'Configurar',
+      action: () => onNavigate('telegram'),
+      connected: telegramConnected,
     },
     {
       id: 'google-calendar',
@@ -290,7 +290,7 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
         { label: 'Calendario', value: calendarConnected ? 'Vinculado' : 'Sin vincular' },
       ],
       action: () => onNavigate('scheduling'),
-      actionLabel: calendarConnected ? 'Configurar' : 'Conectar',
+      connected: calendarConnected,
     },
   ];
 
@@ -306,7 +306,7 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
             Monitorea el rendimiento de tus agentes inteligentes • Plan {planType}
           </p>
         </div>
-        {branches.length > 0 && (
+        {branches.length > 1 && (
           <select
             value={filterBranch}
             onChange={e => setFilterBranch(e.target.value)}
@@ -363,9 +363,13 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
             <div className="px-4 pb-4">
               <button
                 onClick={agent.action}
-                className="w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-gray-700 hover:border-gray-500 transition-all"
+                className={`w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                  agent.connected
+                    ? 'bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-gray-700 hover:border-gray-500'
+                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white border border-indigo-500/30'
+                }`}
               >
-                {agent.actionLabel}
+                {agent.connected ? 'Ver panel' : 'Conectar'}
               </button>
             </div>
           </div>
