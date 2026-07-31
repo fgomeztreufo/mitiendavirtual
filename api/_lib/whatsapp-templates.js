@@ -63,6 +63,66 @@ export const DEFAULT_TEMPLATES = [
         }
       }
     ]
+  },
+  {
+    name: 'credits_depleted',
+    language: 'es',
+    category: 'UTILITY',
+    components: [
+      {
+        type: 'BODY',
+        text: 'Hola {{1}}, tu bot se quedó sin créditos IA este mes. Un cliente intentó contactarte pero no pudimos responder. Recarga en mitiendavirtual.cl para no perder más ventas.',
+        example: {
+          body_text: [['Felipe']]
+        }
+      },
+      {
+        type: 'BUTTONS',
+        buttons: [
+          { type: 'URL', text: 'Recargar ahora', url: 'https://mitiendavirtual.cl' }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'credits_low',
+    language: 'es',
+    category: 'UTILITY',
+    components: [
+      {
+        type: 'BODY',
+        text: 'Hola {{1}}, te quedan solo {{2}} créditos IA este mes. Recarga para no perder ventas cuando se agoten.',
+        example: {
+          body_text: [['Felipe', '5']]
+        }
+      },
+      {
+        type: 'BUTTONS',
+        buttons: [
+          { type: 'URL', text: 'Ver planes', url: 'https://mitiendavirtual.cl' }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'plan_expired',
+    language: 'es',
+    category: 'UTILITY',
+    components: [
+      {
+        type: 'BODY',
+        text: 'Hola {{1}}, tu plan {{2}} ha expirado. Tu bot está pausado y no puede responder a tus clientes. Renueva en mitiendavirtual.cl para reactivarlo.',
+        example: {
+          body_text: [['Felipe', 'Pro']]
+        }
+      },
+      {
+        type: 'BUTTONS',
+        buttons: [
+          { type: 'URL', text: 'Renovar plan', url: 'https://mitiendavirtual.cl' }
+        ]
+      }
+    ]
   }
 ]
 
