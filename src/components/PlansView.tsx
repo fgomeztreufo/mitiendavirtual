@@ -1,5 +1,5 @@
 import Swal from 'sweetalert2'
-import { planDisplayToCode, normalizePlanType, isInTrial, trialDaysLeft, effectivePlan } from '../utils/planUtils'
+import { planDisplayToCode, normalizePlanType, isInTrial, trialDaysLeft, effectivePlan, isPlanExpired } from '../utils/planUtils'
 import { Session } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
 import type { IconType } from 'react-icons'
@@ -214,6 +214,16 @@ export default function PlansView({ session, profile }: PlansViewProps) {
               </div>
             )}
 
+            {profile && isPlanExpired(profile) && !isInTrial(profile) && (
+              <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-red-500/10 to-rose-500/10 border border-red-500/30 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-red-400">Tu plan ha expirado</p>
+                  <p className="text-xs text-red-300/70">Elige un plan para seguir usando tus agentes de IA</p>
+                </div>
+                <span className="text-2xl">⚠️</span>
+              </div>
+            )}
+
             {bonusCredits > 0 && (
               <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 flex items-center justify-between">
                 <div>
@@ -230,7 +240,7 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                 <div className="col-span-full text-center text-gray-400">No hay planes configurados en la base de datos.</div>
               )}
 
-              {!loading && plans.map((plan: any) => {
+              {!loading && plans.filter((p: any) => p.code !== 'expired').map((plan: any) => {
                 const code = plan.code
                 const activePlan = effectivePlan(profile)
                 const isCurrent = activePlan === code

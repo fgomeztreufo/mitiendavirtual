@@ -137,9 +137,17 @@ export function trialDaysLeft(profile: any): number {
   return Math.max(0, Math.ceil(diff / 86400000));
 }
 
+export function isPlanExpired(profile: any): boolean {
+  if (!profile?.plan_expires_at) return false;
+  return new Date(profile.plan_expires_at) < new Date();
+}
+
 export function effectivePlan(profile: any): string {
   if (isInTrial(profile) && profile?.trial_plan) {
     return normalizePlanType(profile.trial_plan);
+  }
+  if (isPlanExpired(profile)) {
+    return 'expired';
   }
   return normalizePlanType(profile?.plan_type);
 }

@@ -54,6 +54,14 @@ const NOTIFICATION_TYPES = {
     },
     wpp_template: 'new_lead_notification',
     telegram: (p) => `🔔 *Nuevo lead desde ${p.channel || 'tu canal'}*\n\n${p.lead_name || 'Alguien'} (${p.lead_phone || 'sin teléfono'}) te ha contactado. Revisa tu panel para responder.`
+  },
+  human_handoff: {
+    push: {
+      title: '🙋 Cliente solicita hablar con humano',
+      body: (p) => `${p.lead_name || 'Un cliente'} desde ${p.channel || 'tu canal'}. Motivo: ${p.motivo || 'Solicita atención humana'}`
+    },
+    wpp_template: 'human_handoff',
+    telegram: (p) => `🙋 *Cliente solicita humano*\n\n${p.lead_name || 'Un cliente'} desde ${p.channel || 'tu canal'}.\nMotivo: ${p.motivo || 'Solicita atención humana'}`
   }
 }
 
@@ -80,6 +88,12 @@ function buildWppTemplateComponents(templateName, params) {
         { type: 'text', text: params.channel || 'WhatsApp' },
         { type: 'text', text: params.lead_name || 'Prospecto' },
         { type: 'text', text: params.lead_phone || 'sin teléfono' }
+      ]}]
+    case 'human_handoff':
+      return [{ type: 'body', parameters: [
+        { type: 'text', text: params.lead_name || 'Un cliente' },
+        { type: 'text', text: params.channel || 'tu canal' },
+        { type: 'text', text: params.motivo || 'Solicita atención humana' }
       ]}]
     default:
       return []

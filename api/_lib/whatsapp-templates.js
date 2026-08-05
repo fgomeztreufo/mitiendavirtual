@@ -123,6 +123,26 @@ export const DEFAULT_TEMPLATES = [
         ]
       }
     ]
+  },
+  {
+    name: 'human_handoff',
+    language: 'es',
+    category: 'UTILITY',
+    components: [
+      {
+        type: 'BODY',
+        text: '{{1}} desde {{2}} necesita hablar con un humano. Motivo: {{3}}. Revisa tu panel para responder.',
+        example: {
+          body_text: [['Carlos Pérez', 'Instagram', 'Quiere cerrar una compra']]
+        }
+      },
+      {
+        type: 'BUTTONS',
+        buttons: [
+          { type: 'URL', text: 'Ir al panel', url: 'https://mitiendavirtual.cl' }
+        ]
+      }
+    ]
   }
 ]
 

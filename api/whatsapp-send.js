@@ -16,8 +16,31 @@ function safeEqual(a, b) {
 }
 
 function buildReadableBody(templateName, params) {
-  if (templateName === 'appointment_confirmation' && params.length >= 5) {
-    return `Hola ${params[0]}, tienes una cita de ${params[1]} para el ${params[2]} a las ${params[3]} con ${params[4]}. Por favor confirma o cancela tu asistencia.`
+  switch (templateName) {
+    case 'appointment_confirmation':
+      if (params.length >= 5) return `Hola ${params[0]}, tienes una cita de ${params[1]} para el ${params[2]} a las ${params[3]} con ${params[4]}. Por favor confirma o cancela tu asistencia.`
+      break
+    case 'new_lead_notification':
+      if (params.length >= 3) return `Nuevo lead desde ${params[0]}: ${params[1]} (${params[2]}) te ha contactado. Revisa tu panel para responder.`
+      break
+    case 'credits_depleted':
+      if (params.length >= 1) return `Hola ${params[0]}, tu bot se quedó sin créditos IA este mes. Un cliente intentó contactarte pero no pudimos responder. Recarga en mitiendavirtual.cl para no perder más ventas.`
+      break
+    case 'credits_low':
+      if (params.length >= 2) return `Hola ${params[0]}, te quedan solo ${params[1]} créditos IA este mes. Recarga para no perder ventas cuando se agoten.`
+      break
+    case 'plan_expired':
+      if (params.length >= 2) return `Hola ${params[0]}, tu plan ${params[1]} ha expirado. Tu bot está pausado y no puede responder a tus clientes. Renueva para reactivarlo.`
+      break
+    case 'human_handoff':
+      if (params.length >= 3) return `${params[0]} desde ${params[1]} necesita hablar con un humano. Motivo: ${params[2]}. Revisa tu panel para responder.`
+      break
+    case 'payment_received':
+      if (params.length >= 3) return `Hola ${params[0]}, tu pago de ${params[1]} por ${params[2]} ha sido recibido exitosamente.`
+      break
+    case 'order_update':
+      if (params.length >= 3) return `Hola ${params[0]}, tu pedido de ${params[1]} ha sido ${params[2]}. Gracias por tu preferencia.`
+      break
   }
   return `[Template: ${templateName}] ${params.join(', ')}`
 }
