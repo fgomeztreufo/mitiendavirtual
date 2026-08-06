@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { isInTrial, trialDaysLeft } from '../../../utils/planUtils'
 
 interface StepWelcomeProps {
   profile: any
@@ -8,8 +7,6 @@ interface StepWelcomeProps {
 }
 
 export default function StepWelcome({ profile, onNext, onSkipAll }: StepWelcomeProps) {
-  const trial = isInTrial(profile)
-  const days = trial ? trialDaysLeft(profile) : 0
 
   return (
     <motion.div
@@ -33,14 +30,6 @@ export default function StepWelcome({ profile, onNext, onSkipAll }: StepWelcomeP
       <p className="text-gray-500 text-sm mb-8">
         Conecta tus canales, personaliza tu bot y sube tus productos para que empiece a vender por ti.
       </p>
-
-      {trial && days > 0 && (
-        <div className="mb-8 px-4 py-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
-          <p className="text-sm text-indigo-300">
-            Tienes <span className="font-bold text-white">{days} dias</span> de prueba del plan Pro
-          </p>
-        </div>
-      )}
 
       <button
         onClick={onNext}

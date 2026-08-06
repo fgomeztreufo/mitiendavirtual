@@ -30,10 +30,10 @@ const CHANNELS = [
 ]
 
 const PLANS = [
-  { name: 'Inicial',  emoji: '⚡', price: '19.900',  products: '50',    messages: '1.000',  channels: 'Instagram + Telegram',                 highlight: false, cta: 'Comenzar' },
-  { name: 'Pyme',     emoji: '💼', price: '39.900',  products: '200',   messages: '3.000',  channels: 'Instagram + Telegram + WhatsApp',       highlight: true,  cta: 'Elegir Pyme' },
-  { name: 'Pro',      emoji: '💎', price: '79.900',  products: '1.000', messages: '8.000',  channels: 'IG + TG + WPP + Calendar',               highlight: false, cta: 'Elegir Pro' },
-  { name: 'Escala',   emoji: '🔥', price: '149.900', products: '5.000', messages: '20.000', channels: 'Todos los canales + Agendamiento',      highlight: false, cta: 'Elegir Escala' },
+  { name: 'Gratis',      emoji: '🌱', price: '0',      products: '10',    messages: '100',    channels: 'Todos los canales',  highlight: false, cta: 'Comenzar Gratis' },
+  { name: 'Emprendedor', emoji: '⚡', price: '19.900', products: '100',   messages: '1.500',  channels: 'Todos los canales',  highlight: false, cta: 'Elegir Emprendedor' },
+  { name: 'Negocio',     emoji: '💼', price: '49.900', products: '500',   messages: '5.000',  channels: 'Todos los canales',  highlight: true,  cta: 'Elegir Negocio' },
+  { name: 'Escala',      emoji: '🔥', price: '99.900', products: '2.000', messages: '15.000', channels: 'Todos los canales',  highlight: false, cta: 'Elegir Escala' },
 ]
 
 /* ─── Component ─── */
@@ -189,7 +189,7 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
               </span>
             </motion.h2>
             <motion.p variants={fadeUp} custom={1} className="mt-4 text-gray-600 max-w-xl mx-auto">
-              Sin contratos. Pagas por mes. Todos los planes incluyen 14 días de prueba gratis.
+              Sin contratos. Pagas por mes. Todos los canales abiertos desde el día 1.
             </motion.p>
           </motion.div>
 

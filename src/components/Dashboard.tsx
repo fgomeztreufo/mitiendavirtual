@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
-import { normalizePlanType, isInTrial, trialDaysLeft, effectivePlan, hasBranches, getBusinessType, BUSINESS_TYPES, hasWhatsAppAccess, hasSchedulingAccess } from '../utils/planUtils'
+import { effectivePlan, getBusinessType, BUSINESS_TYPES } from '../utils/planUtils'
 import { getLabels } from '../utils/businessLabels'
 import { FaInstagram, FaTelegram, FaWhatsapp, FaGoogle } from 'react-icons/fa'
 import { FaMeta } from 'react-icons/fa6'
@@ -48,11 +48,7 @@ export default function Dashboard({ session }: { session: Session }) {
   const [configAgentsOpen, setConfigAgentsOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Plan access helpers (evaluated after profile loads)
   const planCode = effectivePlan(profile)
-  const hasWhatsApp = hasWhatsAppAccess(planCode)
-  const hasScheduling = hasSchedulingAccess(planCode)
-  const hasBranchesAccess = hasBranches(profile)
   const [showOnboarding, setShowOnboarding] = useState(false)
 
   const shouldOnboard = useMemo(() => {
@@ -113,21 +109,6 @@ export default function Dashboard({ session }: { session: Session }) {
 
   useEffect(() => { getData() }, [])
 
-  useEffect(() => {
-    if (!profile || shouldOnboard) return
-    if (!isInTrial(profile) || !profile.trial_plan) return
-    const key = 'trial_welcome_' + session.user.id
-    if (localStorage.getItem(key)) return
-    localStorage.setItem(key, '1')
-    const days = trialDaysLeft(profile)
-    Swal.fire({
-      icon: 'success',
-      title: '¡Bienvenido a MiTiendaVirtual!',
-      html: `Tienes un <b>período de prueba de ${days} días</b> del plan <b>Pro</b>.<br><br>Conecta tus canales y prueba todas las funcionalidades.`,
-      confirmButtonText: '¡Empezar!',
-      
-    })
-  }, [profile, shouldOnboard])
 
   const pickBusinessType = async () => {
     const current = profile?.business_type || 'ecommerce'
@@ -230,10 +211,10 @@ export default function Dashboard({ session }: { session: Session }) {
             <MobileNavBtn label="Ventas Capturadas" active={activeTab === 'leads'} onClick={() => { setActiveTab('leads'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Telegram" active={activeTab === 'telegram'} onClick={() => { setActiveTab('telegram'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Leads Telegram" active={activeTab === 'telegram-leads'} onClick={() => { setActiveTab('telegram-leads'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} locked={!hasWhatsApp} lockLabel="Pyme+" onClick={() => { if (hasWhatsApp) { setActiveTab('whatsapp'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
-            <MobileNavBtn label="Leads WhatsApp" active={activeTab === 'wpp-leads'} locked={!hasWhatsApp} lockLabel="Pyme+" onClick={() => { if (hasWhatsApp) { setActiveTab('wpp-leads'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
-            <MobileNavBtn label="Agendamiento" active={activeTab === 'scheduling'} locked={!hasScheduling} lockLabel="Pro+" onClick={() => { if (hasScheduling) { setActiveTab('scheduling'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
-            <MobileNavBtn label="Sucursales" active={activeTab === 'branches'} locked={!hasBranchesAccess} lockLabel="Inicial+" onClick={() => { if (hasBranchesAccess) { setActiveTab('branches'); setMobileMenuOpen(false); } else { setActiveTab('plans'); setMobileMenuOpen(false); } }} />
+            <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} onClick={() => { setActiveTab('whatsapp'); setMobileMenuOpen(false); }} />
+            <MobileNavBtn label="Leads WhatsApp" active={activeTab === 'wpp-leads'} onClick={() => { setActiveTab('wpp-leads'); setMobileMenuOpen(false); }} />
+            <MobileNavBtn label="Agendamiento" active={activeTab === 'scheduling'} onClick={() => { setActiveTab('scheduling'); setMobileMenuOpen(false); }} />
+            <MobileNavBtn label="Sucursales" active={activeTab === 'branches'} onClick={() => { setActiveTab('branches'); setMobileMenuOpen(false); }} />
             <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-4 mb-2 tracking-widest">Configuración</p>
             <MobileNavBtn label="Notificaciones" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Configura tu Instagram" active={activeTab === 'instagram'} onClick={() => { setActiveTab('instagram'); setMobileMenuOpen(false); }} />
@@ -313,18 +294,16 @@ export default function Dashboard({ session }: { session: Session }) {
             </div>
           )}
 
-          {/* WhatsApp — Pro+ */}
+          {/* WhatsApp */}
           <SidebarBtn
             label="WhatsApp"
             icon={<FaWhatsapp className="text-green-400" />}
             active={activeTab === 'wpp-messages' || activeTab === 'wpp-leads'}
-            onClick={() => hasWhatsApp ? setWhatsappMenuOpen(!whatsappMenuOpen) : setActiveTab('plans')}
-            isParent={hasWhatsApp}
+            onClick={() => setWhatsappMenuOpen(!whatsappMenuOpen)}
+            isParent
             isOpen={whatsappMenuOpen}
-            locked={!hasWhatsApp}
-            lockLabel="Pyme+"
           />
-          {hasWhatsApp && whatsappMenuOpen && (
+          {whatsappMenuOpen && (
             <div className="ml-4 border-l border-white/5 pl-4 space-y-1">
               <SidebarSubBtn
                 label="Leads"
@@ -339,32 +318,21 @@ export default function Dashboard({ session }: { session: Session }) {
             </div>
           )}
 
-          {/* Google Calendar — solo plan Full */}
+          {/* Google Calendar */}
           <SidebarBtn
             label="Google Calendar"
             icon={<FaGoogle className="text-blue-400" />}
             active={activeTab === 'scheduling'}
-            onClick={() => hasScheduling ? (setActiveTab('scheduling'), setLegalView(null)) : setActiveTab('plans')}
-            locked={!hasScheduling}
-            lockLabel="Pro+"
+            onClick={() => { setActiveTab('scheduling'); setLegalView(null) }}
           />
 
-          {/* Sucursales — desde plan Básico */}
+          {/* Sucursales */}
           <SidebarBtn
             label="Sucursales"
             icon={<svg className="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
             active={activeTab === 'branches'}
-            onClick={() => hasBranchesAccess ? (setActiveTab('branches'), setLegalView(null)) : setActiveTab('plans')}
-            locked={!hasBranchesAccess}
-            lockLabel="Inicial+"
+            onClick={() => { setActiveTab('branches'); setLegalView(null) }}
           />
-
-          {profile && isInTrial(profile) && (
-            <div className="mx-1 mt-4 mb-2 p-2.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30">
-              <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest">Trial {profile.trial_plan?.toUpperCase()}</p>
-              <p className="text-[10px] text-amber-300/70">{trialDaysLeft(profile)} días restantes</p>
-            </div>
-          )}
 
           <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Configuración</p>
 
@@ -426,8 +394,8 @@ export default function Dashboard({ session }: { session: Session }) {
                 <button onClick={() => setActiveTab('telegram')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'telegram' ? 'text-sky-400 bg-sky-500/10' : 'text-gray-500 hover:text-sky-400 hover:bg-sky-500/5'}`}>
                   <FaTelegram className="text-sm text-sky-400" /> Telegram
                 </button>
-                <button onClick={() => hasWhatsApp ? setActiveTab('whatsapp') : setActiveTab('plans')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${!hasWhatsApp ? 'text-gray-600 opacity-50' : activeTab === 'whatsapp' ? 'text-green-400 bg-green-500/10' : 'text-gray-500 hover:text-green-400 hover:bg-green-500/5'}`}>
-                  <FaWhatsapp className="text-sm text-green-400" /> WhatsApp {!hasWhatsApp && <span className="ml-auto text-[9px] text-gray-600 font-bold">Pyme+</span>}
+                <button onClick={() => setActiveTab('whatsapp')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'whatsapp' ? 'text-green-400 bg-green-500/10' : 'text-gray-500 hover:text-green-400 hover:bg-green-500/5'}`}>
+                  <FaWhatsapp className="text-sm text-green-400" /> WhatsApp
                 </button>
               </div>
             )}
@@ -615,31 +583,22 @@ export default function Dashboard({ session }: { session: Session }) {
 }
 
 // Auxiliares del Sidebar
-const SidebarBtn = ({ label, icon, active, onClick, isParent, isOpen, locked, lockLabel }: any) => (
+const SidebarBtn = ({ label, icon, active, onClick, isParent, isOpen }: any) => (
   <button
     onClick={onClick}
     className={`w-full flex items-center gap-2 p-3 rounded-xl text-sm transition-all duration-200 ${
-      locked
-        ? 'text-gray-600 hover:bg-white/[0.02] cursor-pointer'
-        : active
+      active
         ? 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shadow-[0_2px_8px_rgba(99,102,241,0.08)]'
         : 'text-gray-400 hover:bg-white/[0.03] hover:text-gray-200'
     }`}
   >
     {icon && <span className="text-base shrink-0">{icon}</span>}
     <span className="font-medium">{label}</span>
-    {locked ? (
-      <span className="ml-auto flex items-center gap-1">
-        <svg className="w-3 h-3 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-        </svg>
-        {lockLabel && <span className="text-[9px] text-gray-600 font-bold tracking-wide">{lockLabel}</span>}
-      </span>
-    ) : isParent ? (
+    {isParent && (
       <span className="ml-auto">
         <svg className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
       </span>
-    ) : null}
+    )}
   </button>
 )
 
@@ -647,18 +606,10 @@ const SidebarSubBtn = ({ label, active, onClick }: any) => (
   <button onClick={onClick} className={`w-full text-left py-2 text-xs font-medium uppercase tracking-wider transition-colors ${active ? 'text-indigo-300' : 'text-gray-500 hover:text-gray-300'}`}>{label}</button>
 )
 
-const MobileNavBtn = ({ label, active, onClick, locked, lockLabel }: any) => (
+const MobileNavBtn = ({ label, active, onClick }: any) => (
   <button onClick={onClick} className={`w-full text-left p-3 rounded-xl text-sm font-medium transition-all flex items-center justify-between ${
-    locked ? 'text-gray-600' : active ? 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20' : 'text-gray-400 hover:bg-white/[0.03] hover:text-gray-200'
+    active ? 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20' : 'text-gray-400 hover:bg-white/[0.03] hover:text-gray-200'
   }`}>
     <span>{label}</span>
-    {locked && (
-      <span className="flex items-center gap-1">
-        <svg className="w-3 h-3 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-        </svg>
-        {lockLabel && <span className="text-[9px] font-bold tracking-wide">{lockLabel}</span>}
-      </span>
-    )}
   </button>
 )

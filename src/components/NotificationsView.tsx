@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import Swal from 'sweetalert2';
-import { effectivePlan, PLAN_PERMISSIONS } from '../utils/planUtils';
+import { effectivePlan } from '../utils/planUtils';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 
 export default function NotificationsView({ session, profile }: any) {
@@ -9,7 +9,6 @@ export default function NotificationsView({ session, profile }: any) {
   const [loading, setLoading] = useState(true);
 
   const planCode = effectivePlan(profile);
-  const allowedChannels = PLAN_PERMISSIONS[planCode] || ['email'];
   const botUsername = ((import.meta as any).env?.VITE_TELEGRAM_BOT_USERNAME) || 'Mitiendavirtualclbot';
   const API_BASE = '/api';
 
@@ -35,22 +34,7 @@ export default function NotificationsView({ session, profile }: any) {
     }
   }
 
-  const toggleChannel = async (channel: string, currentStatus: boolean, isLocked: boolean) => {
-    if (isLocked) {
-      Swal.fire({
-        title: 'Funcionalidad Premium',
-        text: `Las notificaciones por ${channel.toUpperCase()} requieren un plan superior.`,
-        icon: 'lock' as any,
-        showCancelButton: true,
-        confirmButtonText: 'Ver Planes',
-        confirmButtonColor: '#3b82f6'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.dispatchEvent(new CustomEvent('changeTab', { detail: 'plans' }));
-        }
-      });
-      return;
-    }
+  const toggleChannel = async (channel: string, currentStatus: boolean) => {
 
     if (channel === 'email') {
       Swal.fire('Configuración', 'El correo es obligatorio.', 'info');
@@ -380,7 +364,6 @@ export default function NotificationsView({ session, profile }: any) {
 
       <div className="grid gap-4">
         {['email', 'telegram', 'push', 'whatsapp'].map((channel) => {
-          const isLocked = !allowedChannels.includes(channel);
           const config = configs.find(c => c.channel_type === channel);
           const active = !!config?.is_active;
           const meta = CHANNEL_META[channel];
@@ -404,7 +387,7 @@ export default function NotificationsView({ session, profile }: any) {
             <div
               key={channel}
               className={`p-5 rounded-2xl border bg-gray-900 transition-all ${
-                isLocked ? 'opacity-40 border-gray-800' : meta.color
+                meta.color
               }`}
             >
               <div className="flex justify-between items-center">
@@ -420,7 +403,7 @@ export default function NotificationsView({ session, profile }: any) {
                           </span>
                         ) : (
                           <span className="text-[10px] bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full border border-gray-700 cursor-pointer"
-                            onClick={() => !isLocked && toggleChannel(channel, active, isLocked)}>
+                            onClick={() => toggleChannel(channel, active)}>
                             Vincular
                           </span>
                         )
@@ -440,9 +423,9 @@ export default function NotificationsView({ session, profile }: any) {
                           Conectado
                         </span>
                       )}
-                      {channel === 'whatsapp' && !connected && !isLocked && (
+                      {channel === 'whatsapp' && !connected && (
                         <span className="text-[10px] bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full border border-gray-700 cursor-pointer"
-                          onClick={() => toggleChannel(channel, active, isLocked)}>
+                          onClick={() => toggleChannel(channel, active)}>
                           Configurar
                         </span>
                       )}
@@ -451,7 +434,7 @@ export default function NotificationsView({ session, profile }: any) {
                   </div>
                 </div>
                 <div
-                  onClick={() => !isLocked && toggleChannel(channel, active, isLocked)}
+                  onClick={() => toggleChannel(channel, active)}
                   className={`h-6 w-11 rounded-full relative transition-colors cursor-pointer shrink-0 ${
                     toggleOn ? 'bg-green-600' : 'bg-gray-700'
                   }`}

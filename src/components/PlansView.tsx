@@ -1,5 +1,5 @@
 import Swal from 'sweetalert2'
-import { planDisplayToCode, normalizePlanType, isInTrial, trialDaysLeft, effectivePlan, isPlanExpired } from '../utils/planUtils'
+import { planDisplayToCode, effectivePlan, isPlanExpired } from '../utils/planUtils'
 import { Session } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
 import type { IconType } from 'react-icons'
@@ -31,32 +31,12 @@ interface PlanChannel {
     available: boolean;
 }
 
-const PLAN_CHANNELS: Record<string, PlanChannel[]> = {
-    inicial: [
-        { id: 'instagram',       Icon: FaInstagram, label: 'Bot IA en Instagram',       available: true  },
-        { id: 'telegram',        Icon: FaTelegram,  label: 'Bot IA en Telegram',         available: true  },
-        { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: false },
-        { id: 'google_calendar', Icon: FaGoogle,    label: 'Agenda con Google Calendar', available: false },
-    ],
-    pyme: [
-        { id: 'instagram',       Icon: FaInstagram, label: 'Bot IA en Instagram',       available: true  },
-        { id: 'telegram',        Icon: FaTelegram,  label: 'Bot IA en Telegram',         available: true  },
-        { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: true  },
-        { id: 'google_calendar', Icon: FaGoogle,    label: 'Agenda con Google Calendar', available: false },
-    ],
-    pro: [
-        { id: 'instagram',       Icon: FaInstagram, label: 'Bot IA en Instagram',       available: true  },
-        { id: 'telegram',        Icon: FaTelegram,  label: 'Bot IA en Telegram',         available: true  },
-        { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: true  },
-        { id: 'google_calendar', Icon: FaGoogle,    label: 'Agenda con Google Calendar', available: true  },
-    ],
-    escala: [
-        { id: 'instagram',       Icon: FaInstagram, label: 'Bot IA en Instagram',       available: true  },
-        { id: 'telegram',        Icon: FaTelegram,  label: 'Bot IA en Telegram',         available: true  },
-        { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: true  },
-        { id: 'google_calendar', Icon: FaGoogle,    label: 'Agenda con Google Calendar', available: true  },
-    ],
-}
+const ALL_CHANNELS: PlanChannel[] = [
+    { id: 'instagram',       Icon: FaInstagram, label: 'Bot IA en Instagram',       available: true },
+    { id: 'telegram',        Icon: FaTelegram,  label: 'Bot IA en Telegram',         available: true },
+    { id: 'whatsapp',        Icon: FaWhatsapp,  label: 'Bot IA en WhatsApp',         available: true },
+    { id: 'google_calendar', Icon: FaGoogle,    label: 'Agenda con Google Calendar', available: true },
+]
 
 interface CreditPack {
     code: string;
@@ -199,22 +179,12 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                     Elige el motor de tu crecimiento
                 </h1>
                 <p className="text-gray-400 max-w-2xl mx-auto text-base">
-                    Automatiza tus ventas con IA en todos tus canales. Sin contratos amarrados, pagas por mes.
-                    Si no renuevas, vuelves al plan inicial sin perder tus datos.
+                    Automatiza tus ventas con IA en todos tus canales. Sin contratos, pagas por mes.
+                    Todos los canales abiertos desde el día 1. La diferencia está en los créditos IA.
                 </p>
             </div>
 
-            {profile && isInTrial(profile) && (
-              <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-bold text-amber-400">Estás probando el plan {(profile as any).trial_plan?.toUpperCase()} gratis</p>
-                  <p className="text-xs text-amber-300/70">Te quedan {trialDaysLeft(profile)} días de prueba</p>
-                </div>
-                <span className="text-2xl">🎁</span>
-              </div>
-            )}
-
-            {profile && isPlanExpired(profile) && !isInTrial(profile) && (
+            {profile && isPlanExpired(profile) && (
               <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-red-500/10 to-rose-500/10 border border-red-500/30 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold text-red-400">Tu plan ha expirado</p>
@@ -245,62 +215,52 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                 const activePlan = effectivePlan(profile)
                 const isCurrent = activePlan === code
                 const price = Number(plan.monthly_price_clp || 0)
-                const channels = PLAN_CHANNELS[code] || []
+                const channels = ALL_CHANNELS
 
                 const baseClasses = `rounded-2xl p-6 flex flex-col h-full relative`
                 let borderClass = 'border border-gray-800'
-                if (code === 'inicial') {
+                if (code === 'free') {
+                    borderClass = 'border border-gray-700'
+                } else if (code === 'emprendedor') {
                     borderClass = 'border-2 border-sky-400/70 shadow-[0_8px_20px_rgba(56,189,248,0.06)]'
-                } else if (code === 'pyme') {
+                } else if (code === 'negocio') {
                     borderClass = 'border-2 border-indigo-500/60 shadow-[0_10px_30px_rgba(99,102,241,0.16)]'
-                } else if (code === 'pro') {
-                    borderClass = 'border-2 border-purple-500/60 shadow-[0_10px_30px_rgba(124,58,237,0.16)]'
                 } else if (code === 'escala') {
                     borderClass = 'border-2 border-orange-500/50 shadow-[0_10px_30px_rgba(249,115,22,0.10)]'
                 } else if (isCurrent) {
                     borderClass = 'border border-blue-500'
                 }
-                const bgClass = code === 'pyme'
+                const bgClass = code === 'negocio'
                     ? 'bg-gradient-to-b from-gray-900 via-gray-900 to-indigo-950/20'
-                    : code === 'pro'
-                    ? 'bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800'
                     : code === 'escala'
                     ? 'bg-gradient-to-b from-gray-900 via-gray-900 to-orange-950/20'
                     : 'bg-gray-900'
 
                 const buttonDefault = 'w-full py-2 text-sm font-bold rounded-xl transition-all'
                 const buttonDisabled = 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                const buttonPrimary = code === 'pyme'
+                const buttonPrimary = code === 'negocio'
                     ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg'
-                    : code === 'pro'
-                    ? 'bg-purple-500 hover:bg-purple-400 text-white shadow-lg'
                     : code === 'escala'
                     ? 'border border-orange-500 text-orange-400 bg-transparent hover:bg-orange-500/10'
+                    : code === 'emprendedor'
+                    ? 'bg-sky-600 hover:bg-sky-500 text-white shadow-lg'
                     : 'bg-blue-600 hover:bg-blue-500 text-white'
 
-                const inTrial = isInTrial(profile)
-                const isTrialPlan = inTrial && activePlan === code
-                const isRealPlan = !inTrial && isCurrent
-
-                const label = isTrialPlan
-                    ? 'Plan en Prueba'
-                    : isRealPlan
+                const label = isCurrent
                     ? 'Tu Plan Actual'
+                    : price === 0
+                    ? 'Plan Actual'
                     : ('Elegir ' + plan.display_name)
 
-                const planEmoji = code === 'inicial' ? '⚡' : code === 'pyme' ? '💼' : code === 'pro' ? '💎' : '🔥'
+                const planEmoji = code === 'free' ? '🌱' : code === 'emprendedor' ? '⚡' : code === 'negocio' ? '💼' : '🔥'
 
-                const mostPopular = 'pyme'
-                const isButtonDisabled = isRealPlan
+                const mostPopular = 'negocio'
+                const isButtonDisabled = isCurrent
 
                 return (
                     <div key={code} className={`${bgClass} ${borderClass} ${baseClasses}`}>
                         {code === mostPopular && (
                             <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-indigo-600 text-white text-xs font-bold">MÁS POPULAR</div>
-                        )}
-
-                        {code === 'pro' && (
-                            <div className="absolute -top-3 right-4 px-3 py-1 rounded-full bg-purple-600 text-white text-[10px] font-bold">RECOMENDADO</div>
                         )}
 
                         <h3 className="text-lg font-bold text-white mb-1">{plan.display_name} {planEmoji}</h3>

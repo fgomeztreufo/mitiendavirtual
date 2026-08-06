@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../supabaseClient'
 import Swal from 'sweetalert2'
-import { effectivePlan, hasSchedulingAccess } from '../utils/planUtils'
+import { effectivePlan } from '../utils/planUtils'
 import { Session } from '@supabase/supabase-js'
 
 interface SchedulingViewProps {
@@ -153,26 +153,6 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
   }, [userId])
 
   useEffect(() => { loadAll() }, [loadAll])
-
-  if (!hasSchedulingAccess(planCode)) {
-    return (
-      <div className="max-w-4xl mx-auto p-4 text-center space-y-6">
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-indigo-500/10 flex items-center justify-center">
-          <svg className="w-8 h-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        </div>
-        <h2 className="text-xl font-bold text-white">Agendamiento</h2>
-        <p className="text-sm text-gray-400">El sistema de agendamiento está disponible desde el plan Pro.</p>
-        <button
-          onClick={() => goToPlans?.()}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 transition-all"
-        >
-          Ver planes
-        </button>
-      </div>
-    )
-  }
 
   if (loading) {
     return (

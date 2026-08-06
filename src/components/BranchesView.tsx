@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../supabaseClient'
 import { Session } from '@supabase/supabase-js'
 import Swal from 'sweetalert2'
-import { hasBranches, branchesLimit, canCreateBranch } from '../utils/planUtils'
 
 interface BranchesViewProps {
   session: Session
@@ -50,39 +49,7 @@ export default function BranchesView({ session, profile, goToPlans }: BranchesVi
 
   useEffect(() => { loadBranches() }, [loadBranches])
 
-  if (!hasBranches(profile)) {
-    return (
-      <div className="max-w-4xl mx-auto p-4 text-center space-y-6">
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-teal-500/10 flex items-center justify-center">
-          <svg className="w-8 h-8 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-          </svg>
-        </div>
-        <h2 className="text-xl font-bold text-white">Sucursales</h2>
-        <p className="text-sm text-gray-400">Gestiona múltiples ubicaciones de tu negocio. Disponible desde el plan Básico.</p>
-        <button
-          onClick={() => goToPlans?.()}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 transition-all"
-        >
-          Ver planes
-        </button>
-      </div>
-    )
-  }
-
   const addBranch = async () => {
-    if (!canCreateBranch(profile, branches.length)) {
-      const limit = branchesLimit(profile)
-      Swal.fire({
-        icon: 'warning',
-        title: 'Límite de sucursales',
-        text: `Tu plan permite hasta ${limit} sucursales. Mejora tu plan para agregar más.`,
-        
-        
-      })
-      return
-    }
-
     const { value: formValues } = await Swal.fire({
       title: 'Nueva Sucursal',
       html: `
@@ -175,9 +142,6 @@ export default function BranchesView({ session, profile, goToPlans }: BranchesVi
     loadBranches()
   }
 
-  const limit = branchesLimit(profile)
-  const limitLabel = limit === null ? 'ilimitadas' : `${branches.length}/${limit}`
-
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto p-4 flex items-center justify-center min-h-[300px]">
@@ -194,7 +158,7 @@ export default function BranchesView({ session, profile, goToPlans }: BranchesVi
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-white">Sucursales</h2>
-          <p className="text-gray-400 text-sm">Gestiona las ubicaciones de tu negocio. <span className="text-teal-400 font-bold">{limitLabel}</span></p>
+          <p className="text-gray-400 text-sm">Gestiona las ubicaciones de tu negocio.</p>
         </div>
         <button onClick={addBranch} className="px-4 py-2 text-xs font-bold rounded-xl bg-teal-500/20 text-teal-300 border border-teal-500/30 hover:bg-teal-500/30 transition-all">
           + Nueva sucursal
