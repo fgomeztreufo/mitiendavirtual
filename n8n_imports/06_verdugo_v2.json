@@ -1,5 +1,5 @@
 {
-  "name": "Verdugo v2 (Expira Planes)",
+  "name": "Verdugo v2 (Expira Planes + Reset Free)",
   "nodes": [
     {
       "parameters": {
@@ -19,59 +19,17 @@
     },
     {
       "parameters": {
-        "operation": "getAll",
-        "tableId": "profiles",
-        "returnAll": true,
-        "matchType": "allFilters",
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "plan_expires_at",
-              "condition": "lt",
-              "keyValue": "=$now"
-            },
-            {
-              "keyName": "plan_type",
-              "condition": "neq",
-              "keyValue": "expired"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [240, 0],
-      "id": "bb181501-c2de-49e6-85fd-5798fea9c2e2",
-      "name": "Buscar Planes Vencidos",
-      "credentials": {
-        "supabaseApi": {
-          "id": "4hWqjffSDMk2pC8i",
-          "name": "Supabase account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://iesmzunoepfwkxilvxdv.supabase.co/rest/v1/rpc/get_plan_limit",
+        "method": "GET",
+        "url": "=https://iesmzunoepfwkxilvxdv.supabase.co/rest/v1/profiles?plan_expires_at=lt.{{ $now.toISO() }}&plan_type=neq.free&plan_type=neq.expired&select=id,plan_type,ai_credits_used,bonus_credits",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "p_plan_code",
-              "value": "={{ $json.plan_type }}"
-            }
-          ]
-        },
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [480, 0],
-      "id": "c1a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5",
-      "name": "Obtener Limite Plan",
+      "position": [300, -150],
+      "id": "bb181501-paid-expired-query",
+      "name": "Buscar Pagados Vencidos",
       "credentials": {
         "httpHeaderAuth": {
           "id": "bRPHwOivYfq5D2ib",
@@ -81,60 +39,30 @@
     },
     {
       "parameters": {
-        "operation": "update",
-        "tableId": "profiles",
-        "matchType": "allFilters",
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "id",
-              "condition": "eq",
-              "keyValue": "={{ $('Buscar Planes Vencidos').item.json.id }}"
+        "method": "PATCH",
+        "url": "=https://iesmzunoepfwkxilvxdv.supabase.co/rest/v1/profiles?id=eq.{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"plan_type\": \"free\",\n  \"ai_credits_used\": 0,\n  \"messages_used\": 0,\n  \"messages_used_tl\": 0,\n  \"messages_used_wpp\": 0,\n  \"plan_expires_at\": \"{{ $now.plus(30, 'days').toISO() }}\",\n  \"bonus_credits\": {{ Math.max(0, ($json.bonus_credits || 0) - Math.max(0, ($json.ai_credits_used || 0) - 100)) }}\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
             }
-          ]
-        },
-        "fieldsUi": {
-          "fieldValues": [
-            {
-              "fieldId": "plan_type",
-              "fieldValue": "expired"
-            },
-            {
-              "fieldId": "plan_expires_at",
-              "fieldValue": "={{ null }}"
-            },
-            {
-              "fieldId": "messages_used",
-              "fieldValue": "0"
-            },
-            {
-              "fieldId": "messages_used_tl",
-              "fieldValue": "0"
-            },
-            {
-              "fieldId": "messages_used_wpp",
-              "fieldValue": "0"
-            },
-            {
-              "fieldId": "ai_credits_used",
-              "fieldValue": "0"
-            },
-            {
-              "fieldId": "bonus_credits",
-              "fieldValue": "={{ Math.max(0, ($('Buscar Planes Vencidos').item.json.bonus_credits || 0) - Math.max(0, ($('Buscar Planes Vencidos').item.json.ai_credits_used || 0) - ($json || 0))) }}"
-            }
-          ]
+          }
         }
       },
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [720, 0],
-      "id": "f667dfb4-5678-4f73-af68-9d4748f1a6b3",
-      "name": "Expirar Plan",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, -150],
+      "id": "f667dfb4-degrade-to-free",
+      "name": "Degradar a Free",
       "credentials": {
-        "supabaseApi": {
-          "id": "4hWqjffSDMk2pC8i",
-          "name": "Supabase account"
+        "httpHeaderAuth": {
+          "id": "bRPHwOivYfq5D2ib",
+          "name": "supa base secret"
         }
       }
     },
@@ -149,11 +77,11 @@
           "parameters": [
             {
               "name": "p_user_id",
-              "value": "={{ $('Buscar Planes Vencidos').item.json.id }}"
+              "value": "={{ $('Buscar Pagados Vencidos').item.json.id }}"
             },
             {
               "name": "p_limit",
-              "value": "0"
+              "value": "10"
             }
           ]
         },
@@ -161,9 +89,58 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [960, 0],
-      "id": "a84fee87-cb7c-4217-99e3-7f9a381f64f0",
-      "name": "Suspender Todos los Productos",
+      "position": [900, -150],
+      "id": "a84fee87-suspend-products-10",
+      "name": "Ajustar Productos (limite 10)",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bRPHwOivYfq5D2ib",
+          "name": "supa base secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://iesmzunoepfwkxilvxdv.supabase.co/rest/v1/profiles?plan_type=eq.free&or=(plan_expires_at.lt.{{ $now.toISO() }},plan_expires_at.is.null)&select=id,ai_credits_used,bonus_credits",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [300, 150],
+      "id": "bb181501-free-reset-query",
+      "name": "Buscar Free Para Reset",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bRPHwOivYfq5D2ib",
+          "name": "supa base secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://iesmzunoepfwkxilvxdv.supabase.co/rest/v1/profiles?id=eq.{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ai_credits_used\": 0,\n  \"messages_used\": 0,\n  \"messages_used_tl\": 0,\n  \"messages_used_wpp\": 0,\n  \"plan_expires_at\": \"{{ $now.plus(30, 'days').toISO() }}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 150],
+      "id": "f667dfb4-reset-free-credits",
+      "name": "Resetear Creditos Free",
       "credentials": {
         "httpHeaderAuth": {
           "id": "bRPHwOivYfq5D2ib",
@@ -178,40 +155,45 @@
       "main": [
         [
           {
-            "node": "Buscar Planes Vencidos",
+            "node": "Buscar Pagados Vencidos",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Buscar Free Para Reset",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Buscar Planes Vencidos": {
+    "Buscar Pagados Vencidos": {
       "main": [
         [
           {
-            "node": "Obtener Limite Plan",
+            "node": "Degradar a Free",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Obtener Limite Plan": {
+    "Degradar a Free": {
       "main": [
         [
           {
-            "node": "Expirar Plan",
+            "node": "Ajustar Productos (limite 10)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Expirar Plan": {
+    "Buscar Free Para Reset": {
       "main": [
         [
           {
-            "node": "Suspender Todos los Productos",
+            "node": "Resetear Creditos Free",
             "type": "main",
             "index": 0
           }
