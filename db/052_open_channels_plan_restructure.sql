@@ -138,7 +138,8 @@ $$;
 -- 6. UPDATE expire_trials() - ahora es no-op, pero lo dejamos
 -- por compatibilidad con el cron de n8n
 -- ============================================================
-CREATE OR REPLACE FUNCTION public.expire_trials()
+DROP FUNCTION IF EXISTS public.expire_trials();
+CREATE FUNCTION public.expire_trials()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
