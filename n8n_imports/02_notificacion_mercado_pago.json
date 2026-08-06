@@ -104,12 +104,12 @@
                 "conditions": [
                   {
                     "leftValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).plan_code }}",
-                    "rightValue": "inicial",
+                    "rightValue": "emprendedor",
                     "operator": {
                       "type": "string",
                       "operation": "equals"
                     },
-                    "id": "switch-inicial"
+                    "id": "switch-emprendedor"
                   }
                 ],
                 "combinator": "and"
@@ -126,24 +126,15 @@
                 "conditions": [
                   {
                     "leftValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).plan_code }}",
-                    "rightValue": "pyme",
+                    "rightValue": "negocio",
                     "operator": {
                       "type": "string",
                       "operation": "equals"
                     },
-                    "id": "switch-pyme"
-                  },
-                  {
-                    "leftValue": "={{ JSON.parse($('Consultar Estado Pago').item.json.external_reference).plan_code }}",
-                    "rightValue": "pro",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    },
-                    "id": "switch-pro"
+                    "id": "switch-negocio"
                   }
                 ],
-                "combinator": "or"
+                "combinator": "and"
               }
             },
             {
@@ -281,7 +272,7 @@
         1952
       ],
       "id": "706aca7e-a788-4a7d-bfb2-32366cc9a75e",
-      "name": "Get Plan Pro"
+      "name": "Get Plan Negocio"
     },
     {
       "parameters": {
@@ -343,18 +334,6 @@
             {
               "fieldId": "ai_credits_used",
               "fieldValue": "0"
-            },
-            {
-              "fieldId": "trial_plan",
-              "fieldValue": ""
-            },
-            {
-              "fieldId": "trial_ends_at",
-              "fieldValue": ""
-            },
-            {
-              "fieldId": "original_plan",
-              "fieldValue": ""
             }
           ]
         }
@@ -366,7 +345,7 @@
         1568
       ],
       "id": "029dc793-d1db-4bf4-9002-23f3a9d9178d",
-      "name": "Activar Plan en Basico"
+      "name": "Activar Plan Emprendedor"
     },
     {
       "parameters": {
@@ -406,18 +385,6 @@
             {
               "fieldId": "ai_credits_used",
               "fieldValue": "0"
-            },
-            {
-              "fieldId": "trial_plan",
-              "fieldValue": ""
-            },
-            {
-              "fieldId": "trial_ends_at",
-              "fieldValue": ""
-            },
-            {
-              "fieldId": "original_plan",
-              "fieldValue": ""
             }
           ]
         }
@@ -429,7 +396,7 @@
         1952
       ],
       "id": "8d6dc34d-cd49-4c5e-a4f9-23a1f60af02d",
-      "name": "Activar Plan en Pro"
+      "name": "Activar Plan Negocio"
     },
     {
       "parameters": {
@@ -469,18 +436,6 @@
             {
               "fieldId": "ai_credits_used",
               "fieldValue": "0"
-            },
-            {
-              "fieldId": "trial_plan",
-              "fieldValue": ""
-            },
-            {
-              "fieldId": "trial_ends_at",
-              "fieldValue": ""
-            },
-            {
-              "fieldId": "original_plan",
-              "fieldValue": ""
             }
           ]
         }
@@ -492,7 +447,7 @@
         2144
       ],
       "id": "dd6bd867-c66f-41a8-9925-67cc191ff9d6",
-      "name": "Activar Plan en Full"
+      "name": "Activar Plan Escala"
     },
     {
       "parameters": {
@@ -518,7 +473,7 @@
         1568
       ],
       "id": "43158eb9-aae3-494d-a8af-74f6e26babba",
-      "name": "Reactivar Productos Basico",
+      "name": "Reactivar Productos Emprendedor",
       "notes": "Al activar plan B\u00e1sico, reactiva todos los productos del usuario (hasta 50 podr\u00e1n subirse)."
     },
     {
@@ -716,8 +671,8 @@
         1952
       ],
       "id": "510740e2-6ee7-4b9b-9716-c96b1db48d6b",
-      "name": "Reactivar Productos Pro",
-      "notes": "Al activar plan Pro, reactiva todos los productos del usuario (hasta 500 podr\u00e1n subirse)."
+      "name": "Reactivar Productos Negocio",
+      "notes": "Al activar plan Negocio, reactiva todos los productos del usuario (hasta 500 podr\u00e1n subirse)."
     },
     {
       "parameters": {
@@ -743,8 +698,8 @@
         2144
       ],
       "id": "dbd31e7b-1acf-4953-b634-abde70bd99b0",
-      "name": "Reactivar Productos Full",
-      "notes": "Al activar plan Full, reactiva todos los productos del usuario (sin l\u00edmite)."
+      "name": "Reactivar Productos Escala",
+      "notes": "Al activar plan Escala, reactiva todos los productos del usuario (hasta 2000 podr\u00e1n subirse)."
     },
     {
       "parameters": {
@@ -919,7 +874,7 @@
         ],
         [
           {
-            "node": "Get Plan Pro",
+            "node": "Get Plan Negocio",
             "type": "main",
             "index": 0
           }
@@ -937,18 +892,18 @@
       "main": [
         [
           {
-            "node": "Activar Plan en Basico",
+            "node": "Activar Plan Emprendedor",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Get Plan Pro": {
+    "Get Plan Negocio": {
       "main": [
         [
           {
-            "node": "Activar Plan en Pro",
+            "node": "Activar Plan Negocio",
             "type": "main",
             "index": 0
           }
@@ -959,7 +914,7 @@
       "main": [
         [
           {
-            "node": "Activar Plan en Full",
+            "node": "Activar Plan Escala",
             "type": "main",
             "index": 0
           }
@@ -977,93 +932,33 @@
         ]
       ]
     },
-    "Activar Plan en Basico": {
+    "Activar Plan Emprendedor": {
       "main": [
         [
           {
-            "node": "Reactivar Productos Basico",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Obtener Instancia (downgrade)",
+            "node": "Reactivar Productos Emprendedor",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Obtener Instancia (downgrade)": {
+    "Activar Plan Negocio": {
       "main": [
         [
           {
-            "node": "Obtener Bot Token (downgrade)",
+            "node": "Reactivar Productos Negocio",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Obtener Bot Token (downgrade)": {
+    "Activar Plan Escala": {
       "main": [
         [
           {
-            "node": "Descifrar Token (downgrade)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Descifrar Token (downgrade)": {
-      "main": [
-        [
-          {
-            "node": "\u00bfTiene bot propio?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "\u00bfTiene bot propio?": {
-      "main": [
-        [
-          {
-            "node": "Delete Webhook Telegram (downgrade)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Delete Webhook Telegram (downgrade)": {
-      "main": [
-        [
-          {
-            "node": "Limpiar channels.telegram (downgrade)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Activar Plan en Pro": {
-      "main": [
-        [
-          {
-            "node": "Reactivar Productos Pro",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Activar Plan en Full": {
-      "main": [
-        [
-          {
-            "node": "Reactivar Productos Full",
+            "node": "Reactivar Productos Escala",
             "type": "main",
             "index": 0
           }

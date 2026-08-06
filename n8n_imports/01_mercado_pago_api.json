@@ -125,9 +125,9 @@
           "params": {},
           "query": {},
           "body": {
-            "plan_name": "Pro",
-            "plan_code": "pro",
-            "amount": 39990,
+            "plan_name": "Negocio",
+            "plan_code": "negocio",
+            "amount": 49900,
             "user_id": "dcbbe3e4-b3d9-4359-9cea-97446e86351b",
             "email": "test@mitiendavirtual.cl"
           },

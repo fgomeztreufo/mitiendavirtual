@@ -122,15 +122,6 @@
             {
               "fieldId": "bonus_credits",
               "fieldValue": "={{ Math.max(0, ($('Buscar Planes Vencidos').item.json.bonus_credits || 0) - Math.max(0, ($('Buscar Planes Vencidos').item.json.ai_credits_used || 0) - ($json || 0))) }}"
-            },
-            {
-              "fieldId": "trial_plan"
-            },
-            {
-              "fieldId": "trial_ends_at"
-            },
-            {
-              "fieldId": "original_plan"
             }
           ]
         }
