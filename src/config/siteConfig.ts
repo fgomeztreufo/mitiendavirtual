@@ -152,7 +152,7 @@ export const siteConfig: SiteConfig = {
   },
   analytics: {
     googleAnalyticsId: "G-XQ2HLS2SEQ",
-    microsoftClarityId: "XXXXXXXXXX"
+    microsoftClarityId: "xzv9cge1m7"
   },
   video:{
     isVisible: false
