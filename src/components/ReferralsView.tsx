@@ -9,6 +9,8 @@ interface ReferralStats {
   pending: number
   activated: number
   credits_earned: number
+  monthly_credits_cap: number
+  monthly_credits_earned: number
   monthly_remaining: number
 }
 
@@ -76,7 +78,7 @@ export default function ReferralsView({ session }: { session: Session }) {
       try {
         await navigator.share({
           title: 'MiTiendaVirtual — Automatiza tus ventas con IA',
-          text: `Regístrate con mi código y ambos ganamos 500 créditos IA gratis. Usa mi link:`,
+          text: `Regístrate con mi código y ambos ganamos 150 créditos IA gratis. Usa mi link:`,
           url: shareUrl,
         })
       } catch {}
@@ -109,7 +111,7 @@ export default function ReferralsView({ session }: { session: Session }) {
       >
         <h2 className="text-xl font-bold text-white">Programa de Referidos</h2>
         <p className="text-sm text-gray-400 mt-1">
-          Comparte tu código y ambos ganan <span className="text-indigo-400 font-semibold">500 créditos IA</span> gratis
+          Comparte tu código y ambos ganan <span className="text-indigo-400 font-semibold">150 créditos IA</span> gratis
         </p>
       </motion.div>
 
@@ -172,6 +174,37 @@ export default function ReferralsView({ session }: { session: Session }) {
         <StatCard label="Disponibles este mes" value={stats?.monthly_remaining ?? 10} color="text-amber-400" />
       </motion.div>
 
+      {/* Progress bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.25 }}
+        className="bg-white/[0.02] border border-white/5 rounded-2xl p-5"
+      >
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-bold text-white">Créditos por referidos este mes</h3>
+          <span className="text-xs text-gray-400">
+            {(stats?.monthly_credits_earned ?? 0).toLocaleString('es-CL')} / {(stats?.monthly_credits_cap ?? 1500).toLocaleString('es-CL')}
+          </span>
+        </div>
+        <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${Math.min(100, ((stats?.monthly_credits_earned ?? 0) / (stats?.monthly_credits_cap ?? 1500)) * 100)}%` }}
+            transition={{ duration: 0.8, ease: 'easeOut', delay: 0.4 }}
+            className="h-full rounded-full bg-gradient-to-r from-indigo-600 to-purple-500"
+          />
+        </div>
+        <div className="flex items-center justify-between mt-2">
+          <p className="text-[11px] text-gray-500">
+            {stats?.monthly_remaining ?? 10} referidos disponibles
+          </p>
+          <p className="text-[11px] text-gray-500">
+            Máx. 1.500 créditos/mes
+          </p>
+        </div>
+      </motion.div>
+
       {/* How it works */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -189,12 +222,12 @@ export default function ReferralsView({ session }: { session: Session }) {
           <StepCard
             step="2"
             title="Se registran"
-            desc="Ellos reciben 500 créditos IA al registrarse"
+            desc="Ellos reciben 150 créditos IA al registrarse"
           />
           <StepCard
             step="3"
             title="Ambos ganan"
-            desc="Cuando activan su cuenta, tú también recibes 500 créditos"
+            desc="Cuando activan su cuenta, tú también recibes 150 créditos"
           />
         </div>
         <p className="text-[11px] text-gray-600 mt-4">

@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS referrals (
   referred_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   status text NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'activated', 'credited')),
-  credits_amount int NOT NULL DEFAULT 500,
+  credits_amount int NOT NULL DEFAULT 150,
   referrer_credited_at timestamptz,
   referred_credited_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -125,19 +125,19 @@ BEGIN
     RETURN jsonb_build_object('ok', false, 'reason', 'monthly_limit');
   END IF;
 
-  -- Crear referral + acreditar 500 bonus al referido inmediatamente
+  -- Crear referral + acreditar 150 bonus al referido inmediatamente
   INSERT INTO referrals (referrer_id, referred_id, status, credits_amount, referred_credited_at)
-  VALUES (v_referrer_id, p_referred_id, 'pending', 500, now());
+  VALUES (v_referrer_id, p_referred_id, 'pending', 150, now());
 
   UPDATE profiles
   SET referred_by = v_referrer_id,
-      bonus_credits = COALESCE(bonus_credits, 0) + 500
+      bonus_credits = COALESCE(bonus_credits, 0) + 150
   WHERE id = p_referred_id;
 
   RETURN jsonb_build_object(
     'ok', true,
     'referrer_id', v_referrer_id,
-    'credits_given', 500
+    'credits_given', 150
   );
 END;
 $$;
@@ -240,6 +240,13 @@ BEGIN
     'pending', v_pending,
     'activated', v_activated,
     'credits_earned', v_credits_earned,
+    'monthly_credits_cap', 1500,
+    'monthly_credits_earned', (
+      SELECT COALESCE(sum(credits_amount), 0) FROM referrals
+      WHERE referrer_id = p_user_id
+        AND status = 'activated'
+        AND referrer_credited_at >= date_trunc('month', now())
+    ),
     'monthly_remaining', 10 - (
       SELECT count(*) FROM referrals
       WHERE referrer_id = p_user_id

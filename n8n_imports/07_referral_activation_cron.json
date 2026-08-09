@@ -137,7 +137,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ user_id: $json.referrer_id, title: '¡Referido activado!', body: 'Tu referido se activó. Ganaste 500 créditos IA.' }) }}",
+        "jsonBody": "={{ JSON.stringify({ user_id: $json.referrer_id, title: '¡Referido activado!', body: 'Tu referido se activó. Ganaste 150 créditos IA.' }) }}",
         "options": {
           "response": { "response": { "responseFormat": "json" } },
           "timeout": 10000
