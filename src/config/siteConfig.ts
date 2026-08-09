@@ -49,6 +49,7 @@ export interface SiteConfig {
   };
   analytics: {
     googleAnalyticsId: string;
+    microsoftClarityId: string;
   };
   video:{
     isVisible: boolean;
@@ -150,7 +151,8 @@ export const siteConfig: SiteConfig = {
     }
   },
   analytics: {
-    googleAnalyticsId: "G-XQ2HLS2SEQ" // Reemplazar con tu ID de Google Analytics
+    googleAnalyticsId: "G-XQ2HLS2SEQ",
+    microsoftClarityId: "XXXXXXXXXX"
   },
   video:{
     isVisible: false

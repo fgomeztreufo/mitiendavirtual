@@ -9,6 +9,8 @@ import IndexLanding from './components/Index'
 import Dashboard from './components/Dashboard'
 import LoginPage from './components/LoginPage'
 import PaymentResult from './components/PaymentResult'
+import GoogleAnalytics from './components/GoogleAnalytics'
+import MicrosoftClarity from './components/MicrosoftClarity'
 
 const KnowlowerView = lazy(() => import('./components/KnowlowerView'))
 
@@ -76,6 +78,8 @@ function App() {
 
   return (
     <ErrorBoundary>
+    <GoogleAnalytics />
+    <MicrosoftClarity />
     <Routes>
       
       {/* RUTA 1: LANDING PAGE (Inicio) */}
