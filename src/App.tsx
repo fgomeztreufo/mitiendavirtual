@@ -19,6 +19,13 @@ function App() {
   const navigate = useNavigate()
 
   useEffect(() => {
+    // Capturar código de referido desde URL (?ref=ABC123)
+    const params = new URLSearchParams(window.location.search)
+    const refCode = params.get('ref')
+    if (refCode) {
+      localStorage.setItem('mtv_referral_code', refCode.toUpperCase().trim())
+    }
+
     const hash = window.location.hash
     const isRecovery = hash.includes('type=recovery')
 
@@ -42,6 +49,20 @@ function App() {
         navigate('/login?view=update_password')
         return
       }
+
+      // Al registrarse (SIGNED_IN por primera vez), procesar referido
+      if (event === 'SIGNED_IN' && session?.user) {
+        const storedRef = localStorage.getItem('mtv_referral_code')
+        if (storedRef) {
+          supabase.rpc('process_referral', {
+            p_referred_id: session.user.id,
+            p_referral_code: storedRef
+          }).then(({ data }) => {
+            if (data?.ok) localStorage.removeItem('mtv_referral_code')
+          }).catch(() => {})
+        }
+      }
+
       setSession(session)
       setLoading(false)
     })

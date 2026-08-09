@@ -1,0 +1,197 @@
+{
+  "name": "08 – IG Identity Enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "Cada 6 horas",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/instances?provider_id=not.is.null&ig_username=is.null&select=id,provider_id,access_token",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "fetch-instances",
+      "name": "Instances sin ig_username",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300],
+      "notesInFlow": true,
+      "notes": "Busca instances con provider_id pero sin ig_username"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "has-items",
+              "leftValue": "={{ $json.length || ($input.all().length) }}",
+              "rightValue": "0",
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-has-items",
+      "name": "¿Hay instances?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.first().json;\nif (Array.isArray(items)) {\n  return items.map(r => ({ json: r }));\n}\nreturn [{ json: items }];"
+      },
+      "id": "split-instances",
+      "name": "Split instances",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 240]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v25.0/{{ $json.provider_id }}?fields=username,name",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $json.access_token }}" }
+          ]
+        },
+        "options": {
+          "response": { "response": { "responseFormat": "json" } },
+          "timeout": 10000
+        }
+      },
+      "id": "fetch-ig-profile",
+      "name": "Meta Graph API - IG Profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 240],
+      "notesInFlow": true,
+      "notes": "GET /{provider_id}?fields=username,name",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "has-username",
+              "leftValue": "={{ $json.username || $json.name }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-got-data",
+      "name": "¿Obtuvo datos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1320, 240]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/instances?id=eq.{{ $('Split instances').item.json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ig_username: $json.username || null, ig_page_name: $json.name || null }) }}",
+        "options": {}
+      },
+      "id": "update-instance",
+      "name": "Actualizar ig_username",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, 180],
+      "notesInFlow": true,
+      "notes": "PATCH instances SET ig_username, ig_page_name"
+    },
+    {
+      "parameters": {},
+      "id": "no-instances",
+      "name": "Sin instances pendientes",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [880, 380]
+    },
+    {
+      "parameters": {},
+      "id": "no-data",
+      "name": "Token expirado / error",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1540, 320]
+    }
+  ],
+  "connections": {
+    "Cada 6 horas": {
+      "main": [[{ "node": "Instances sin ig_username", "type": "main", "index": 0 }]]
+    },
+    "Instances sin ig_username": {
+      "main": [[{ "node": "¿Hay instances?", "type": "main", "index": 0 }]]
+    },
+    "¿Hay instances?": {
+      "main": [
+        [{ "node": "Split instances", "type": "main", "index": 0 }],
+        [{ "node": "Sin instances pendientes", "type": "main", "index": 0 }]
+      ]
+    },
+    "Split instances": {
+      "main": [[{ "node": "Meta Graph API - IG Profile", "type": "main", "index": 0 }]]
+    },
+    "Meta Graph API - IG Profile": {
+      "main": [[{ "node": "¿Obtuvo datos?", "type": "main", "index": 0 }]]
+    },
+    "¿Obtuvo datos?": {
+      "main": [
+        [{ "node": "Actualizar ig_username", "type": "main", "index": 0 }],
+        [{ "node": "Token expirado / error", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    { "name": "cron" },
+    { "name": "instagram" }
+  ]
+}

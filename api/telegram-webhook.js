@@ -155,6 +155,30 @@ export default async function handler(req, res) {
     console.warn('telegram-webhook: active token lookup failed', err)
   }
 
+  // Update telegram_username with the real username from the update payload
+  try {
+    const SUPABASE_URL_FWD = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
+    const SUPABASE_KEY_FWD = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+    const fromUser = body?.message?.from || body?.callback_query?.from
+    const chatId = body?.message?.chat?.id || body?.callback_query?.message?.chat?.id
+    if (SUPABASE_URL_FWD && SUPABASE_KEY_FWD && fromUser && chatId && resolvedUserId) {
+      const realUsername = fromUser.username || fromUser.first_name || null
+      if (realUsername) {
+        const patchUrl = `${SUPABASE_URL_FWD.replace(/\/$/, '')}/rest/v1/telegram_link_tokens?user_id=eq.${resolvedUserId}&chat_id=eq.${encodeURIComponent(String(chatId))}&used=eq.true`
+        fetch(patchUrl, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${SUPABASE_KEY_FWD}`,
+            apikey: SUPABASE_KEY_FWD,
+            Prefer: 'return=minimal'
+          },
+          body: JSON.stringify({ telegram_username: realUsername })
+        }).catch(() => {})
+      }
+    }
+  } catch (_) {}
+
   // Forward the original update to n8n. n8n workflows should handle linking and messages.
   try {
     const payload = {

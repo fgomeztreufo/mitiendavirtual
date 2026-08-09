@@ -150,7 +150,7 @@ export default async function handler(req, res) {
         try {
           const { data: conn } = await sb
             .from('whatsapp_connections')
-            .select('waba_id, access_token')
+            .select('waba_id, access_token, phone_number_id')
             .eq('user_id', user.id)
             .limit(1)
             .single()
@@ -161,6 +161,36 @@ export default async function handler(req, res) {
             const creditResult = await shareCreditLine(conn.waba_id)
             if (creditResult) {
               console.log('Credit line sharing:', JSON.stringify(creditResult))
+            }
+
+            // Fetch and store verified_name + waba_name from Meta Graph API
+            try {
+              const identityUpdates = {}
+              if (conn.phone_number_id) {
+                const phoneRes = await fetch(
+                  `https://graph.facebook.com/v25.0/${conn.phone_number_id}?fields=verified_name`,
+                  { headers: { Authorization: `Bearer ${conn.access_token}` } }
+                )
+                const phoneData = await phoneRes.json()
+                if (phoneData.verified_name) identityUpdates.verified_name = phoneData.verified_name
+              }
+              const wabaRes = await fetch(
+                `https://graph.facebook.com/v25.0/${conn.waba_id}?fields=name`,
+                { headers: { Authorization: `Bearer ${conn.access_token}` } }
+              )
+              const wabaData = await wabaRes.json()
+              if (wabaData.name) identityUpdates.waba_name = wabaData.name
+
+              if (Object.keys(identityUpdates).length > 0) {
+                await sb
+                  .from('whatsapp_connections')
+                  .update(identityUpdates)
+                  .eq('user_id', user.id)
+                  .eq('waba_id', conn.waba_id)
+                console.log('WPP identity updated:', JSON.stringify(identityUpdates))
+              }
+            } catch (idErr) {
+              console.warn('WPP identity fetch error:', idErr.message || idErr)
             }
           }
         } catch (tplErr) {

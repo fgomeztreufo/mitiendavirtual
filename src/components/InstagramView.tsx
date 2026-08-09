@@ -197,10 +197,19 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
             {isConnected && (
               <>
                 <div className="h-px bg-white/5 mx-2" />
-                <p className="text-[10px] tracking-widest text-gray-500 uppercase">ID de Cuenta Vinculada</p>
+                <p className="text-[10px] tracking-widest text-gray-500 uppercase">
+                  {instance.ig_username ? 'Cuenta Vinculada' : 'ID de Cuenta Vinculada'}
+                </p>
                 <div className="inline-block bg-black/40 rounded-lg px-3 py-1.5">
-                  <span className="text-xs text-white font-mono">{instance.provider_id}</span>
+                  {instance.ig_username ? (
+                    <span className="text-xs text-indigo-400 font-semibold">@{instance.ig_username}</span>
+                  ) : (
+                    <span className="text-xs text-white font-mono">{instance.provider_id}</span>
+                  )}
                 </div>
+                {instance.ig_page_name && (
+                  <p className="text-[11px] text-gray-400 mt-1">{instance.ig_page_name}</p>
+                )}
               </>
             )}
 

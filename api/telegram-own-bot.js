@@ -265,6 +265,7 @@ export default async function handler(req, res) {
       bot_type: 'own',
       bot_id: String(botInfo.id),
       bot_username: botInfo.username,
+      bot_display_name: botInfo.first_name || null,
       connected_at: new Date().toISOString()
     })
 
