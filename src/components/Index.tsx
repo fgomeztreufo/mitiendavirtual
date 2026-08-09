@@ -332,6 +332,71 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
         </div>
       </section>
 
+      {/* ════════════ REFERIDOS ════════════ */}
+      <section className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 bg-white">
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={stagger}
+            className="relative overflow-hidden rounded-3xl border border-indigo-200 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-8 sm:p-12"
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-indigo-400/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-purple-400/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+              <div className="flex-1 text-center lg:text-left">
+                <motion.div variants={fadeUp} custom={0} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 border border-indigo-200 mb-4">
+                  <span className="text-lg">🎁</span>
+                  <span className="text-xs font-bold text-indigo-700 tracking-wide">PROGRAMA DE REFERIDOS</span>
+                </motion.div>
+
+                <motion.h2 variants={fadeUp} custom={1} className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                  Invita amigos,{' '}
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+                    gana créditos IA
+                  </span>
+                </motion.h2>
+
+                <motion.p variants={fadeUp} custom={2} className="mt-4 text-gray-600 text-sm sm:text-base max-w-lg mx-auto lg:mx-0">
+                  Comparte tu código con otros emprendedores. Por cada persona que se registre
+                  y active su cuenta, <strong className="text-indigo-700">ambos ganan 150 créditos IA gratis</strong>.
+                </motion.p>
+
+                <motion.div variants={fadeUp} custom={3} className="mt-6 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+                  <button
+                    onClick={onLoginClick}
+                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm shadow-lg hover:shadow-xl active:scale-95 hover:scale-[1.02] transition-all duration-300"
+                  >
+                    Obtener mi código gratis
+                  </button>
+                </motion.div>
+              </div>
+
+              <motion.div variants={fadeUp} custom={2} className="flex-shrink-0 w-full lg:w-auto">
+                <div className="grid grid-cols-3 gap-3 sm:gap-4 max-w-xs mx-auto">
+                  {[
+                    { icon: '📤', title: 'Comparte', desc: 'Tu link único' },
+                    { icon: '👤', title: 'Se registran', desc: '+150 créditos' },
+                    { icon: '🎉', title: 'Activan', desc: 'Tú ganas +150' },
+                  ].map((step) => (
+                    <div key={step.title} className="flex flex-col items-center text-center p-3 rounded-xl bg-white/70 border border-white shadow-sm">
+                      <span className="text-2xl mb-1">{step.icon}</span>
+                      <p className="text-xs font-bold text-gray-900">{step.title}</p>
+                      <p className="text-[10px] text-gray-500 mt-0.5">{step.desc}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-center text-[11px] text-gray-500 mt-3">
+                  Hasta <strong className="text-indigo-600">1.500 créditos/mes</strong> por referidos
+                </p>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ════════════ CTA FINAL ════════════ */}
       <section className="relative z-10 py-20 sm:py-32 px-4 sm:px-6 bg-[#F8FAFC]">
         <motion.div
