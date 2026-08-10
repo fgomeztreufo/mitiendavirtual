@@ -371,9 +371,11 @@ export default function Dashboard({ session }: { session: Session }) {
                     {bLabels.inventory}
                   </button>
                 )}
+                {!['clinica', 'servicios'].includes(profile?.business_type || '') && (
                 <button onClick={() => setActiveTab('ig-scanner')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'ig-scanner' ? 'text-pink-400 bg-pink-500/10' : 'text-gray-500 hover:text-pink-400 hover:bg-pink-500/5'}`}>
                   <FaInstagram className="text-pink-500 text-sm" /> Cargar desde Instagram
                 </button>
+                )}
               </div>
             )}
           </div>

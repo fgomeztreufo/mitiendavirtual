@@ -8,12 +8,13 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
 interface StepContentProps {
   session: any
   instance?: any
+  profile?: any
   onNext: () => void
   onSkip: () => void
   onBack: () => void
 }
 
-export default function StepContent({ session, instance, onNext, onSkip, onBack }: StepContentProps) {
+export default function StepContent({ session, instance, profile, onNext, onSkip, onBack }: StepContentProps) {
   const [mode, setMode] = useState<'choose' | 'manual' | 'scan'>('choose')
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
@@ -26,6 +27,7 @@ export default function StepContent({ session, instance, onNext, onSkip, onBack 
   const [scanDone, setScanDone] = useState(false)
 
   const igConnected = !!instance?.provider_id
+  const showScanOption = igConnected && !['clinica', 'servicios'].includes(profile?.business_type || '')
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -138,36 +140,32 @@ export default function StepContent({ session, instance, onNext, onSkip, onBack 
             </div>
           </button>
 
-          {/* Opción 2: Scan Instagram */}
+          {/* Opción 2: Scan Instagram (solo para negocios con productos) */}
+          {showScanOption !== false && (
           <button
-            onClick={() => igConnected ? setMode('scan') : undefined}
-            disabled={!igConnected}
+            onClick={() => showScanOption ? setMode('scan') : undefined}
+            disabled={!showScanOption}
             className={`w-full p-5 rounded-2xl border transition-all text-left group ${
-              igConnected
+              showScanOption
                 ? 'border-gray-800 bg-gray-900/50 hover:border-pink-500/50 hover:bg-pink-500/5'
                 : 'border-gray-800/50 bg-gray-900/30 opacity-50 cursor-not-allowed'
             }`}
           >
             <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                igConnected
-                  ? 'bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500'
-                  : 'bg-gray-800'
-              }`}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500">
                 <FaInstagram className="text-white text-xl" />
               </div>
               <div>
-                <p className={`font-bold text-sm transition-colors ${igConnected ? 'text-white group-hover:text-pink-300' : 'text-gray-600'}`}>
+                <p className="font-bold text-sm transition-colors text-white group-hover:text-pink-300">
                   Escanear tu Instagram
                 </p>
                 <p className="text-gray-500 text-xs mt-0.5">
-                  {igConnected
-                    ? 'Carga productos desde tus publicaciones de Instagram'
-                    : 'Conecta Instagram primero (paso anterior)'}
+                  Carga productos desde tus publicaciones de Instagram
                 </p>
               </div>
             </div>
           </button>
+          )}
         </div>
       ) : mode === 'scan' ? (
         <div className="w-full text-center space-y-4">
