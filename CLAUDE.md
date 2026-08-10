@@ -80,6 +80,7 @@ Renderiza vistas condicionalmente por tab activo en sidebar. Tabs disponibles se
 - `catalog` → CatalogView
 - `inventory` → ProductsListView
 - `notifications` → NotificationsView
+- `ig-scanner` → InstagramScannerView
 - `plans` → PlansView
 
 ### Supabase Calls
@@ -90,7 +91,7 @@ Directos desde componentes con `async/await` + `try/catch`. Errores mostrados vi
 
 n8n en `webhook.mitiendavirtual.cl`. Product uploads usan `FormData` al webhook, no API directa.
 
-## Components (src/components/) — 26 archivos
+## Components (src/components/) — 27 archivos
 
 | Componente | Propósito | Tablas Supabase |
 |-----------|-----------|-----------------|
@@ -105,6 +106,7 @@ n8n en `webhook.mitiendavirtual.cl`. Product uploads usan `FormData` al webhook,
 | GoogleAnalytics | Integración GA (G-XQ2HLS2SEQ) | — |
 | Header | Header/navegación | — |
 | Index | Landing page con hero, channels, planes | — |
+| InstagramScannerView | Escaner IG: scan feed, AI classify, select & import | `products`, `ig_scan_log`, `plans`, `profiles` + n8n webhooks |
 | InstagramView | Config canal Instagram + agente | `instances`, `instance_personalities`, `plans` |
 | KnowlowerView | Base de conocimiento IA (FAQs/docs) | `faqs` |
 | Leads | CRM leads Instagram | `leads` (sistema='instagram') |
@@ -134,9 +136,8 @@ n8n en `webhook.mitiendavirtual.cl`. Product uploads usan `FormData` al webhook,
 
 | Endpoint | Método | Auth | Propósito |
 |----------|--------|------|-----------|
-| `/api/telegram-link-start` | POST | Bearer token | Inicia linking bot plataforma via n8n |
+| `/api/telegram-link-start` | POST/DELETE | Bearer token | POST: inicia linking bot plataforma via n8n. DELETE: desactiva linkage sin borrar historial |
 | `/api/telegram-own-bot` | POST/DELETE | Bearer token | POST: conecta bot propio (valida, encrypta, registra webhook). DELETE: desconecta |
-| `/api/telegram-deactivate` | POST | Bearer token | Desactiva linkage Telegram sin borrar historial |
 | `/api/whatsapp-link-start` | GET/POST | Bearer token | GET: estado conexión. POST: inicia embedded signup |
 | `/api/whatsapp-disconnect` | POST | Bearer token | Desregistra phone de Meta API, borra de DB |
 | `/api/whatsapp-discover` | GET | Optional Bearer | Proxy a n8n discovery workflow |
@@ -147,6 +148,7 @@ n8n en `webhook.mitiendavirtual.cl`. Product uploads usan `FormData` al webhook,
 | Endpoint | Método | Auth | Propósito |
 |----------|--------|------|-----------|
 | `/api/google-calendar` | GET/POST/DELETE | Bearer token / GCAL_SYNC_SECRET | OAuth flow, list calendars, assign staff, sync busy blocks, create events |
+| `/api/instagram-scanner` | GET/POST | Bearer token | GET `?action=scan`: proxy Graph API media. POST `?action=classify`: AI classification via n8n. POST `?action=import`: import selected products |
 | `/api/send-push-notification` | POST | `x-push-secret` o Bearer | Envía push notifications via Firebase Admin |
 
 ### Librería Compartida (api/_lib/)
@@ -166,7 +168,8 @@ n8n en `webhook.mitiendavirtual.cl`. Product uploads usan `FormData` al webhook,
 | `instance_personalities` | Personalidad agente (legacy) | `instance_id`, `ai_name`, `tone`, `greeting`, `business_rules` |
 | `agent_prompts` | Prompts IA por canal | `instance_id`, `channel`, `system_prompt`, `personality_config` (JSONB), `tools_enabled`, `is_active` |
 | `integration_credentials` | Credenciales encriptadas | `user_id`, `instance_id`, `provider`, `credential_type`, `credential_value` (bytea pgp_sym_encrypt) |
-| `products` | Catálogo productos | `user_id`, `name`, `price`, `description`, `brand`, `category`, `image_url` |
+| `products` | Catálogo productos | `user_id`, `name`, `price`, `description`, `brand`, `category`, `image_url`, `ig_post_id` (duplicate prevention) |
+| `ig_scan_log` | Log escaneos IG (cooldown/auditoria) | `user_id`, `scanned_at`, `posts_found`, `products_classified`, `products_imported` |
 | `documents` | RAG embeddings | `original_id_saas` (product id), indexado para similarity search |
 | `leads` | Pipeline CRM | `user_id`, `sistema` (instagram\|telegram\|whatsapp), `status` (nuevo\|cotizando\|completado) |
 | `faqs` | Base conocimiento | `user_id`, `question`, `answer`, `category`, `is_active` |
@@ -208,10 +211,11 @@ n8n en `webhook.mitiendavirtual.cl`. Product uploads usan `FormData` al webhook,
 | `increment_messages_wpp_rpc()` | Incrementa contador messages_used_wpp |
 | `expire_trials()` | Revierte plan_type a original_plan cuando trial expira |
 | `purge_old_whatsapp_messages()` | Elimina mensajes WPP > 90 días |
+| `increment_product_count_checked()` | Incremento atomico de current_products con validacion de limite de plan |
 
-### DB Migrations (db/) — 31 archivos
+### DB Migrations (db/)
 
-Secuencialmente numerados `001_` a `028c_`. Continuar la secuencia al agregar nuevas migraciones.
+Secuencialmente numerados `001_` a `055_`. Continuar la secuencia al agregar nuevas migraciones. Incluye `055_ig_scan_tracking.sql` (tabla `ig_scan_log`, columna `ig_post_id` en products, RPC `increment_product_count_checked`).
 
 ## Plan System
 
@@ -329,6 +333,8 @@ Todos los canales (Instagram, Telegram, WhatsApp) comparten un pool de mensajes 
 | `webhook.mitiendavirtual.cl/webhook/instagram-auth` | OAuth callback Instagram |
 | `webhook.mitiendavirtual.cl/webhook/instagram-unsuscribed` | Disconnect Instagram |
 | `webhook.mitiendavirtual.cl/webhook/create-payment` | Crear link pago Mercado Pago |
+| `webhook.mitiendavirtual.cl/webhook/ig-classify-products` | Clasificacion IA de posts IG (gpt-4o-mini) |
+| `webhook.mitiendavirtual.cl/webhook/ig-import-products` | Import: download img, Tinify, Storage, DB + RAG |
 
 ### Internal (Client → Vercel API)
 
@@ -338,10 +344,10 @@ Todos los canales (Instagram, Telegram, WhatsApp) comparten un pool de mensajes 
 | `/api/whatsapp-disconnect` | Desconectar WhatsApp |
 | `/api/whatsapp-discover` | Proxy discovery n8n |
 | `/api/whatsapp-meta-numbers` | Consulta directa Meta Graph API |
-| `/api/telegram-link-start` | Iniciar linking bot plataforma |
+| `/api/telegram-link-start` | Iniciar/desactivar linking bot plataforma |
 | `/api/telegram-own-bot` | Gestionar bot propio |
-| `/api/telegram-deactivate` | Desactivar linkage |
 | `/api/google-calendar` | OAuth + sync + events |
+| `/api/instagram-scanner` | Escaner IG: scan/classify/import productos |
 | `/api/send-push-notification` | Enviar push notification |
 
 ## Security
@@ -478,13 +484,13 @@ Realtime subscription para cambios inmediatos en personalidad del agente.
 
 ```
 mitiendavirtual/
-├── api/                    # Vercel serverless functions (13 endpoints)
+├── api/                    # Vercel serverless functions (13 archivos)
 │   └── _lib/               # Shared libs (push-sender, google-tokens)
-├── db/                     # SQL migrations (001_ a 028c_)
+├── db/                     # SQL migrations (001_ a 055_)
 ├── public/                 # Static assets (images, service worker)
 ├── scripts/                # One-off Node utilities (11 scripts)
 ├── src/
-│   ├── components/         # React components (26 archivos)
+│   ├── components/         # React components (27 archivos)
 │   ├── config/             # siteConfig.ts, firebase.ts
 │   ├── hooks/              # usePushNotifications.ts
 │   ├── utils/              # planUtils.ts, sanitizeInstructions.ts
@@ -495,6 +501,7 @@ mitiendavirtual/
 ├── tests/                  # E2E tests (Playwright)
 ├── postman/                # API test collections
 ├── n8n/                    # Exported workflow JSONs (branch remotes/origin/n8n)
+├── n8n_imports/            # Workflow JSONs for import (ig-classify, ig-import)
 └── vercel.json             # SPA rewrites config
 ```
 
