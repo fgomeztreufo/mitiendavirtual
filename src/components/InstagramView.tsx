@@ -5,6 +5,7 @@ import Swal from 'sweetalert2'
 import { effectivePlan, planCodeToDisplay } from '../utils/planUtils'
 import { buildInstagramOAuthUrl } from '../utils/instagramOAuth'
 import AgentPersonalitySection from './AgentPersonalitySection'
+import { FaInstagram } from 'react-icons/fa'
 
 interface InstagramViewProps {
   session: Session
@@ -12,9 +13,10 @@ interface InstagramViewProps {
   instance: any
   onUpdate: () => void
   goToPlans?: () => void
+  setActiveTab?: (tab: string) => void
 }
 
-export default function InstagramView({ session, profile, instance, onUpdate, goToPlans }: InstagramViewProps) {
+export default function InstagramView({ session, profile, instance, onUpdate, goToPlans, setActiveTab }: InstagramViewProps) {
   const [saving, setSaving] = useState(false)
   const [personalityLoaded, setPersonalityLoaded] = useState(false)
   const [personalityName, setPersonalityName] = useState('')
@@ -335,6 +337,27 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
           channel="instagram"
           channelColor="from-[#833AB4]/10 to-[#E1306C]/10"
         />
+      )}
+
+      {/* CTA: Import products from Instagram */}
+      {isConnected && (
+        <div className="rounded-2xl overflow-hidden bg-gradient-to-r from-[#833AB4] via-[#E1306C] to-[#F77737] p-[1px]">
+          <div className="rounded-2xl bg-gradient-to-r from-[#833AB4]/20 via-[#E1306C]/20 to-[#F77737]/20 backdrop-blur-sm p-6 flex items-center gap-5">
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
+              <FaInstagram className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-white">Cargar productos desde Instagram</h3>
+              <p className="text-xs text-gray-300 mt-0.5">Escanea tu feed y selecciona productos para importar a tu catálogo</p>
+            </div>
+            <button
+              onClick={() => setActiveTab?.('ig-scanner')}
+              className="flex-shrink-0 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest text-white bg-white/10 border border-white/20 hover:bg-white/20 hover:scale-[1.02] transition-all"
+            >
+              Ir al escáner
+            </button>
+          </div>
+        </div>
       )}
 
       {/* INSTAGRAM SETTINGS — Antispam + Palabra Clave */}

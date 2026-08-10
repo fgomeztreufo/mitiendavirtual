@@ -113,6 +113,23 @@ export const TermsOfService = ({ onClose }: { onClose: () => void }) => {
       </div>
     </section>
 
+    <section className="space-y-6">
+      <h3 className="text-white font-bold text-xl border-l-4 border-purple-500 pl-4 uppercase tracking-tight">4. Escaneo de Productos desde Instagram</h3>
+      <div className="text-sm space-y-4 leading-relaxed">
+        <p>
+          La funcionalidad de escaneo e importación de productos desde publicaciones de Instagram es un servicio exclusivo para clientes activos de MiTiendaVirtual. Al utilizar esta función, usted autoriza a MiTiendaVirtual a:
+        </p>
+        <ul className="list-disc ml-6 space-y-2 text-gray-400 italic">
+          <li>Acceder a las publicaciones de su cuenta de Instagram Business vinculada.</li>
+          <li>Analizar el contenido mediante inteligencia artificial para identificar productos.</li>
+          <li>Descargar y almacenar las imágenes que usted seleccione para importar a su catálogo.</li>
+        </ul>
+        <p>
+          La clasificación realizada por IA es orientativa y el cliente es responsable de verificar y confirmar los datos extraídos antes de completar la importación. Los productos importados están sujetos a los límites de su plan vigente.
+        </p>
+      </div>
+    </section>
+
     <footer className="pt-8 border-t border-white/5 mt-8 text-[11px] text-gray-600">
       Titular Responsable: FELIPE ALONSO GOMEZ TREUFO • RUT: 16.208.020-2 • Domicilio Comercial: Los Castaños 1088, Puente Alto, Santiago, Chile.
     </footer>
@@ -134,6 +151,7 @@ export const PrivacyPolicy = ({ onClose }: { onClose: () => void }) => (
           <li className="flex gap-4"><span className="text-blue-500 font-bold">03.</span><p><strong>Datos de mensajería:</strong> mensajes recibidos y enviados a través de Instagram, Telegram y WhatsApp para el funcionamiento del asistente IA.</p></li>
           <li className="flex gap-4"><span className="text-blue-500 font-bold">04.</span><p><strong>Datos de leads:</strong> nombre, teléfono y canal de origen de clientes potenciales que contactan su negocio.</p></li>
           <li className="flex gap-4"><span className="text-blue-500 font-bold">05.</span><p><strong>Tokens de integración:</strong> credenciales de acceso a Meta (Instagram, WhatsApp), Telegram y Google Calendar, almacenadas de forma encriptada.</p></li>
+          <li className="flex gap-4"><span className="text-blue-500 font-bold">06.</span><p><strong>Datos de publicaciones de Instagram:</strong> al utilizar la función de escaneo de productos, se procesan temporalmente imágenes, textos descriptivos y metadatos de sus publicaciones de Instagram para extraer información de productos. Solo se almacenan de forma permanente las publicaciones que usted seleccione explícitamente para importar. Las imágenes no seleccionadas no se guardan en nuestros servidores.</p></li>
         </ul>
       </div>
 

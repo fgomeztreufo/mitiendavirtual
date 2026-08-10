@@ -1,0 +1,509 @@
+{
+  "name": "10 – IG Import Products",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ig-import-products",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 300],
+      "id": "wh-import-001",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraer datos del body\nconst body = $input.first().json.body;\nconst userId = body.userId;\nconst products = body.products || [];\n\nif (!userId || !products.length) {\n  return [{ json: { error: 'Missing userId or products', imported: 0 } }];\n}\n\nreturn [{ json: { userId, products, count: products.length } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "id": "code-validate-001",
+      "name": "Validar Input"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/rpc/increment_product_count_checked",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_user_id\": \"{{ $json.userId }}\",\n  \"p_count\": {{ $json.count }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300],
+      "id": "rpc-limit-001",
+      "name": "Validar Límite Plan"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-ok",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [720, 300],
+      "id": "if-limit-001",
+      "name": "¿Cabe en plan?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ error: 'Plan limit exceeded', remaining: $('Validar Límite Plan').first().json.remaining || 0 }) }}",
+        "options": {
+          "responseCode": 409
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [960, 500],
+      "id": "respond-limit-001",
+      "name": "Respond Límite"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Splittear productos para procesamiento individual\nconst userId = $('Validar Input').first().json.userId;\nconst products = $('Validar Input').first().json.products;\n\nreturn products.map(p => ({\n  json: {\n    userId,\n    ig_post_id: p.igPostId,\n    name: p.name,\n    price: p.price || 0,\n    description: p.description || '',\n    brand: p.brand || '',\n    category: p.category || '',\n    media_url: p.media_url\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 300],
+      "id": "code-split-001",
+      "name": "Split Productos"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.media_url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 300],
+      "id": "download-img-001",
+      "name": "Descargar Imagen IG"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tinify.com/shrink",
+        "authentication": "predefinedCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1440, 300],
+      "id": "tinify-001",
+      "name": "Tinify Compresor",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "TINIFY_CREDENTIAL_ID",
+          "name": "Tinify API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.output.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1680, 300],
+      "id": "download-compressed-001",
+      "name": "Descargador"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://iesmzunoepfwkxilvxdv.supabase.co/storage/v1/object/catalog/{{ $('Split Productos').item.json.userId }}/ig_{{ $('Split Productos').item.json.ig_post_id }}.webp",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "={{ $binary.data.mimeType }}"
+            },
+            {
+              "name": "x-upsert",
+              "value": "true"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1920, 300],
+      "id": "storage-upload-001",
+      "name": "Upload Storage"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Preparar URL de storage limpia\nconst storageKey = $json.Key || '';\nconst imageUrl = `https://iesmzunoepfwkxilvxdv.supabase.co/storage/v1/object/public/${storageKey}`;\nconst product = $('Split Productos').item.json;\n\nreturn [{ json: { ...product, image_url: imageUrl } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2160, 300],
+      "id": "code-url-001",
+      "name": "Limpiar URL Storage"
+    },
+    {
+      "parameters": {
+        "tableId": "products",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $json.userId }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldId": "price",
+              "fieldValue": "={{ $json.price }}"
+            },
+            {
+              "fieldId": "description",
+              "fieldValue": "={{ $json.description }}"
+            },
+            {
+              "fieldId": "brand",
+              "fieldValue": "={{ $json.brand }}"
+            },
+            {
+              "fieldId": "category",
+              "fieldValue": "={{ $json.category }}"
+            },
+            {
+              "fieldId": "image_url",
+              "fieldValue": "={{ $json.image_url }}"
+            },
+            {
+              "fieldId": "ig_post_id",
+              "fieldValue": "={{ $json.ig_post_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [2400, 300],
+      "id": "insert-product-001",
+      "name": "Insertar Producto",
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "CARGAR_MEMORIA_RAG_WORKFLOW_ID"
+        },
+        "options": {},
+        "fields": {
+          "values": [
+            {
+              "name": "user_id",
+              "value": "={{ $('Split Productos').item.json.userId }}"
+            },
+            {
+              "name": "id",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [2640, 300],
+      "id": "rag-001",
+      "name": "Cargar Memoria RAG"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agrupar resultados de todos los productos procesados\nconst items = $input.all();\nconst imported = items.length;\n\n// Actualizar ig_scan_log con productos importados\nreturn [{ json: { imported, message: `${imported} productos importados desde Instagram` } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2880, 300],
+      "id": "code-summary-001",
+      "name": "Resumen"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/ig_scan_log?user_id=eq.{{ $('Validar Input').first().json.userId }}&order=scanned_at.desc&limit=1",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"products_imported\": {{ $json.imported }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3120, 300],
+      "id": "update-log-001",
+      "name": "Actualizar Scan Log"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($('Resumen').first().json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [3360, 300],
+      "id": "respond-ok-001",
+      "name": "Respond OK"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validar Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Input": {
+      "main": [
+        [
+          {
+            "node": "Validar Límite Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Límite Plan": {
+      "main": [
+        [
+          {
+            "node": "¿Cabe en plan?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Cabe en plan?": {
+      "main": [
+        [
+          {
+            "node": "Split Productos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Límite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Productos": {
+      "main": [
+        [
+          {
+            "node": "Descargar Imagen IG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar Imagen IG": {
+      "main": [
+        [
+          {
+            "node": "Tinify Compresor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tinify Compresor": {
+      "main": [
+        [
+          {
+            "node": "Descargador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargador": {
+      "main": [
+        [
+          {
+            "node": "Upload Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Storage": {
+      "main": [
+        [
+          {
+            "node": "Limpiar URL Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar URL Storage": {
+      "main": [
+        [
+          {
+            "node": "Insertar Producto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insertar Producto": {
+      "main": [
+        [
+          {
+            "node": "Cargar Memoria RAG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cargar Memoria RAG": {
+      "main": [
+        [
+          {
+            "node": "Resumen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resumen": {
+      "main": [
+        [
+          {
+            "node": "Actualizar Scan Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar Scan Log": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "tags": []
+}

@@ -1,17 +1,20 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { FaInstagram } from 'react-icons/fa'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
 
 interface StepContentProps {
   session: any
+  instance?: any
   onNext: () => void
   onSkip: () => void
   onBack: () => void
 }
 
-export default function StepContent({ session, onNext, onSkip, onBack }: StepContentProps) {
+export default function StepContent({ session, instance, onNext, onSkip, onBack }: StepContentProps) {
+  const [mode, setMode] = useState<'choose' | 'manual' | 'scan'>('choose')
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [description, setDescription] = useState('')
@@ -20,6 +23,9 @@ export default function StepContent({ session, onNext, onSkip, onBack }: StepCon
   const [uploading, setUploading] = useState(false)
   const [uploaded, setUploaded] = useState(false)
   const [error, setError] = useState('')
+  const [scanDone, setScanDone] = useState(false)
+
+  const igConnected = !!instance?.provider_id
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -88,26 +94,98 @@ export default function StepContent({ session, onNext, onSkip, onBack }: StepCon
       </div>
 
       <h2 className="text-2xl font-black text-white mb-2 text-center">
-        Sube tu primer producto
+        Carga tus productos
       </h2>
       <p className="text-gray-500 text-sm mb-6 text-center">
         Tu bot necesita conocer tus productos para poder venderlos. Puedes agregar mas despues.
       </p>
 
-      {uploaded ? (
+      {(uploaded || scanDone) ? (
         <div className="w-full max-w-xs space-y-4">
           <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center">
             <svg className="w-8 h-8 text-emerald-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-sm font-bold text-emerald-300">Producto subido</p>
-            <p className="text-xs text-emerald-400/60 mt-1">Tu bot lo aprendera en los proximos minutos.</p>
+            <p className="text-sm font-bold text-emerald-300">
+              {scanDone ? 'Productos cargados desde Instagram' : 'Producto subido'}
+            </p>
+            <p className="text-xs text-emerald-400/60 mt-1">Tu bot los aprendera en los proximos minutos.</p>
           </div>
           <button
             onClick={onNext}
             className="w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             Continuar
+          </button>
+        </div>
+      ) : mode === 'choose' ? (
+        <div className="w-full space-y-4">
+          {/* Opción 1: Manual */}
+          <button
+            onClick={() => setMode('manual')}
+            className="w-full p-5 rounded-2xl border border-gray-800 bg-gray-900/50 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all text-left group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-white font-bold text-sm group-hover:text-amber-300 transition-colors">1 producto de prueba</p>
+                <p className="text-gray-500 text-xs mt-0.5">Sube un producto manualmente con foto</p>
+              </div>
+            </div>
+          </button>
+
+          {/* Opción 2: Scan Instagram */}
+          <button
+            onClick={() => igConnected ? setMode('scan') : undefined}
+            disabled={!igConnected}
+            className={`w-full p-5 rounded-2xl border transition-all text-left group ${
+              igConnected
+                ? 'border-gray-800 bg-gray-900/50 hover:border-pink-500/50 hover:bg-pink-500/5'
+                : 'border-gray-800/50 bg-gray-900/30 opacity-50 cursor-not-allowed'
+            }`}
+          >
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                igConnected
+                  ? 'bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500'
+                  : 'bg-gray-800'
+              }`}>
+                <FaInstagram className="text-white text-xl" />
+              </div>
+              <div>
+                <p className={`font-bold text-sm transition-colors ${igConnected ? 'text-white group-hover:text-pink-300' : 'text-gray-600'}`}>
+                  Escanear tu Instagram
+                </p>
+                <p className="text-gray-500 text-xs mt-0.5">
+                  {igConnected
+                    ? 'Carga productos desde tus publicaciones de Instagram'
+                    : 'Conecta Instagram primero (paso anterior)'}
+                </p>
+              </div>
+            </div>
+          </button>
+        </div>
+      ) : mode === 'scan' ? (
+        <div className="w-full text-center space-y-4">
+          <div className="p-6 rounded-2xl bg-pink-500/5 border border-pink-500/20">
+            <FaInstagram className="text-pink-500 text-3xl mx-auto mb-3" />
+            <p className="text-white text-sm font-bold mb-2">Escaneo de Instagram</p>
+            <p className="text-gray-500 text-xs mb-4">
+              Podrás escanear y seleccionar productos desde tu Instagram en el Dashboard.
+            </p>
+            <button
+              onClick={() => { setScanDone(true) }}
+              className="w-full py-3 rounded-xl font-black text-xs uppercase tracking-widest bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 text-white hover:shadow-[0_0_20px_rgba(236,72,153,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Continuar al Dashboard para escanear
+            </button>
+          </div>
+          <button onClick={() => setMode('choose')} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+            Volver a elegir
           </button>
         </div>
       ) : (
@@ -190,10 +268,17 @@ export default function StepContent({ session, onNext, onSkip, onBack }: StepCon
       )}
 
       <div className="flex gap-4 mt-4">
-        <button onClick={onBack} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
-          Volver
-        </button>
-        {!uploaded && (
+        {mode !== 'choose' && !uploaded && !scanDone && (
+          <button onClick={() => setMode('choose')} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+            Volver
+          </button>
+        )}
+        {mode === 'choose' && (
+          <button onClick={onBack} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+            Volver
+          </button>
+        )}
+        {!uploaded && !scanDone && (
           <button onClick={onSkip} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
             Omitir por ahora
           </button>

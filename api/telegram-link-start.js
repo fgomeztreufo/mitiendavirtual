@@ -18,9 +18,80 @@ if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
 
 const TELEGRAM_BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || (process.env.VITE_TELEGRAM_BOT_USERNAME) || 'mi_tienda_virtual_bot'
 
+// DELETE: deactivate Telegram linkage (merged from telegram-deactivate.js)
+async function handleDeactivate(req, res) {
+  const authHeader = req.headers.authorization || ''
+  if (!authHeader) return res.status(401).json({ message: 'Unauthorized' })
+
+  let user = null
+  try {
+    const uRes = await fetch(`${SUPABASE_URL.replace(/\/$/, '')}/auth/v1/user`, {
+      headers: { Authorization: authHeader, apikey: SUPABASE_SERVICE_ROLE_KEY }
+    })
+    if (uRes.ok) user = await uRes.json()
+  } catch (_) {}
+  if (!user?.id) return res.status(401).json({ message: 'Unauthorized' })
+
+  let body = req.body
+  if (!body) {
+    try {
+      body = await new Promise((resolve, reject) => {
+        let data = ''
+        req.on('data', c => { data += c })
+        req.on('end', () => { try { resolve(JSON.parse(data || '{}')) } catch { resolve({}) } })
+        req.on('error', reject)
+      })
+    } catch { body = {} }
+  }
+
+  const chatId = body.chat_id || null
+  const updateUrl = chatId
+    ? `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/telegram_link_tokens?chat_id=eq.${encodeURIComponent(String(chatId))}`
+    : `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/telegram_link_tokens?user_id=eq.${user.id}`
+
+  try {
+    const patchRes = await fetch(updateUrl, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        Prefer: 'return=representation'
+      },
+      body: JSON.stringify({ used: false })
+    })
+
+    if (!patchRes.ok) {
+      const txt = await patchRes.text().catch(() => '')
+      console.error('Failed updating telegram_link_tokens', patchRes.status, txt)
+      return res.status(502).json({ message: 'Failed updating tokens', detail: txt })
+    }
+
+    const updatedRows = await patchRes.json().catch(() => [])
+
+    try {
+      const n8nUrl = process.env.N8N_WEBHOOK_URL
+      if (n8nUrl) {
+        await fetch(n8nUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'deactivate', user_id: user.id, chat_id: chatId })
+        }).catch(() => {})
+      }
+    } catch (_) {}
+
+    return res.status(200).json({ ok: true, updated: Array.isArray(updatedRows) ? updatedRows.length : 0 })
+  } catch (err) {
+    console.error('telegram-deactivate error', err)
+    return res.status(500).json({ message: 'Internal error' })
+  }
+}
+
 export default async function handler(req, res) {
+  if (req.method === 'DELETE') return handleDeactivate(req, res)
+
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST')
+    res.setHeader('Allow', 'POST, DELETE')
     return res.status(405).json({ message: 'Method Not Allowed' })
   }
 

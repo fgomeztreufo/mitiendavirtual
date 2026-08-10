@@ -189,6 +189,7 @@ export default function OnboardingWizard({ session, profile, instance, onComplet
           <StepContent
             key="content"
             session={session}
+            instance={instance}
             onNext={() => {
               setCompletedSteps(prev => ({ ...prev, content: true }))
               goNext()

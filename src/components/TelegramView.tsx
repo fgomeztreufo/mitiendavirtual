@@ -437,8 +437,8 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
         // para todos los tokens del usuario (incluyendo admin).
         const accessToken = await getAccessToken()
         try {
-          const res = await fetch(`${API_BASE}/telegram-deactivate`, {
-            method: 'POST',
+          const res = await fetch(`${API_BASE}/telegram-link-start`, {
+            method: 'DELETE',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
             body: JSON.stringify({ chat_id: telegramConfig?.telegram_chat_id || null })
           })

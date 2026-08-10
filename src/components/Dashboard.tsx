@@ -29,6 +29,7 @@ const WhatsAppMessagesView = lazy(() => import('./WhatsAppMessagesView'))
 const WhatsAppLeadsView = lazy(() => import('./WhatsAppLeadsView'))
 const BranchesView = lazy(() => import('./BranchesView'))
 const ReferralsView = lazy(() => import('./ReferralsView'))
+const InstagramScannerView = lazy(() => import('./InstagramScannerView'))
 
 const LazyFallback = () => (
   <div className="flex items-center justify-center h-64">
@@ -343,7 +344,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <button
               onClick={() => setKnowledgeOpen(!knowledgeOpen)}
               className={`w-full flex items-center gap-2.5 p-3 text-sm transition-all duration-200 ${
-                activeTab === 'faqs' || activeTab === 'knowlower' || activeTab === 'catalog' || activeTab === 'inventory'
+                activeTab === 'faqs' || activeTab === 'knowlower' || activeTab === 'catalog' || activeTab === 'inventory' || activeTab === 'ig-scanner'
                   ? 'text-purple-300'
                   : 'text-gray-300 hover:text-purple-300'
               }`}
@@ -370,6 +371,9 @@ export default function Dashboard({ session }: { session: Session }) {
                     {bLabels.inventory}
                   </button>
                 )}
+                <button onClick={() => setActiveTab('ig-scanner')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'ig-scanner' ? 'text-pink-400 bg-pink-500/10' : 'text-gray-500 hover:text-pink-400 hover:bg-pink-500/5'}`}>
+                  <FaInstagram className="text-pink-500 text-sm" /> Cargar desde Instagram
+                </button>
               </div>
             )}
           </div>
@@ -475,6 +479,7 @@ export default function Dashboard({ session }: { session: Session }) {
                 instance={instance}
                 onUpdate={getData}
                 goToPlans={() => setActiveTab('plans')}
+                setActiveTab={setActiveTab}
               />
             )}
             {activeTab === 'whatsapp' && (
@@ -517,6 +522,15 @@ export default function Dashboard({ session }: { session: Session }) {
               />
             )}
             {activeTab === 'inventory' && <ProductsListView session={session} onUpdate={getData} businessType={businessType} />}
+            {activeTab === 'ig-scanner' && (
+              <InstagramScannerView
+                session={session}
+                profile={profile}
+                instance={instance}
+                onProductsImported={getData}
+                goToPlans={() => setActiveTab('plans')}
+              />
+            )}
             {activeTab === 'services' && (
               <ServicesView
                 session={session}

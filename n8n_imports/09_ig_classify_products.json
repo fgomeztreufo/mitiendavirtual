@@ -1,0 +1,181 @@
+{
+  "name": "09 – IG Classify Products",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ig-classify-products",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 300],
+      "id": "wh-classify-001",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraer posts del body y preparar prompt para clasificación\nconst body = $input.first().json.body;\nconst posts = body.posts || [];\n\nif (!posts.length) {\n  return [{ json: { error: 'No posts received', classified: [] } }];\n}\n\n// Construir prompt con los posts para clasificación batch\nconst postsSummary = posts.map((p, i) => {\n  const caption = (p.caption || '').substring(0, 300);\n  return `[${i}] id=${p.id} | type=${p.media_type} | caption=\"${caption}\" | permalink=${p.permalink}`;\n}).join('\\n');\n\nconst prompt = `Eres un clasificador de publicaciones de Instagram para una plataforma de e-commerce chilena.\n\nClasifica cada publicación en una de estas categorías:\n- \"product\": Es un producto real a la venta (ropa, electrónica, comida, servicios, etc.)\n- \"ad\": Es publicidad, promoción genérica o spam\n- \"personal\": Es contenido personal, selfie, evento, viaje\n- \"catalog\": Es un catálogo o collage de múltiples productos\n- \"other\": Meme, repost, contenido no clasificable\n\nPara cada post clasificado como \"product\", extrae:\n- name: nombre corto del producto (inferido del caption)\n- price: precio en CLP si se menciona (solo número, null si no hay)\n- description: descripción breve del producto\n- brand: marca si se menciona (null si no)\n- category: categoría general (Ropa, Electrónica, Alimentos, Belleza, Hogar, Servicios, Otro)\n\nPublicaciones a clasificar:\n${postsSummary}\n\nResponde SOLO con un JSON array. Cada elemento:\n{\"index\": N, \"classification\": \"...\", \"confidence\": 0.0-1.0, \"product_data\": {\"name\": \"...\", \"price\": null|number, \"description\": \"...\", \"brand\": null|\"...\", \"category\": \"...\"}|null}\n\nSolo incluye product_data para classification=\"product\". Responde SOLO el JSON array, sin markdown ni explicaciones.`;\n\nreturn [{ json: { prompt, posts, userId: body.userId } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "id": "code-prep-001",
+      "name": "Preparar Prompt"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0.1,\n  \"max_tokens\": 4000,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Eres un experto clasificador de productos de e-commerce. Siempre respondes SOLO con JSON válido, sin markdown.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.prompt) }}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300],
+      "id": "openai-classify-001",
+      "name": "OpenAI Clasificador",
+      "credentials": {
+        "openAiApi": {
+          "id": "OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parsear respuesta de OpenAI y enriquecer con datos originales\nconst posts = $('Preparar Prompt').first().json.posts;\nconst userId = $('Preparar Prompt').first().json.userId;\n\nlet rawContent = '';\ntry {\n  rawContent = $input.first().json.choices[0].message.content;\n  // Limpiar posibles backticks de markdown\n  rawContent = rawContent.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n} catch (e) {\n  return [{ json: { error: 'Failed to parse OpenAI response', classified: [] } }];\n}\n\nlet classifications = [];\ntry {\n  classifications = JSON.parse(rawContent);\n} catch (e) {\n  return [{ json: { error: 'Invalid JSON from OpenAI', raw: rawContent, classified: [] } }];\n}\n\n// Merge classification con datos originales del post\nconst classified = classifications.map(c => {\n  const post = posts[c.index];\n  if (!post) return null;\n  return {\n    ig_post_id: post.id,\n    media_url: post.media_url || post.thumbnail_url,\n    thumbnail_url: post.thumbnail_url || post.media_url,\n    permalink: post.permalink,\n    caption: (post.caption || '').substring(0, 500),\n    media_type: post.media_type,\n    timestamp: post.timestamp,\n    classification: c.classification,\n    confidence: c.confidence,\n    product_data: c.product_data || null\n  };\n}).filter(Boolean);\n\nreturn [{ json: { classified, total: posts.length, products: classified.filter(c => c.classification === 'product').length } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300],
+      "id": "code-merge-001",
+      "name": "Merge Resultados"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/ig_scan_log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"user_id\": \"{{ $('Preparar Prompt').first().json.userId }}\",\n  \"posts_found\": {{ $json.total }},\n  \"products_classified\": {{ $json.products }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, 300],
+      "id": "log-scan-001",
+      "name": "Log Scan"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($('Merge Resultados').first().json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1200, 300],
+      "id": "respond-001",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Preparar Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Prompt": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Clasificador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Clasificador": {
+      "main": [
+        [
+          {
+            "node": "Merge Resultados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Resultados": {
+      "main": [
+        [
+          {
+            "node": "Log Scan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Scan": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "tags": []
+}
