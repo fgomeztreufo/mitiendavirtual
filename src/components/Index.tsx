@@ -360,8 +360,8 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
                 </motion.h2>
 
                 <motion.p variants={fadeUp} custom={2} className="mt-4 text-gray-600 text-sm sm:text-base max-w-lg mx-auto lg:mx-0">
-                  Comparte tu código con otros emprendedores. Por cada persona que se registre
-                  y active su cuenta, <strong className="text-indigo-700">ambos ganan 150 créditos IA gratis</strong>.
+                  Invita a otros emprendedores a tener su propio vendedor IA 24/7. Por cada persona que se registre
+                  y active su cuenta, <strong className="text-indigo-700">ambos ganan 150 créditos IA gratis</strong> para automatizar sus ventas.
                 </motion.p>
 
                 <motion.div variants={fadeUp} custom={3} className="mt-6 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">

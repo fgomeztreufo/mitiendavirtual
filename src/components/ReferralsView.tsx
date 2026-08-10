@@ -77,8 +77,8 @@ export default function ReferralsView({ session }: { session: Session }) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'MiTiendaVirtual — Automatiza tus ventas con IA',
-          text: `Regístrate con mi código y ambos ganamos 150 créditos IA gratis. Usa mi link:`,
+          title: 'Tu vendedor IA 24/7 — MiTiendaVirtual',
+          text: `Yo ya tengo un agente de IA que responde clientes y vende por mi en Instagram, WhatsApp y Telegram. Pruébalo gratis y ambos ganamos 150 créditos IA:`,
           url: shareUrl,
         })
       } catch {}
@@ -111,7 +111,7 @@ export default function ReferralsView({ session }: { session: Session }) {
       >
         <h2 className="text-xl font-bold text-white">Programa de Referidos</h2>
         <p className="text-sm text-gray-400 mt-1">
-          Comparte tu código y ambos ganan <span className="text-indigo-400 font-semibold">150 créditos IA</span> gratis
+          Invita a otros emprendedores a vender con IA y ambos ganan <span className="text-indigo-400 font-semibold">150 créditos IA</span> gratis
         </p>
       </motion.div>
 
