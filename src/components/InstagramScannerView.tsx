@@ -173,11 +173,16 @@ export default function InstagramScannerView({ session, profile, instance, onPro
       }
 
       const classRaw = await classifyRes.json()
-      const classResult: any[] = Array.isArray(classRaw) ? classRaw : (classRaw.classified || [])
+      let classResult: any[] = []
+      if (Array.isArray(classRaw)) classResult = classRaw
+      else if (classRaw && Array.isArray(classRaw.classified)) classResult = classRaw.classified
+      else if (classRaw && Array.isArray(classRaw.data)) classResult = classRaw.data
+      console.log('classify response:', JSON.stringify(classRaw).substring(0, 500))
+      console.log('classResult array length:', classResult.length)
 
       const alreadyImported = await importedPostIds()
       const merged = allPosts.map(p => {
-        const cl = classResult.find((c: any) => c.ig_post_id === p.id || c.id === p.id)
+        const cl = classResult.find((c: any) => (c.ig_post_id && c.ig_post_id === p.id) || (c.id && c.id === p.id) || (c.index !== undefined && allPosts[c.index]?.id === p.id))
         const pd = cl?.product_data || cl || {}
         return {
           ...p,
