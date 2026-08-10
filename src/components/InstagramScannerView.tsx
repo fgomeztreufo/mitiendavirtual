@@ -125,7 +125,7 @@ export default function InstagramScannerView({ session, profile, instance, onPro
     setPhase('scanning')
 
     try {
-      let url = `/api/instagram-scanner?action=scan?limit=30`
+      let url = `/api/instagram-scanner?action=scan&limit=30`
       if (cursor) url += `&after=${encodeURIComponent(cursor)}`
 
       const res = await fetch(url, { headers: authHeaders() })
