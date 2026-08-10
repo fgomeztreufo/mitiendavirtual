@@ -172,19 +172,21 @@ export default function InstagramScannerView({ session, profile, instance, onPro
         throw new Error(errData.message || 'Error al clasificar')
       }
 
-      const classResult: ClassifiedPost[] = await classifyRes.json()
+      const classRaw = await classifyRes.json()
+      const classResult: any[] = Array.isArray(classRaw) ? classRaw : (classRaw.classified || [])
 
       const alreadyImported = await importedPostIds()
       const merged = allPosts.map(p => {
-        const cl = classResult.find(c => c.id === p.id)
+        const cl = classResult.find((c: any) => c.ig_post_id === p.id || c.id === p.id)
+        const pd = cl?.product_data || cl || {}
         return {
           ...p,
           classification: cl?.classification || 'other' as const,
-          name: cl?.name || '',
-          price: cl?.price || null,
-          description: cl?.description || '',
-          brand: cl?.brand || '',
-          category: cl?.category || '',
+          name: pd?.name || '',
+          price: pd?.price || null,
+          description: pd?.description || '',
+          brand: pd?.brand || '',
+          category: pd?.category || '',
           _imported: alreadyImported.has(p.id)
         }
       }) as (ClassifiedPost & { _imported?: boolean })[]
