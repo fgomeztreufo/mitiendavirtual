@@ -208,6 +208,8 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
                 className={`relative p-6 rounded-2xl flex flex-col ${
                   plan.highlight
                     ? 'border-2 border-indigo-400 bg-indigo-50 shadow-[0_8px_40px_rgba(99,102,241,0.12)]'
+                    : plan.name === 'Gratis'
+                    ? 'border-2 border-[#D4AF37] bg-amber-50/40 shadow-[0_8px_40px_rgba(212,175,55,0.15)]'
                     : 'border border-gray-200 bg-white shadow-sm'
                 } ${plan.blocked ? 'opacity-70' : ''}`}
               >
@@ -248,6 +250,8 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       : plan.highlight
                       ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg'
+                      : plan.name === 'Gratis'
+                      ? 'bg-[#D4AF37] hover:bg-[#c9a430] text-white shadow-lg'
                       : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
