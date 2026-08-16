@@ -439,7 +439,7 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
               />
             </div>
             {!planMessagesLimit && (
-              <p className="text-[10px] text-indigo-500 italic">Créditos ilimitados bajo política de uso justo</p>
+              <p className="text-[10px] text-indigo-500 italic">Créditos IA incluidos en tu plan</p>
             )}
             {limitReached && (
               <p className="text-[10px] text-red-600 font-bold tracking-wide uppercase">Límite alcanzado</p>

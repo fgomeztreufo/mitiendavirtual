@@ -200,7 +200,20 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                   <p className="text-sm font-bold text-emerald-600">Créditos de recarga disponibles</p>
                   <p className="text-xs text-emerald-600">{bonusCredits.toLocaleString('es-CL')} créditos extra acumulados</p>
                 </div>
-                <span className="text-2xl">💰</span>
+                <button onClick={() => document.getElementById('bolsas-recarga')?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 transition-all">
+                  Comprar más
+                </button>
+              </div>
+            )}
+            {bonusCredits === 0 && profile && !isPlanExpired(profile) && (
+              <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-amber-600">Sin créditos de recarga</p>
+                  <p className="text-xs text-amber-500">Compra una bolsa para tener créditos extra cuando se agoten los de tu plan</p>
+                </div>
+                <button onClick={() => document.getElementById('bolsas-recarga')?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 text-xs font-bold rounded-xl bg-amber-500 text-white hover:bg-amber-400 transition-all shrink-0">
+                  Ver bolsas
+                </button>
               </div>
             )}
 
@@ -246,16 +259,21 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                     ? 'bg-sky-600 hover:bg-sky-500 text-white shadow-lg'
                     : 'bg-blue-600 hover:bg-blue-500 text-white'
 
-                const label = isCurrent
-                    ? 'Tu Plan Actual'
-                    : price === 0
+                const isCurrentFree = isCurrent && price === 0
+                const isCurrentPaid = isCurrent && price > 0
+
+                const label = isCurrentFree
                     ? 'Plan Actual'
+                    : isCurrentPaid
+                    ? '🔄 Renovar Plan'
+                    : price === 0
+                    ? 'Comenzar Gratis'
                     : ('Elegir ' + plan.display_name)
 
                 const planEmoji = code === 'free' ? '🌱' : code === 'emprendedor' ? '⚡' : code === 'negocio' ? '💼' : '🔥'
 
                 const mostPopular = 'negocio'
-                const isButtonDisabled = isCurrent
+                const isButtonDisabled = isCurrentFree
 
                 return (
                     <div key={code} className={`${bgClass} ${borderClass} ${baseClasses}`}>
@@ -283,7 +301,7 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                                 <span>
                                     {plan.messages_limit
                                         ? `${plan.messages_limit.toLocaleString('es-CL')} créditos IA / mes`
-                                        : 'Créditos IA ilimitados'}
+                                        : 'Créditos IA incluidos'}
                                     {plan.messages_limit && (
                                         <span className="text-gray-500 text-[10px] ml-1">(todos los canales)</span>
                                     )}
@@ -314,9 +332,14 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                             ))}
                         </ul>
 
+                        {isCurrent && profile?.plan_expires_at && (
+                            <p className="text-[10px] text-gray-400 mb-2 text-center">
+                                Vence el {new Date(profile.plan_expires_at).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </p>
+                        )}
                         <button
                             onClick={() => { if (!isButtonDisabled) handleBuyPlan(plan.display_name, price) }}
-                            className={`${buttonDefault} ${isButtonDisabled ? buttonDisabled : buttonPrimary}`}
+                            className={`${buttonDefault} ${isButtonDisabled ? buttonDisabled : isCurrentPaid ? 'border-2 border-emerald-500 text-emerald-600 bg-emerald-50 hover:bg-emerald-100' : buttonPrimary}`}
                             disabled={isButtonDisabled}
                         >
                             {label}
@@ -328,7 +351,7 @@ export default function PlansView({ session, profile }: PlansViewProps) {
 
             {/* BOLSAS DE RECARGA */}
             {packs.length > 0 && (
-              <div className="mt-16">
+              <div id="bolsas-recarga" className="mt-16">
                 <div className="text-center mb-8">
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Bolsas de Recarga</h2>
                   <p className="text-gray-500 text-sm">Créditos extra que no vencen mientras tengas suscripción activa</p>
@@ -359,9 +382,9 @@ export default function PlansView({ session, profile }: PlansViewProps) {
 
             <footer className="mt-16 text-center space-y-2">
                 <p className="text-gray-500 text-[10px] italic">
-                    *Los mensajes IA ilimitados están sujetos a política de "uso justo" para garantizar la estabilidad del servicio.<br/>
-                    Los mensajes de todos los canales (Instagram, Telegram, WhatsApp) comparten el pool del plan.
-                    Los créditos de recarga se consumen después de los créditos del plan y no vencen.
+                    *Los créditos IA de tu plan se renuevan cada mes.<br/>
+                    Los créditos de todos los canales (Instagram, Telegram, WhatsApp) comparten el pool del plan.
+                    Los créditos de bolsas de recarga se consumen después de los créditos del plan y no vencen mientras tengas suscripción activa.
                 </p>
                 <p className="text-gray-500 text-xs">
                     Pagos procesados de forma segura vía Mercado Pago.
