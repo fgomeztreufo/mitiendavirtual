@@ -400,10 +400,10 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
     {
       id: 'google-calendar',
       name: 'Agente Calendar',
-      status: calendarConnected ? 'Activo' : 'Desconectado',
-      color: calendarConnected ? 'from-blue-500 to-indigo-600' : 'from-gray-700 to-gray-800',
-      statusColor: calendarConnected ? 'text-green-400' : 'text-red-400',
-      dotColor: calendarConnected ? 'bg-green-400' : 'bg-red-400',
+      status: !profile?.scheduling_enabled ? 'Desactivado' : calendarConnected ? 'Activo' : 'Desconectado',
+      color: !profile?.scheduling_enabled ? 'from-gray-700 to-gray-800' : calendarConnected ? 'from-blue-500 to-indigo-600' : 'from-gray-700 to-gray-800',
+      statusColor: !profile?.scheduling_enabled ? 'text-gray-400' : calendarConnected ? 'text-green-400' : 'text-red-400',
+      dotColor: !profile?.scheduling_enabled ? 'bg-gray-500' : calendarConnected ? 'bg-green-400' : 'bg-red-400',
       icon: (
         <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5">
           <rect x="3" y="4" width="18" height="18" rx="2" />

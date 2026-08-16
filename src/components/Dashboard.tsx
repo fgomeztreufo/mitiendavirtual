@@ -215,7 +215,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <MobileNavBtn label="Leads Telegram" active={activeTab === 'telegram-leads'} onClick={() => { setActiveTab('telegram-leads'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} onClick={() => { setActiveTab('whatsapp'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Leads WhatsApp" active={activeTab === 'wpp-leads'} onClick={() => { setActiveTab('wpp-leads'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Agendamiento" active={activeTab === 'scheduling'} onClick={() => { setActiveTab('scheduling'); setMobileMenuOpen(false); }} />
+            <MobileNavBtn label="Google Calendar" active={activeTab === 'scheduling'} onClick={() => { setActiveTab('scheduling'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Sucursales" active={activeTab === 'branches'} onClick={() => { setActiveTab('branches'); setMobileMenuOpen(false); }} />
             <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-4 mb-2 tracking-widest">Configuración</p>
             <MobileNavBtn label="Notificaciones" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false); }} />
@@ -321,14 +321,6 @@ export default function Dashboard({ session }: { session: Session }) {
             </div>
           )}
 
-          {/* Google Calendar */}
-          <SidebarBtn
-            label="Google Calendar"
-            icon={<FaGoogle className="text-blue-400" />}
-            active={activeTab === 'scheduling'}
-            onClick={() => { setActiveTab('scheduling'); setLegalView(null) }}
-          />
-
           {/* Sucursales */}
           <SidebarBtn
             label="Sucursales"
@@ -385,7 +377,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <button
               onClick={() => setConfigAgentsOpen(!configAgentsOpen)}
               className={`w-full flex items-center gap-2.5 p-3 text-sm transition-all duration-200 ${
-                activeTab === 'instagram' || activeTab === 'telegram' || activeTab === 'whatsapp'
+                activeTab === 'instagram' || activeTab === 'telegram' || activeTab === 'whatsapp' || activeTab === 'scheduling'
                   ? 'text-indigo-300'
                   : 'text-gray-300 hover:text-indigo-300'
               }`}
@@ -404,6 +396,9 @@ export default function Dashboard({ session }: { session: Session }) {
                 </button>
                 <button onClick={() => setActiveTab('whatsapp')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'whatsapp' ? 'text-green-400 bg-green-500/10' : 'text-gray-500 hover:text-green-400 hover:bg-green-500/5'}`}>
                   <FaWhatsapp className="text-sm text-green-400" /> WhatsApp
+                </button>
+                <button onClick={() => setActiveTab('scheduling')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'scheduling' ? 'text-blue-400 bg-blue-500/10' : 'text-gray-500 hover:text-blue-400 hover:bg-blue-500/5'}`}>
+                  <FaGoogle className="text-sm text-blue-400" /> Google Calendar
                 </button>
               </div>
             )}

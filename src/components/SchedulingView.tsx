@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../supabaseClient'
 import Swal from 'sweetalert2'
-import { effectivePlan } from '../utils/planUtils'
+import { effectivePlan, planCodeToDisplay } from '../utils/planUtils'
 import { Session } from '@supabase/supabase-js'
 
 interface SchedulingViewProps {
@@ -116,8 +116,16 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
   const [branches, setBranches] = useState<Branch[]>([])
   const [selectedStaffId, setSelectedStaffId] = useState<string>('')
 
+  const [gcalConnected, setGcalConnected] = useState(false)
+  const [gcalEmail, setGcalEmail] = useState('')
+  const [gcalLoading, setGcalLoading] = useState(true)
+  const [schedulingEnabled, setSchedulingEnabled] = useState(profile?.scheduling_enabled ?? false)
+  const [toggling, setToggling] = useState(false)
+  const [planMessagesLimit, setPlanMessagesLimit] = useState<number | null>(null)
+
   const planCode = effectivePlan(profile)
   const userId = session?.user?.id
+  const token = session?.access_token
 
   const loadAll = useCallback(async () => {
     if (!userId) return
@@ -154,6 +162,189 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
 
   useEffect(() => { loadAll() }, [loadAll])
 
+  const checkGcalConnection = useCallback(async () => {
+    if (!token) return
+    setGcalLoading(true)
+    try {
+      const res = await fetch('/api/google-calendar', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setGcalConnected(data.connected)
+        setGcalEmail(data.email || '')
+      }
+    } catch {} finally {
+      setGcalLoading(false)
+    }
+  }, [token])
+
+  useEffect(() => {
+    checkGcalConnection()
+
+    const params = new URLSearchParams(window.location.search)
+    const gcal = params.get('gcal')
+    if (gcal === 'connected') {
+      Swal.fire({
+        icon: 'success',
+        title: 'Google Calendar conectado',
+        timer: 3000,
+        showConfirmButton: false,
+        background: '#1a1a1a',
+        color: '#fff',
+      })
+      window.history.replaceState({}, '', window.location.pathname)
+    } else if (gcal === 'error') {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al conectar',
+        text: `No se pudo conectar Google Calendar. ${params.get('reason') || ''}`,
+        background: '#1a1a1a',
+        color: '#fff',
+      })
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [checkGcalConnection])
+
+  useEffect(() => {
+    setSchedulingEnabled(profile?.scheduling_enabled ?? false)
+  }, [profile?.scheduling_enabled])
+
+  useEffect(() => {
+    let mounted = true
+    async function loadPlanLimit() {
+      try {
+        const { data, error } = await supabase
+          .from('plans')
+          .select('messages_limit')
+          .eq('code', planCode)
+          .single()
+        if (!error && mounted) setPlanMessagesLimit(data?.messages_limit ?? null)
+      } catch {}
+    }
+    if (planCode) loadPlanLimit()
+    return () => { mounted = false }
+  }, [planCode])
+
+  const toggleScheduling = async () => {
+    const newEnabled = !schedulingEnabled
+    const action = newEnabled ? 'activar' : 'desactivar'
+
+    if (!newEnabled) {
+      const confirm = await Swal.fire({
+        title: '¿Desactivar agendamiento?',
+        text: 'Tu asistente IA dejará de ofrecer citas a los clientes.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Desactivar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#EF4444',
+        background: '#1a1a1a',
+        color: '#fff',
+      })
+      if (!confirm.isConfirmed) return
+    }
+
+    setToggling(true)
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ scheduling_enabled: newEnabled })
+        .eq('id', userId)
+
+      if (error) throw error
+      setSchedulingEnabled(newEnabled)
+      Swal.fire({
+        icon: 'success',
+        title: newEnabled ? 'Agendamiento activado' : 'Agendamiento desactivado',
+        text: newEnabled
+          ? 'Tu asistente IA ahora podrá agendar citas con tus clientes.'
+          : 'Tu asistente IA dejó de ofrecer citas.',
+        timer: 2500,
+        showConfirmButton: false,
+        background: '#1a1a1a',
+        color: '#fff',
+      })
+      onUpdate?.()
+    } catch (err: any) {
+      console.error(`Error al ${action} agendamiento:`, err)
+      Swal.fire('Error', `No se pudo ${action} el agendamiento.`, 'error')
+    } finally {
+      setToggling(false)
+    }
+  }
+
+  const startGcalOAuth = async () => {
+    try {
+      const res = await fetch('/api/google-calendar', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        window.location.href = data.url
+      } else {
+        Swal.fire('Error', 'No se pudo iniciar la conexión.', 'error')
+      }
+    } catch {
+      Swal.fire('Error', 'Error de conexión.', 'error')
+    }
+  }
+
+  const disconnectGcal = async () => {
+    const { isConfirmed } = await Swal.fire({
+      title: '¿Desconectar Google Calendar?',
+      text: 'Se eliminarán todas las asignaciones de calendarios y los bloques sincronizados.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      confirmButtonText: 'Desconectar',
+      cancelButtonText: 'Cancelar',
+      background: '#1a1a1a',
+      color: '#fff',
+    })
+    if (!isConfirmed) return
+
+    await fetch('/api/google-calendar', {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    setGcalConnected(false)
+    setGcalEmail('')
+    loadAll()
+  }
+
+  // Credits
+  const creditsUsed = profile?.ai_credits_used ?? 0
+  const usagePct = planMessagesLimit ? Math.min((creditsUsed / planMessagesLimit) * 100, 100) : 0
+  let barColor = '#4F46E5'
+  if (usagePct > 85) barColor = '#ef4444'
+  else if (usagePct > 60) barColor = '#f59e0b'
+  const limitReached = planMessagesLimit !== null && creditsUsed >= planMessagesLimit
+
+  // Status styling
+  let statusCardBg: string
+  let statusDotClass: string
+  let statusTextClass: string
+  let statusLabel: string
+
+  if (!schedulingEnabled) {
+    statusCardBg = 'bg-gray-900/60 border-white/5'
+    statusDotClass = 'bg-gray-600'
+    statusTextClass = 'text-gray-500'
+    statusLabel = 'Desactivado'
+  } else if (gcalConnected) {
+    statusCardBg = 'bg-emerald-900/20 border-emerald-700/30'
+    statusDotClass = 'bg-emerald-400 shadow-[0_0_8px_2px_rgba(52,211,153,0.5)]'
+    statusTextClass = 'text-emerald-400'
+    statusLabel = 'Activo'
+  } else {
+    statusCardBg = 'bg-amber-950/20 border-amber-500/30'
+    statusDotClass = 'bg-amber-400'
+    statusTextClass = 'text-amber-400'
+    statusLabel = 'Sin Calendar'
+  }
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto p-4 flex items-center justify-center min-h-[300px]">
@@ -167,10 +358,140 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 p-4">
+      {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-white">Agendamiento</h2>
-        <p className="text-gray-400 text-sm">Gestiona profesionales, servicios y citas de tu negocio.</p>
+        <h2 className="text-2xl font-bold text-white">Google Calendar</h2>
+        <p className="text-gray-400 text-sm">Gestiona el agendamiento automático de tu negocio.</p>
       </div>
+
+      {/* Status Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* SCHEDULING STATUS */}
+        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-5 space-y-4 backdrop-blur-sm">
+          <p className="text-[11px] font-bold tracking-[0.18em] text-gray-500 uppercase text-center">Estado de Agendamiento</p>
+          <div className={`rounded-xl p-4 text-center space-y-2 border ${statusCardBg}`}>
+            <div className={`w-3 h-3 rounded-full mx-auto ${statusDotClass}`} />
+            <p className={`text-sm font-extrabold tracking-widest uppercase ${statusTextClass}`}>
+              {statusLabel}
+            </p>
+
+            {gcalConnected && (
+              <>
+                <div className="h-px bg-white/5 mx-2" />
+                <p className="text-[10px] tracking-widest text-gray-500 uppercase">Google Calendar</p>
+                <div className="inline-block bg-black/40 rounded-lg px-3 py-1.5">
+                  <span className="text-xs text-white font-mono">{gcalEmail}</span>
+                </div>
+              </>
+            )}
+
+            {!gcalConnected && !gcalLoading && (
+              <>
+                <div className="h-px bg-white/5 mx-2" />
+                <p className="text-[10px] text-gray-600">Google Calendar no conectado</p>
+                <button
+                  onClick={startGcalOAuth}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition-all text-xs mt-1"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545 10.239v3.821h5.445c-.712 2.315-2.647 3.972-5.445 3.972a6.033 6.033 0 110-12.064c1.498 0 2.866.549 3.921 1.453l2.814-2.814A9.969 9.969 0 0012.545 2C7.021 2 2.543 6.477 2.543 12s4.478 10 10.002 10c8.396 0 10.249-7.85 9.426-11.748l-9.426-.013z" /></svg>
+                  Conectar
+                </button>
+              </>
+            )}
+          </div>
+
+          <button
+            onClick={toggleScheduling}
+            disabled={toggling}
+            className={`w-full py-2 text-xs font-bold rounded-xl border transition-all ${
+              schedulingEnabled
+                ? 'border-amber-500/30 text-amber-400 hover:bg-amber-500/10'
+                : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
+            }`}
+          >
+            {toggling
+              ? 'Procesando...'
+              : schedulingEnabled
+                ? '⏸ Desactivar agendamiento'
+                : '▶ Activar agendamiento'}
+          </button>
+
+          {gcalConnected && (
+            <button
+              onClick={disconnectGcal}
+              className="w-full py-2 text-[10px] font-black text-red-500/50 hover:text-red-500 uppercase tracking-widest transition-all"
+            >
+              Desconectar Google Calendar
+            </button>
+          )}
+        </div>
+
+        {/* MONTHLY CREDITS */}
+        <div className={`rounded-2xl bg-white/[0.03] border p-5 space-y-4 backdrop-blur-sm ${limitReached ? 'border-red-500/40' : 'border-white/5'}`}>
+          <p className="text-[11px] font-bold tracking-[0.18em] text-gray-500 uppercase text-center">Créditos Mensuales</p>
+          <div className={`rounded-xl border p-4 text-center space-y-3 ${limitReached ? 'bg-red-950/30 border-red-500/30' : 'bg-gray-900/60 border-white/5'}`}>
+            <p className="text-4xl font-black tracking-tight text-white italic">{planCodeToDisplay(planCode).toUpperCase()}</p>
+            <div className="flex justify-between text-xs text-gray-400 px-1">
+              <span>USO</span>
+              <span className="font-mono text-white">
+                {creditsUsed.toLocaleString('es-CL')} / {planMessagesLimit ? planMessagesLimit.toLocaleString('es-CL') : '∞'}
+              </span>
+            </div>
+            <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: planMessagesLimit ? `${usagePct}%` : '100%',
+                  background: planMessagesLimit ? barColor : '#4F46E5',
+                  opacity: planMessagesLimit ? 1 : 0.4
+                }}
+              />
+            </div>
+            {!planMessagesLimit && (
+              <p className="text-[10px] text-indigo-400/70 italic">Créditos ilimitados bajo política de uso justo</p>
+            )}
+            {limitReached && (
+              <p className="text-[10px] text-red-400 font-bold tracking-wide uppercase">Límite alcanzado</p>
+            )}
+            {!limitReached && planMessagesLimit && usagePct > 85 && (
+              <p className="text-[10px] text-amber-400 italic">Cerca del límite — considera actualizar tu plan</p>
+            )}
+          </div>
+          {planCode !== 'escala' && (
+            <button
+              onClick={() => goToPlans?.()}
+              className="w-full py-2 text-xs font-bold rounded-xl border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 transition-all"
+            >
+              Ver planes →
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* INFO BANNER */}
+      {schedulingEnabled && gcalConnected && !limitReached && (
+        <div className="p-4 rounded-xl bg-emerald-900/10 border border-emerald-800/30 flex items-start gap-3">
+          <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <p className="text-sm text-emerald-300 font-semibold">Tu asistente IA está agendando citas</p>
+            <p className="text-xs text-emerald-400/60 mt-0.5">Los clientes pueden agendar citas automáticamente a través de tus canales.</p>
+          </div>
+        </div>
+      )}
+
+      {!schedulingEnabled && (
+        <div className="p-4 rounded-xl bg-amber-900/10 border border-amber-800/30 flex items-start gap-3">
+          <svg className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.832c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <div>
+            <p className="text-sm text-amber-300 font-semibold">Agendamiento desactivado</p>
+            <p className="text-xs text-amber-400/60 mt-0.5">Tu asistente IA no ofrecerá citas a los clientes. Actívalo para que puedan agendar automáticamente.</p>
+          </div>
+        </div>
+      )}
 
       {/* Sub-tabs */}
       <div className="flex gap-1 p-1 rounded-xl bg-white/[0.03] border border-white/5 overflow-x-auto">
