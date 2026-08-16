@@ -204,39 +204,155 @@ export default function Dashboard({ session }: { session: Session }) {
       </div>
 
       {/* MOBILE MENU OVERLAY */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
-          <div className="absolute top-14 left-0 right-0 bg-white/95 backdrop-blur-lg border-b border-gray-100 p-4 space-y-1 max-h-[70vh] overflow-y-auto shadow-xl">
-            <MobileNavBtn label="Panel de Agentes" active={activeTab === 'home'} onClick={() => { setActiveTab('home'); setMobileMenuOpen(false); }} />
-            <p className="text-xs font-bold text-gray-400 uppercase px-2 mb-2 tracking-widest">Canales</p>
-            <MobileNavBtn label="Ventas Capturadas" active={activeTab === 'leads'} onClick={() => { setActiveTab('leads'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Telegram" active={activeTab === 'telegram'} onClick={() => { setActiveTab('telegram'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Leads Telegram" active={activeTab === 'telegram-leads'} onClick={() => { setActiveTab('telegram-leads'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="WhatsApp" active={activeTab === 'whatsapp'} onClick={() => { setActiveTab('whatsapp'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Leads WhatsApp" active={activeTab === 'wpp-leads'} onClick={() => { setActiveTab('wpp-leads'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Google Calendar" active={activeTab === 'scheduling'} onClick={() => { setActiveTab('scheduling'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Sucursales" active={activeTab === 'branches'} onClick={() => { setActiveTab('branches'); setMobileMenuOpen(false); }} />
-            <p className="text-xs font-bold text-gray-400 uppercase px-2 mt-4 mb-2 tracking-widest">Configuración</p>
-            <MobileNavBtn label="Notificaciones" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Configura tu Instagram" active={activeTab === 'instagram'} onClick={() => { setActiveTab('instagram'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Configura tu Telegram" active={activeTab === 'telegram'} onClick={() => { setActiveTab('telegram'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Configura tu WhatsApp" active={activeTab === 'whatsapp'} onClick={() => { setActiveTab('whatsapp'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Cargar FAQs" active={activeTab === 'faqs'} onClick={() => { setActiveTab('faqs'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Cerebro IA" active={activeTab === 'knowlower'} onClick={() => { setActiveTab('knowlower'); setMobileMenuOpen(false); }} />
-            {bLabels.showCatalog && <MobileNavBtn label={bLabels.catalog} active={activeTab === 'catalog'} onClick={() => { setActiveTab('catalog'); setMobileMenuOpen(false); }} />}
-            {bLabels.showCatalog && <MobileNavBtn label={bLabels.inventory} active={activeTab === 'inventory'} onClick={() => { setActiveTab('inventory'); setMobileMenuOpen(false); }} />}
-            <MobileNavBtn label={bLabels.services} active={activeTab === 'services'} onClick={() => { setActiveTab('services'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Planes" active={activeTab === 'plans'} onClick={() => { setActiveTab('plans'); setMobileMenuOpen(false); }} />
-            <MobileNavBtn label="Referidos" active={activeTab === 'referrals'} onClick={() => { setActiveTab('referrals'); setMobileMenuOpen(false); }} />
-            <div className="pt-3 border-t border-gray-100 mt-3">
-              <button onClick={() => supabase.auth.signOut({ scope: 'local' })} className="w-full text-left text-red-500 p-3 hover:bg-red-50 rounded-xl flex items-center gap-2 transition-colors text-sm">
-                Cerrar Sesión
-              </button>
+      <div className={`fixed inset-0 z-40 md:hidden transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
+        <div className={`absolute top-14 left-0 right-0 bg-white/95 backdrop-blur-lg border-b border-gray-100 p-4 space-y-1 overflow-y-auto shadow-xl transition-all duration-300 ${mobileMenuOpen ? 'max-h-[75vh] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+
+          <MobileNavBtn
+            label="Panel de Agentes"
+            icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>}
+            active={activeTab === 'home'}
+            onClick={() => { setActiveTab('home'); setMobileMenuOpen(false) }}
+          />
+
+          <p className="text-xs font-bold text-gray-400 uppercase px-2 mt-4 mb-2 tracking-widest">Canales</p>
+
+          {/* Instagram */}
+          <MobileNavBtn
+            label="Instagram"
+            icon={<FaInstagram className="text-pink-500" />}
+            active={activeTab === 'leads'}
+            onClick={() => setInstagramMenuOpen(!instagramMenuOpen)}
+            isParent isOpen={instagramMenuOpen}
+          />
+          {instagramMenuOpen && (
+            <div className="ml-4 border-l border-gray-100 pl-3 space-y-0.5">
+              <MobileSubBtn label="Ventas Capturadas" active={activeTab === 'leads'} onClick={() => { setActiveTab('leads'); setMobileMenuOpen(false) }} />
             </div>
+          )}
+
+          {/* Telegram */}
+          <MobileNavBtn
+            label="Telegram"
+            icon={<FaTelegram className="text-sky-500" />}
+            active={activeTab === 'telegram-leads'}
+            onClick={() => setTelegramMenuOpen(!telegramMenuOpen)}
+            isParent isOpen={telegramMenuOpen}
+          />
+          {telegramMenuOpen && (
+            <div className="ml-4 border-l border-gray-100 pl-3 space-y-0.5">
+              <MobileSubBtn label="Leads" active={activeTab === 'telegram-leads'} onClick={() => { setActiveTab('telegram-leads'); setMobileMenuOpen(false) }} />
+            </div>
+          )}
+
+          {/* WhatsApp */}
+          <MobileNavBtn
+            label="WhatsApp"
+            icon={<FaWhatsapp className="text-green-500" />}
+            active={activeTab === 'wpp-leads' || activeTab === 'wpp-messages'}
+            onClick={() => setWhatsappMenuOpen(!whatsappMenuOpen)}
+            isParent isOpen={whatsappMenuOpen}
+          />
+          {whatsappMenuOpen && (
+            <div className="ml-4 border-l border-gray-100 pl-3 space-y-0.5">
+              <MobileSubBtn label="Leads" active={activeTab === 'wpp-leads'} onClick={() => { setActiveTab('wpp-leads'); setMobileMenuOpen(false) }} />
+              <MobileSubBtn label="Bandeja" active={activeTab === 'wpp-messages'} onClick={() => { setActiveTab('wpp-messages'); setMobileMenuOpen(false) }} />
+            </div>
+          )}
+
+          {/* Sucursales */}
+          <MobileNavBtn
+            label="Sucursales"
+            icon={<svg className="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+            active={activeTab === 'branches'}
+            onClick={() => { setActiveTab('branches'); setMobileMenuOpen(false) }}
+          />
+
+          <p className="text-xs font-bold text-gray-400 uppercase px-2 mt-4 mb-2 tracking-widest">Configuración</p>
+
+          {/* Entrenamiento IA — card */}
+          <div className="rounded-xl bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 overflow-hidden">
+            <button
+              onClick={() => setKnowledgeOpen(!knowledgeOpen)}
+              className={`w-full flex items-center gap-2.5 p-3 text-sm transition-all duration-200 ${
+                ['faqs','knowlower','catalog','inventory','ig-scanner','services'].includes(activeTab)
+                  ? 'text-purple-600' : 'text-gray-600 hover:text-purple-600'
+              }`}
+            >
+              <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-xs shadow-[0_2px_8px_rgba(139,92,246,0.3)]">🧠</span>
+              <span className="font-bold text-xs uppercase tracking-wider">Entrenamiento IA</span>
+              <svg className={`w-4 h-4 ml-auto transition-transform duration-200 ${knowledgeOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {knowledgeOpen && (
+              <div className="px-3 pb-3 space-y-0.5 border-t border-purple-100">
+                <MobileSubBtn label="FAQs / Base Conocimiento" active={activeTab === 'faqs'} onClick={() => { setActiveTab('faqs'); setMobileMenuOpen(false) }} />
+                <MobileSubBtn label="Cerebro IA" active={activeTab === 'knowlower'} onClick={() => { setActiveTab('knowlower'); setMobileMenuOpen(false) }} />
+                {bLabels.showCatalog && <MobileSubBtn label={bLabels.catalog} active={activeTab === 'catalog'} onClick={() => { setActiveTab('catalog'); setMobileMenuOpen(false) }} />}
+                {bLabels.showCatalog && <MobileSubBtn label={bLabels.inventory} active={activeTab === 'inventory'} onClick={() => { setActiveTab('inventory'); setMobileMenuOpen(false) }} />}
+                {!['clinica', 'servicios'].includes(profile?.business_type || '') && (
+                  <MobileSubBtn label="Cargar desde Instagram" icon={<FaInstagram className="text-pink-500" />} active={activeTab === 'ig-scanner'} onClick={() => { setActiveTab('ig-scanner'); setMobileMenuOpen(false) }} />
+                )}
+                <MobileSubBtn label={bLabels.services} active={activeTab === 'services'} onClick={() => { setActiveTab('services'); setMobileMenuOpen(false) }} />
+              </div>
+            )}
+          </div>
+
+          {/* Configura Agentes — card */}
+          <div className="rounded-xl bg-gradient-to-r from-indigo-50 to-sky-50 border border-indigo-200 overflow-hidden mt-2">
+            <button
+              onClick={() => setConfigAgentsOpen(!configAgentsOpen)}
+              className={`w-full flex items-center gap-2.5 p-3 text-sm transition-all duration-200 ${
+                ['instagram','telegram','whatsapp','scheduling'].includes(activeTab)
+                  ? 'text-indigo-600' : 'text-gray-600 hover:text-indigo-600'
+              }`}
+            >
+              <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center text-white text-xs shadow-[0_2px_8px_rgba(99,102,241,0.3)]">⚙️</span>
+              <span className="font-bold text-xs uppercase tracking-wider">Configura Agentes</span>
+              <svg className={`w-4 h-4 ml-auto transition-transform duration-200 ${configAgentsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {configAgentsOpen && (
+              <div className="px-3 pb-3 space-y-0.5 border-t border-indigo-100">
+                <MobileSubBtn label="Instagram" icon={<FaInstagram className="text-pink-500" />} active={activeTab === 'instagram'} onClick={() => { setActiveTab('instagram'); setMobileMenuOpen(false) }} />
+                <MobileSubBtn label="Telegram" icon={<FaTelegram className="text-sky-500" />} active={activeTab === 'telegram'} onClick={() => { setActiveTab('telegram'); setMobileMenuOpen(false) }} />
+                <MobileSubBtn label="WhatsApp" icon={<FaWhatsapp className="text-green-500" />} active={activeTab === 'whatsapp'} onClick={() => { setActiveTab('whatsapp'); setMobileMenuOpen(false) }} />
+                <MobileSubBtn label="Google Calendar" icon={<FaGoogle className="text-blue-500" />} active={activeTab === 'scheduling'} onClick={() => { setActiveTab('scheduling'); setMobileMenuOpen(false) }} />
+              </div>
+            )}
+          </div>
+
+          <MobileNavBtn
+            label="Notificaciones"
+            icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>}
+            active={activeTab === 'notifications'}
+            onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false) }}
+          />
+
+          <MobileNavBtn
+            label="Planes"
+            icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+            active={activeTab === 'plans'}
+            onClick={() => { setActiveTab('plans'); setMobileMenuOpen(false) }}
+          />
+
+          <MobileNavBtn
+            label="Referidos"
+            icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
+            active={activeTab === 'referrals'}
+            onClick={() => { setActiveTab('referrals'); setMobileMenuOpen(false) }}
+          />
+
+          <div className="pt-3 border-t border-gray-100 mt-3 space-y-1">
+            <button onClick={pickBusinessType} className="w-full text-left text-gray-500 p-3 hover:bg-gray-50 rounded-xl flex items-center gap-2 transition-all text-xs">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+              <span>{BUSINESS_TYPES[businessType] || 'Tipo de negocio'}</span>
+            </button>
+            <button onClick={() => supabase.auth.signOut({ scope: 'local' })} className="w-full text-left text-red-500 p-3 hover:bg-red-50 rounded-xl flex items-center gap-2 transition-colors text-sm">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+              <span>Cerrar Sesión</span>
+            </button>
           </div>
         </div>
-      )}
+      </div>
 
       {/* SIDEBAR */}
       <aside className="w-64 bg-white/80 backdrop-blur-md border-r border-gray-100 flex flex-col hidden md:flex">
@@ -627,10 +743,25 @@ const SidebarSubBtn = ({ label, active, onClick }: any) => (
   <button onClick={onClick} className={`w-full text-left py-2 text-xs font-medium uppercase tracking-wider transition-colors ${active ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}>{label}</button>
 )
 
-const MobileNavBtn = ({ label, active, onClick }: any) => (
-  <button onClick={onClick} className={`w-full text-left p-3 rounded-xl text-sm font-medium transition-all flex items-center justify-between ${
-    active ? 'bg-indigo-50 text-indigo-600 border border-indigo-200' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+const MobileNavBtn = ({ label, icon, active, onClick, isParent, isOpen }: any) => (
+  <button onClick={onClick} className={`w-full flex items-center gap-2.5 p-3 rounded-xl text-sm transition-all duration-200 ${
+    active
+      ? 'bg-indigo-50 text-indigo-600 border border-indigo-200'
+      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
   }`}>
-    <span>{label}</span>
+    {icon && <span className="text-base shrink-0">{icon}</span>}
+    <span className="font-medium">{label}</span>
+    {isParent && (
+      <svg className={`w-4 h-4 ml-auto transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" /></svg>
+    )}
+  </button>
+)
+
+const MobileSubBtn = ({ label, icon, active, onClick }: any) => (
+  <button onClick={onClick} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${
+    active ? 'text-indigo-600 bg-indigo-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+  }`}>
+    {icon && <span className="text-sm shrink-0">{icon}</span>}
+    {label}
   </button>
 )
