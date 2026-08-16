@@ -19,9 +19,9 @@ interface PlansViewProps {
 
 const CHANNEL_COLORS: Record<string, string> = {
     instagram: 'text-pink-500',
-    telegram: 'text-sky-400',
-    whatsapp: 'text-green-400',
-    google_calendar: 'text-blue-400',
+    telegram: 'text-sky-500',
+    whatsapp: 'text-green-500',
+    google_calendar: 'text-blue-500',
 }
 
 interface PlanChannel {
@@ -175,39 +175,39 @@ export default function PlansView({ session, profile }: PlansViewProps) {
     return (
         <div className="animate-fade-in-up p-4 max-w-7xl mx-auto">
             <div className="text-center mb-16">
-                <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
                     Elige el motor de tu crecimiento
                 </h1>
-                <p className="text-gray-400 max-w-2xl mx-auto text-base">
+                <p className="text-gray-500 max-w-2xl mx-auto text-base">
                     Automatiza tus ventas con IA en todos tus canales. Sin contratos, pagas por mes.
                     Todos los canales abiertos desde el día 1. La diferencia está en los créditos IA.
                 </p>
             </div>
 
             {profile && isPlanExpired(profile) && (
-              <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-red-500/10 to-rose-500/10 border border-red-500/30 flex items-center justify-between">
+              <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-bold text-red-400">Tu plan ha expirado</p>
-                  <p className="text-xs text-red-300/70">Elige un plan para seguir usando tus agentes de IA</p>
+                  <p className="text-sm font-bold text-red-600">Tu plan ha expirado</p>
+                  <p className="text-xs text-red-500">Elige un plan para seguir usando tus agentes de IA</p>
                 </div>
                 <span className="text-2xl">⚠️</span>
               </div>
             )}
 
             {bonusCredits > 0 && (
-              <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 flex items-center justify-between">
+              <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-bold text-emerald-400">Créditos de recarga disponibles</p>
-                  <p className="text-xs text-emerald-300/70">{bonusCredits.toLocaleString('es-CL')} créditos extra acumulados</p>
+                  <p className="text-sm font-bold text-emerald-600">Créditos de recarga disponibles</p>
+                  <p className="text-xs text-emerald-600">{bonusCredits.toLocaleString('es-CL')} créditos extra acumulados</p>
                 </div>
                 <span className="text-2xl">💰</span>
               </div>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 items-start">
-              {loading && <div className="col-span-full text-center text-gray-400">Cargando planes...</div>}
+              {loading && <div className="col-span-full text-center text-gray-500">Cargando planes...</div>}
               {!loading && plans.length === 0 && (
-                <div className="col-span-full text-center text-gray-400">No hay planes configurados en la base de datos.</div>
+                <div className="col-span-full text-center text-gray-500">No hay planes configurados en la base de datos.</div>
               )}
 
               {!loading && plans.filter((p: any) => p.code !== 'expired').map((plan: any) => {
@@ -217,27 +217,27 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                 const price = Number(plan.monthly_price_clp || 0)
                 const channels = ALL_CHANNELS
 
-                const baseClasses = `rounded-2xl p-6 flex flex-col h-full relative`
-                let borderClass = 'border border-gray-800'
+                const baseClasses = `rounded-2xl p-6 flex flex-col h-full relative shadow-sm`
+                let borderClass = 'border border-gray-200'
                 if (code === 'free') {
-                    borderClass = 'border border-gray-700'
+                    borderClass = 'border border-gray-200'
                 } else if (code === 'emprendedor') {
-                    borderClass = 'border-2 border-sky-400/70 shadow-[0_8px_20px_rgba(56,189,248,0.06)]'
+                    borderClass = 'border-2 border-sky-400 shadow-[0_8px_20px_rgba(56,189,248,0.06)]'
                 } else if (code === 'negocio') {
-                    borderClass = 'border-2 border-indigo-500/60 shadow-[0_10px_30px_rgba(99,102,241,0.16)]'
+                    borderClass = 'border-2 border-indigo-500 shadow-[0_10px_30px_rgba(99,102,241,0.16)]'
                 } else if (code === 'escala') {
-                    borderClass = 'border-2 border-orange-500/50 shadow-[0_10px_30px_rgba(249,115,22,0.10)]'
+                    borderClass = 'border-2 border-orange-500 shadow-[0_10px_30px_rgba(249,115,22,0.10)]'
                 } else if (isCurrent) {
                     borderClass = 'border border-blue-500'
                 }
                 const bgClass = code === 'negocio'
-                    ? 'bg-gradient-to-b from-gray-900 via-gray-900 to-indigo-950/20'
+                    ? 'bg-gradient-to-b from-white via-white to-indigo-50'
                     : code === 'escala'
-                    ? 'bg-gradient-to-b from-gray-900 via-gray-900 to-orange-950/20'
-                    : 'bg-gray-900'
+                    ? 'bg-gradient-to-b from-white via-white to-orange-50'
+                    : 'bg-white'
 
                 const buttonDefault = 'w-full py-2 text-sm font-bold rounded-xl transition-all'
-                const buttonDisabled = 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                const buttonDisabled = 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 const buttonPrimary = code === 'negocio'
                     ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg'
                     : code === 'escala'
@@ -263,22 +263,22 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                             <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-indigo-600 text-white text-xs font-bold">MÁS POPULAR</div>
                         )}
 
-                        <h3 className="text-lg font-bold text-white mb-1">{plan.display_name} {planEmoji}</h3>
-                        <div className="text-3xl font-bold text-white mb-1">
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">{plan.display_name} {planEmoji}</h3>
+                        <div className="text-3xl font-bold text-gray-900 mb-1">
                             ${price.toLocaleString('es-CL')}
-                            <span className="text-sm text-gray-500 font-normal"> /mes</span>
+                            <span className="text-sm text-gray-400 font-normal"> /mes</span>
                         </div>
                         {plan.description && (
-                            <p className="text-[11px] text-gray-400 mb-5 italic leading-relaxed">{plan.description}</p>
+                            <p className="text-[11px] text-gray-500 mb-5 italic leading-relaxed">{plan.description}</p>
                         )}
 
                         {/* Límites */}
-                        <ul className="space-y-2 mb-5 pb-5 border-b border-gray-800">
-                            <li className="flex items-start gap-2 text-xs text-gray-300">
+                        <ul className="space-y-2 mb-5 pb-5 border-b border-gray-200">
+                            <li className="flex items-start gap-2 text-xs text-gray-400">
                                 <span className="text-green-500 font-bold mt-0.5">✓</span>
                                 <span>{plan.products_limit || 0} productos en catálogo</span>
                             </li>
-                            <li className="flex items-start gap-2 text-xs text-gray-300">
+                            <li className="flex items-start gap-2 text-xs text-gray-400">
                                 <span className="text-green-500 font-bold mt-0.5">✓</span>
                                 <span>
                                     {plan.messages_limit
@@ -289,8 +289,8 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                                     )}
                                 </span>
                             </li>
-                            <li className={`flex items-start gap-2 text-xs ${plan.branches_limit === 0 ? 'text-gray-600' : 'text-gray-300'}`}>
-                                <span className={`font-bold mt-0.5 ${plan.branches_limit === 0 ? 'text-gray-600' : 'text-green-500'}`}>
+                            <li className={`flex items-start gap-2 text-xs ${plan.branches_limit === 0 ? 'text-gray-400' : 'text-gray-400'}`}>
+                                <span className={`font-bold mt-0.5 ${plan.branches_limit === 0 ? 'text-gray-400' : 'text-green-500'}`}>
                                     {plan.branches_limit === 0 ? '✗' : '✓'}
                                 </span>
                                 <span>
@@ -306,7 +306,7 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                         {/* Canales */}
                         <ul className="space-y-2 mb-8 flex-1">
                             {channels.map((ch) => (
-                                <li key={ch.id} className={`flex items-center gap-2 text-xs ${ch.available ? 'text-gray-200' : 'text-gray-600'}`}>
+                                <li key={ch.id} className={`flex items-center gap-2 text-xs ${ch.available ? 'text-gray-400' : 'text-gray-400'}`}>
                                     <ch.Icon className={`text-base shrink-0 ${ch.available ? CHANNEL_COLORS[ch.id] : 'opacity-30'}`} />
                                     <span className={ch.available ? '' : 'line-through'}>{ch.label}</span>
                                     {ch.available && <span className="ml-auto text-green-500 text-[10px] font-bold">✓</span>}
@@ -330,23 +330,23 @@ export default function PlansView({ session, profile }: PlansViewProps) {
             {packs.length > 0 && (
               <div className="mt-16">
                 <div className="text-center mb-8">
-                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Bolsas de Recarga</h2>
-                  <p className="text-gray-400 text-sm">Créditos extra que no vencen mientras tengas suscripción activa</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Bolsas de Recarga</h2>
+                  <p className="text-gray-500 text-sm">Créditos extra que no vencen mientras tengas suscripción activa</p>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {packs.map((pack) => {
                     const sizeLabel = pack.code === 'pack_s' ? 'S' : pack.code === 'pack_m' ? 'M' : pack.code === 'pack_l' ? 'L' : pack.code === 'pack_xl' ? 'XL' : '';
                     const isPopular = pack.code === 'pack_m';
                     return (
-                    <div key={pack.code} className={`rounded-2xl border ${isPopular ? 'border-emerald-500/60 ring-1 ring-emerald-500/30' : 'border-white/10'} bg-gray-900/80 p-5 flex flex-col items-center text-center space-y-3 hover:border-emerald-500/40 transition-all relative`}>
+                    <div key={pack.code} className={`rounded-2xl border ${isPopular ? 'border-emerald-500 ring-1 ring-emerald-500/20' : 'border-gray-200'} bg-white shadow-sm p-5 flex flex-col items-center text-center space-y-3 hover:border-emerald-400 transition-all relative`}>
                       {isPopular && <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold text-black bg-emerald-400 px-3 py-0.5 rounded-full whitespace-nowrap">Más popular</span>}
-                      {sizeLabel && <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-0.5 rounded-full">Bolsa {sizeLabel}</span>}
-                      <p className="text-2xl font-black text-white">{pack.credits.toLocaleString('es-CL')}</p>
-                      <p className="text-[11px] text-gray-400 uppercase tracking-wider">créditos IA</p>
-                      <p className="text-lg font-bold text-emerald-400">${pack.price_clp.toLocaleString('es-CL')}</p>
+                      {sizeLabel && <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-0.5 rounded-full">Bolsa {sizeLabel}</span>}
+                      <p className="text-2xl font-black text-gray-900">{pack.credits.toLocaleString('es-CL')}</p>
+                      <p className="text-[11px] text-gray-500 uppercase tracking-wider">créditos IA</p>
+                      <p className="text-lg font-bold text-emerald-600">${pack.price_clp.toLocaleString('es-CL')}</p>
                       <button
                         onClick={() => handleBuyCreditPack(pack)}
-                        className="w-full py-2 text-xs font-bold rounded-xl border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition-all"
+                        className="w-full py-2 text-xs font-bold rounded-xl border border-emerald-300 text-emerald-600 hover:bg-emerald-50 transition-all"
                       >
                         Comprar
                       </button>
@@ -363,7 +363,7 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                     Los mensajes de todos los canales (Instagram, Telegram, WhatsApp) comparten el pool del plan.
                     Los créditos de recarga se consumen después de los créditos del plan y no vencen.
                 </p>
-                <p className="text-gray-400 text-xs">
+                <p className="text-gray-500 text-xs">
                     Pagos procesados de forma segura vía Mercado Pago.
                 </p>
             </footer>

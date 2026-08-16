@@ -83,7 +83,7 @@ export default function StepPersonality({ instance, onNext, onSkip, onBack }: St
         </svg>
       </div>
 
-      <h2 className="text-2xl font-black text-white mb-2 text-center">
+      <h2 className="text-2xl font-black text-gray-900 mb-2 text-center">
         Personaliza tu agente
       </h2>
       <p className="text-gray-500 text-sm mb-6 text-center">
@@ -100,7 +100,7 @@ export default function StepPersonality({ instance, onNext, onSkip, onBack }: St
             onChange={e => setName(e.target.value)}
             placeholder="Ej: Luna, Max, Vendedor IA..."
             maxLength={50}
-            className="w-full bg-black border border-gray-800 p-3.5 rounded-xl text-white text-sm outline-none focus:border-indigo-500 transition-all"
+            className="w-full bg-gray-50 border border-gray-200 p-3.5 rounded-xl text-gray-900 text-sm outline-none focus:border-indigo-500 transition-all"
           />
         </div>
 
@@ -115,8 +115,8 @@ export default function StepPersonality({ instance, onNext, onSkip, onBack }: St
                 onClick={() => setTone(opt.value)}
                 className={`p-3 rounded-xl border text-sm font-semibold transition-all ${
                   tone === opt.value
-                    ? 'bg-indigo-500/10 border-indigo-500/50 text-white'
-                    : 'bg-white/[0.03] border-white/5 text-gray-400 hover:border-white/10'
+                    ? 'bg-indigo-500/10 border-indigo-500/50 text-gray-900'
+                    : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
                 }`}
               >
                 {opt.emoji} {opt.label}
@@ -134,7 +134,7 @@ export default function StepPersonality({ instance, onNext, onSkip, onBack }: St
             onChange={e => setGreeting(e.target.value)}
             placeholder="Ej: Hola! Soy Luna, tu asistente de ventas"
             maxLength={300}
-            className="w-full bg-black border border-gray-800 p-3.5 rounded-xl text-white text-sm outline-none focus:border-indigo-500 transition-all"
+            className="w-full bg-gray-50 border border-gray-200 p-3.5 rounded-xl text-gray-900 text-sm outline-none focus:border-indigo-500 transition-all"
           />
         </div>
 
@@ -148,7 +148,7 @@ export default function StepPersonality({ instance, onNext, onSkip, onBack }: St
             placeholder="Ej: Solo vendemos en Chile. Envios gratis sobre $30.000."
             maxLength={500}
             rows={3}
-            className="w-full bg-black border border-gray-800 p-3.5 rounded-xl text-white text-sm outline-none focus:border-indigo-500 transition-all resize-none"
+            className="w-full bg-gray-50 border border-gray-200 p-3.5 rounded-xl text-gray-900 text-sm outline-none focus:border-indigo-500 transition-all resize-none"
           />
         </div>
 
@@ -166,10 +166,10 @@ export default function StepPersonality({ instance, onNext, onSkip, onBack }: St
       </div>
 
       <div className="flex gap-4 mt-4">
-        <button onClick={onBack} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+        <button onClick={onBack} className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
           Volver
         </button>
-        <button onClick={onSkip} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+        <button onClick={onSkip} className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
           Omitir por ahora
         </button>
       </div>

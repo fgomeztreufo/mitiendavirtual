@@ -68,33 +68,33 @@ export default function LeadsView({ onClose, userId }: Readonly<{ onClose?: () =
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-zinc-400 p-6 md:p-12 font-sans">
+    <div className="min-h-screen bg-white text-gray-500 p-6 md:p-12 font-sans">
       
       <div className="max-w-7xl mx-auto mb-10">
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tighter italic">
-              PIPELINE <span className="text-zinc-800 not-italic font-thin"> IA</span>
+            <h1 className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tighter italic">
+              PIPELINE <span className="text-gray-300 not-italic font-thin"> IA</span>
             </h1>
-            <p className="text-zinc-500 text-xs mt-2 uppercase tracking-widest font-bold">Gestión de Conversión Directa</p>
+            <p className="text-gray-500 text-xs mt-2 uppercase tracking-widest font-bold">Gestión de Conversión Directa</p>
           </div>
           {onClose && (
-            <button onClick={onClose} className="p-2 hover:bg-zinc-900 rounded-full transition-colors">
-              <FiX className="w-6 h-6 text-zinc-600" />
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <FiX className="w-6 h-6 text-gray-400" />
             </button>
           )}
         </div>
 
         {/* Barra de Filtros */}
-        <div className="flex flex-wrap gap-4 items-center bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/50 backdrop-blur-md">
-          <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-tighter">
+        <div className="flex flex-wrap gap-4 items-center bg-gray-50 p-4 rounded-2xl border border-gray-200">
+          <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-tighter">
             <FiFilter className="text-amber-500" /> Filtrar:
           </div>
           
           <select 
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-black border border-zinc-800 text-zinc-300 text-xs rounded-lg px-3 py-2 outline-none focus:border-amber-500/50"
+            className="bg-white border border-gray-200 text-gray-700 text-xs rounded-lg px-3 py-2 outline-none focus:border-indigo-500/50"
           >
             <option value="todos">Todos los estados</option>
             <option value="nuevo">Nuevos</option>
@@ -105,7 +105,7 @@ export default function LeadsView({ onClose, userId }: Readonly<{ onClose?: () =
           <select
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
-            className="bg-black border border-zinc-800 text-zinc-300 text-xs rounded-lg px-3 py-2 outline-none focus:border-amber-500/50"
+            className="bg-white border border-gray-200 text-gray-700 text-xs rounded-lg px-3 py-2 outline-none focus:border-indigo-500/50"
           >
             <option value={7}>Últimos 7 días</option>
             <option value={30}>Últimos 30 días</option>
@@ -116,7 +116,7 @@ export default function LeadsView({ onClose, userId }: Readonly<{ onClose?: () =
             <select
               value={filterBranch}
               onChange={(e) => setFilterBranch(e.target.value)}
-              className="bg-black border border-zinc-800 text-zinc-300 text-xs rounded-lg px-3 py-2 outline-none focus:border-teal-500/50"
+              className="bg-white border border-gray-200 text-gray-700 text-xs rounded-lg px-3 py-2 outline-none focus:border-indigo-500/50"
             >
               <option value="all">Todas las sucursales</option>
               {branches.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -128,29 +128,29 @@ export default function LeadsView({ onClose, userId }: Readonly<{ onClose?: () =
       </div>
 
       <div className="max-w-7xl mx-auto">
-        <div className="bg-zinc-900/20 border border-zinc-800/40 rounded-[32px] overflow-hidden overflow-x-auto">
+        <div className="bg-white border border-gray-200 shadow-sm rounded-[32px] overflow-hidden overflow-x-auto">
           <table className="w-full text-left min-w-[600px]">
             <thead>
-              <tr className="bg-zinc-900/60 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">
-                <th className="px-4 sm:px-8 py-4 sm:py-5 border-b border-zinc-800/50">Cliente</th>
-                <th className="px-4 sm:px-8 py-4 sm:py-5 border-b border-zinc-800/50">Intención</th>
-                <th className="px-4 sm:px-8 py-4 sm:py-5 border-b border-zinc-800/50 text-center">Estado</th>
-                <th className="px-4 sm:px-8 py-4 sm:py-5 border-b border-zinc-800/50 text-right">Valor Est.</th>
+              <tr className="bg-gray-50 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                <th className="px-4 sm:px-8 py-4 sm:py-5 border-b border-gray-200">Cliente</th>
+                <th className="px-4 sm:px-8 py-4 sm:py-5 border-b border-gray-200">Intención</th>
+                <th className="px-4 sm:px-8 py-4 sm:py-5 border-b border-gray-200 text-center">Estado</th>
+                <th className="px-4 sm:px-8 py-4 sm:py-5 border-b border-gray-200 text-right">Valor Est.</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800/30">
+            <tbody className="divide-y divide-gray-100">
               {leads.map((lead) => {
-                let statusClass = 'bg-zinc-800 border-zinc-700 text-zinc-400';
+                let statusClass = 'bg-gray-100 border-gray-200 text-gray-500';
                 if (lead.status === 'nuevo') {
-                  statusClass = 'bg-amber-500/10 border-amber-500/30 text-amber-500';
+                  statusClass = 'bg-amber-50 border-amber-200 text-amber-600';
                 } else if (lead.status === 'completado') {
-                  statusClass = 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500';
+                  statusClass = 'bg-emerald-50 border-emerald-200 text-emerald-600';
                 }
 
                 return (
-                <tr key={lead.id} className="group hover:bg-white/[0.01] transition-all">
+                <tr key={lead.id} className="group hover:bg-gray-50 transition-all">
                   <td className="px-4 sm:px-8 py-4 sm:py-6">
-                    <div className="text-zinc-100 font-bold text-base flex items-center gap-2">
+                    <div className="text-gray-900 font-bold text-base flex items-center gap-2">
                       {lead.cliente_nombre || 'Prospecto sin nombre'}
                       <a 
                         href={`https://wa.me/${lead.whatsapp_contacto?.replace(/\D/g,'')}`} 
@@ -161,14 +161,14 @@ export default function LeadsView({ onClose, userId }: Readonly<{ onClose?: () =
                         <FiExternalLink />
                       </a>
                     </div>
-                    <div className="text-zinc-600 text-[10px] font-mono mt-1 italic">{lead.whatsapp_contacto || 'Sin contacto'}</div>
+                    <div className="text-gray-400 text-[10px] font-mono mt-1 italic">{lead.whatsapp_contacto || 'Sin contacto'}</div>
                   </td>
                   
                   <td className="px-4 sm:px-8 py-4 sm:py-6">
-                    <div className="text-amber-500/90 text-sm font-semibold tracking-tight">
+                    <div className="text-amber-600 text-sm font-semibold tracking-tight">
                       {lead.intencion_compra || 'Interés general'}
                     </div>
-                    <div className="text-zinc-500 text-[11px] font-light italic line-clamp-1">
+                    <div className="text-gray-400 text-[11px] font-light italic line-clamp-1">
                       {lead.resumen_chat ? `"${lead.resumen_chat}"` : 'Sin resumen'}
                     </div>
                   </td>
@@ -185,9 +185,9 @@ export default function LeadsView({ onClose, userId }: Readonly<{ onClose?: () =
                     </select>
                   </td>
 
-                  <td className="px-4 sm:px-8 py-4 sm:py-6 text-right font-mono text-white text-sm">
+                  <td className="px-4 sm:px-8 py-4 sm:py-6 text-right font-mono text-gray-900 text-sm">
                     ${Number(lead.valor_estimado || 0).toLocaleString('es-CL')}
-                    <div className="text-[9px] text-zinc-700 font-bold mt-1">
+                    <div className="text-[9px] text-gray-400 font-bold mt-1">
                       {new Date(lead.created_at).toLocaleDateString()}
                     </div>
                   </td>
@@ -199,8 +199,8 @@ export default function LeadsView({ onClose, userId }: Readonly<{ onClose?: () =
           
           {!loading && leads.length === 0 && (
             <div className="py-24 text-center">
-              <div className="text-zinc-800 font-black text-6xl mb-4 italic opacity-20">NO DATA</div>
-              <p className="text-zinc-600 text-xs font-bold uppercase tracking-[0.3em]">
+              <div className="text-gray-200 font-black text-6xl mb-4 italic opacity-20">NO DATA</div>
+              <p className="text-gray-400 text-xs font-bold uppercase tracking-[0.3em]">
                 Esperando capturas del Cosechador de Oro
               </p>
             </div>

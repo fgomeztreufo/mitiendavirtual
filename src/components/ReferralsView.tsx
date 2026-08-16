@@ -88,9 +88,9 @@ export default function ReferralsView({ session }: { session: Session }) {
   }
 
   const statusLabel: Record<string, { text: string; color: string }> = {
-    pending: { text: 'Pendiente', color: 'text-amber-400' },
-    activated: { text: 'Activado', color: 'text-emerald-400' },
-    credited: { text: 'Acreditado', color: 'text-emerald-400' },
+    pending: { text: 'Pendiente', color: 'text-amber-600' },
+    activated: { text: 'Activado', color: 'text-emerald-600' },
+    credited: { text: 'Acreditado', color: 'text-emerald-600' },
   }
 
   if (loading) {
@@ -109,9 +109,9 @@ export default function ReferralsView({ session }: { session: Session }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <h2 className="text-xl font-bold text-white">Programa de Referidos</h2>
-        <p className="text-sm text-gray-400 mt-1">
-          Invita a otros emprendedores a vender con IA y ambos ganan <span className="text-indigo-400 font-semibold">150 créditos IA</span> gratis
+        <h2 className="text-xl font-bold text-gray-900">Programa de Referidos</h2>
+        <p className="text-sm text-gray-500 mt-1">
+          Invita a otros emprendedores a vender con IA y ambos ganan <span className="text-indigo-600 font-semibold">150 créditos IA</span> gratis
         </p>
       </motion.div>
 
@@ -120,19 +120,19 @@ export default function ReferralsView({ session }: { session: Session }) {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="bg-gradient-to-br from-indigo-600/10 via-purple-600/5 to-transparent border border-indigo-500/20 rounded-2xl p-6"
+        className="bg-gradient-to-br from-indigo-50 via-purple-50/50 to-transparent border border-indigo-200 rounded-2xl p-6"
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex-1 min-w-0">
             <p className="text-xs text-gray-400 mb-1">Tu código de referido</p>
-            <p className="text-2xl font-black text-white tracking-widest font-mono">
+            <p className="text-2xl font-black text-gray-900 tracking-widest font-mono">
               {stats?.referral_code || '---'}
             </p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
             <button
               onClick={copyLink}
-              className="flex-1 sm:flex-initial px-4 py-2.5 text-sm font-semibold rounded-xl border border-indigo-500/30 bg-indigo-600/10 text-indigo-300 hover:bg-indigo-600/20 transition-all flex items-center justify-center gap-2"
+              className="flex-1 sm:flex-initial px-4 py-2.5 text-sm font-semibold rounded-xl border border-indigo-300 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all flex items-center justify-center gap-2"
             >
               {copied ? (
                 <>
@@ -156,7 +156,7 @@ export default function ReferralsView({ session }: { session: Session }) {
           </div>
         </div>
 
-        <div className="mt-4 p-3 rounded-xl bg-black/30 border border-white/5">
+        <div className="mt-4 p-3 rounded-xl bg-gray-50 border border-gray-200">
           <p className="text-xs text-gray-500 font-mono break-all">{shareUrl}</p>
         </div>
       </motion.div>
@@ -169,9 +169,9 @@ export default function ReferralsView({ session }: { session: Session }) {
         className="grid grid-cols-2 sm:grid-cols-4 gap-3"
       >
         <StatCard label="Referidos totales" value={stats?.total ?? 0} />
-        <StatCard label="Activados" value={stats?.activated ?? 0} color="text-emerald-400" />
-        <StatCard label="Créditos ganados" value={stats?.credits_earned ?? 0} color="text-indigo-400" />
-        <StatCard label="Disponibles este mes" value={stats?.monthly_remaining ?? 10} color="text-amber-400" />
+        <StatCard label="Activados" value={stats?.activated ?? 0} color="text-emerald-600" />
+        <StatCard label="Créditos ganados" value={stats?.credits_earned ?? 0} color="text-indigo-600" />
+        <StatCard label="Disponibles este mes" value={stats?.monthly_remaining ?? 10} color="text-amber-600" />
       </motion.div>
 
       {/* Progress bar */}
@@ -179,15 +179,15 @@ export default function ReferralsView({ session }: { session: Session }) {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.25 }}
-        className="bg-white/[0.02] border border-white/5 rounded-2xl p-5"
+        className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5"
       >
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-bold text-white">Créditos por referidos este mes</h3>
-          <span className="text-xs text-gray-400">
+          <h3 className="text-sm font-bold text-gray-900">Créditos por referidos este mes</h3>
+          <span className="text-xs text-gray-500">
             {(stats?.monthly_credits_earned ?? 0).toLocaleString('es-CL')} / {(stats?.monthly_credits_cap ?? 1500).toLocaleString('es-CL')}
           </span>
         </div>
-        <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden">
+        <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(100, ((stats?.monthly_credits_earned ?? 0) / (stats?.monthly_credits_cap ?? 1500)) * 100)}%` }}
@@ -210,9 +210,9 @@ export default function ReferralsView({ session }: { session: Session }) {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.3 }}
-        className="bg-white/[0.02] border border-white/5 rounded-2xl p-5"
+        className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5"
       >
-        <h3 className="text-sm font-bold text-white mb-3">Cómo funciona</h3>
+        <h3 className="text-sm font-bold text-gray-900 mb-3">Cómo funciona</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StepCard
             step="1"
@@ -241,18 +241,18 @@ export default function ReferralsView({ session }: { session: Session }) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.4 }}
-          className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden"
+          className="bg-white border border-gray-200 shadow-sm rounded-2xl overflow-hidden"
         >
-          <div className="p-4 border-b border-white/5">
-            <h3 className="text-sm font-bold text-white">Tus referidos</h3>
+          <div className="p-4 border-b border-gray-100">
+            <h3 className="text-sm font-bold text-gray-900">Tus referidos</h3>
           </div>
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-gray-100">
             {referrals.map((ref) => {
               const st = statusLabel[ref.status] || statusLabel.pending
               return (
                 <div key={ref.id} className="px-4 py-3 flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-300">
+                    <p className="text-sm text-gray-700">
                       Referido #{ref.id.slice(0, 8)}
                     </p>
                     <p className="text-xs text-gray-500">
@@ -275,9 +275,9 @@ export default function ReferralsView({ session }: { session: Session }) {
   )
 }
 
-function StatCard({ label, value, color = 'text-white' }: { label: string; value: number; color?: string }) {
+function StatCard({ label, value, color = 'text-gray-900' }: { label: string; value: number; color?: string }) {
   return (
-    <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 text-center">
+    <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-4 text-center">
       <p className={`text-2xl font-bold ${color}`}>{value.toLocaleString('es-CL')}</p>
       <p className="text-[11px] text-gray-500 mt-1">{label}</p>
     </div>
@@ -287,12 +287,12 @@ function StatCard({ label, value, color = 'text-white' }: { label: string; value
 function StepCard({ step, title, desc }: { step: string; title: string; desc: string }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="w-7 h-7 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center flex-shrink-0">
-        <span className="text-xs font-bold text-indigo-400">{step}</span>
+      <div className="w-7 h-7 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center flex-shrink-0">
+        <span className="text-xs font-bold text-indigo-600">{step}</span>
       </div>
       <div>
-        <p className="text-sm font-semibold text-white">{title}</p>
-        <p className="text-xs text-gray-400">{desc}</p>
+        <p className="text-sm font-semibold text-gray-900">{title}</p>
+        <p className="text-xs text-gray-500">{desc}</p>
       </div>
     </div>
   )

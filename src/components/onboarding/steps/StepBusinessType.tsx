@@ -48,7 +48,7 @@ export default function StepBusinessType({ profile, onNext, onBack }: StepBusine
       exit={{ opacity: 0, x: -40 }}
       className="flex flex-col items-center justify-center min-h-[70vh] px-6 max-w-lg mx-auto"
     >
-      <h2 className="text-2xl font-black text-white mb-2 text-center">
+      <h2 className="text-2xl font-black text-gray-900 mb-2 text-center">
         Que tipo de negocio tienes?
       </h2>
       <p className="text-gray-500 text-sm mb-8 text-center">
@@ -63,17 +63,17 @@ export default function StepBusinessType({ profile, onNext, onBack }: StepBusine
             className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all text-left ${
               selected === key
                 ? 'bg-indigo-500/10 border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.15)]'
-                : 'bg-white/[0.03] border-white/5 hover:border-white/10'
+                : 'bg-white border-gray-200 hover:border-gray-300 shadow-sm'
             }`}
           >
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-              selected === key ? 'bg-indigo-500/20' : 'bg-white/5'
+              selected === key ? 'bg-indigo-500/20' : 'bg-gray-100'
             }`}>
               <svg className={`w-5 h-5 ${selected === key ? 'text-indigo-400' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d={ICONS[key] || ICONS.ecommerce} />
               </svg>
             </div>
-            <span className={`text-sm font-semibold ${selected === key ? 'text-white' : 'text-gray-400'}`}>
+            <span className={`text-sm font-semibold ${selected === key ? 'text-gray-900' : 'text-gray-600'}`}>
               {label}
             </span>
             {selected === key && (
@@ -93,7 +93,7 @@ export default function StepBusinessType({ profile, onNext, onBack }: StepBusine
         {saving ? 'Guardando...' : 'Continuar'}
       </button>
 
-      <button onClick={onBack} className="mt-4 text-xs text-gray-600 hover:text-gray-400 transition-colors">
+      <button onClick={onBack} className="mt-4 text-xs text-gray-500 hover:text-gray-700 transition-colors">
         Volver
       </button>
     </motion.div>

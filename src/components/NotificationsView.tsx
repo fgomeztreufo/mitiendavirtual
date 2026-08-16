@@ -51,8 +51,7 @@ export default function NotificationsView({ session, profile }: any) {
           icon: 'warning',
           title: 'No soportado',
           text: 'Tu navegador no soporta notificaciones push. Prueba con Chrome, Edge o Firefox.',
-          background: '#111827',
-          color: '#fff',
+
         });
         return;
       }
@@ -65,8 +64,6 @@ export default function NotificationsView({ session, profile }: any) {
             icon: 'success',
             title: 'Push desactivado',
             text: 'Ya no recibirás notificaciones push.',
-            background: '#111827',
-            color: '#fff',
             timer: 2000,
             showConfirmButton: false,
           });
@@ -94,8 +91,7 @@ export default function NotificationsView({ session, profile }: any) {
           icon: 'success',
           title: 'Push activado',
           text: 'Recibirás alertas de ventas e inventario en este dispositivo.',
-          background: '#111827',
-          color: '#fff',
+
           timer: 2500,
           showConfirmButton: false,
         });
@@ -103,9 +99,8 @@ export default function NotificationsView({ session, profile }: any) {
         Swal.fire({
           icon: 'error',
           title: 'Permiso denegado',
-          html: 'Debes habilitar las notificaciones en la configuración de tu navegador.<br/><br/><span class="text-xs text-gray-400">Chrome: Candado en la barra de URL → Notificaciones → Permitir</span>',
-          background: '#111827',
-          color: '#fff',
+          html: 'Debes habilitar las notificaciones en la configuración de tu navegador.<br/><br/><span class="text-xs text-gray-500">Chrome: Candado en la barra de URL → Notificaciones → Permitir</span>',
+
         });
       }
       return;
@@ -171,7 +166,7 @@ export default function NotificationsView({ session, profile }: any) {
           title: 'Vincular Telegram',
           html: `
             <div class="p-2 text-center">
-              <p class="text-sm text-gray-400 mb-4">Toca el botón para abrir Telegram y vincula tu cuenta con nuestro bot.</p>
+              <p class="text-sm text-gray-500 mb-4">Toca el botón para abrir Telegram y vincula tu cuenta con nuestro bot.</p>
               <a href="${deepLink}" target="_blank" rel="noopener noreferrer"
                 style="text-decoration:none;color:white;background:#2AABEE;border-radius:12px;padding:12px 24px;display:inline-block;font-weight:600;">
                 Abrir en Telegram
@@ -241,8 +236,6 @@ export default function NotificationsView({ session, profile }: any) {
             icon: 'success',
             title: 'WhatsApp desactivado',
             text: 'Ya no recibirás alertas por WhatsApp.',
-            background: '#111827',
-            color: '#fff',
             timer: 2000,
             showConfirmButton: false,
           });
@@ -262,8 +255,6 @@ export default function NotificationsView({ session, profile }: any) {
             icon: 'success',
             title: 'WhatsApp activado',
             text: `Alertas se enviarán a ${config?.config?.owner_phone}`,
-            background: '#111827',
-            color: '#fff',
             timer: 2000,
             showConfirmButton: false,
           });
@@ -273,7 +264,7 @@ export default function NotificationsView({ session, profile }: any) {
 
       const { value: phone } = await Swal.fire({
         title: 'Configurar WhatsApp',
-        html: '<p class="text-sm text-gray-400 mb-2">Ingresa tu número de WhatsApp personal donde recibirás las alertas de ventas.</p>',
+        html: '<p class="text-sm text-gray-500 mb-2">Ingresa tu número de WhatsApp personal donde recibirás las alertas de ventas.</p>',
         input: 'tel',
         inputPlaceholder: '+56 9 1234 5678',
         inputAttributes: { autocomplete: 'tel' },
@@ -281,8 +272,6 @@ export default function NotificationsView({ session, profile }: any) {
         confirmButtonText: 'Activar',
         confirmButtonColor: '#10B981',
         cancelButtonText: 'Cancelar',
-        background: '#111827',
-        color: '#fff',
         inputValidator: (value) => {
           const cleaned = value.replace(/[\s\-()]/g, '');
           if (!cleaned || cleaned.length < 8) return 'Ingresa un número válido';
@@ -308,8 +297,7 @@ export default function NotificationsView({ session, profile }: any) {
           icon: 'success',
           title: 'WhatsApp activado',
           text: `Recibirás alertas en ${cleanPhone}`,
-          background: '#111827',
-          color: '#fff',
+
           timer: 2500,
           showConfirmButton: false,
         });
@@ -335,32 +323,32 @@ export default function NotificationsView({ session, profile }: any) {
       label: 'Email',
       description: 'Recibe alertas en tu correo electrónico',
       icon: '📧',
-      color: 'border-blue-800',
+      color: 'border-blue-200',
     },
     telegram: {
       label: 'Telegram',
       description: 'Alertas instantáneas en tu Telegram personal',
       icon: '📱',
-      color: 'border-sky-800',
+      color: 'border-sky-200',
     },
     push: {
       label: 'Push Navegador',
       description: 'Notificaciones directas en tu celular o computador',
       icon: '🔔',
-      color: 'border-amber-800',
+      color: 'border-amber-200',
     },
     whatsapp: {
       label: 'WhatsApp',
       description: 'Recibe alertas de ventas en tu WhatsApp personal',
       icon: '💬',
-      color: 'border-green-800',
+      color: 'border-green-200',
     },
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 p-4">
-      <h2 className="text-2xl font-bold text-white">Notificaciones</h2>
-      <p className="text-gray-400 text-sm">Gestiona cómo recibes las alertas de ventas e inventario.</p>
+      <h2 className="text-2xl font-bold text-gray-900">Notificaciones</h2>
+      <p className="text-gray-500 text-sm">Gestiona cómo recibes las alertas de ventas e inventario.</p>
 
       <div className="grid gap-4">
         {['email', 'telegram', 'push', 'whatsapp'].map((channel) => {
@@ -386,7 +374,7 @@ export default function NotificationsView({ session, profile }: any) {
           return (
             <div
               key={channel}
-              className={`p-5 rounded-2xl border bg-gray-900 transition-all ${
+              className={`p-5 rounded-2xl border bg-white shadow-sm transition-all ${
                 meta.color
               }`}
             >
@@ -395,36 +383,36 @@ export default function NotificationsView({ session, profile }: any) {
                   <span className="text-xl">{meta.icon}</span>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-white font-medium">{meta.label}</span>
+                      <span className="text-gray-900 font-medium">{meta.label}</span>
                       {channel === 'telegram' && (
                         connected ? (
-                          <span className="text-[10px] bg-green-900/30 text-green-400 px-2 py-0.5 rounded-full border border-green-800">
+                          <span className="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full border border-green-200">
                             Conectado
                           </span>
                         ) : (
-                          <span className="text-[10px] bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full border border-gray-700 cursor-pointer"
+                          <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full border border-gray-200 cursor-pointer"
                             onClick={() => toggleChannel(channel, active)}>
                             Vincular
                           </span>
                         )
                       )}
                       {channel === 'push' && connected && (
-                        <span className="text-[10px] bg-amber-900/30 text-amber-400 px-2 py-0.5 rounded-full border border-amber-800">
+                        <span className="text-[10px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full border border-amber-200">
                           {deviceCount > 1 ? `${deviceCount} dispositivos` : 'Activado'}
                         </span>
                       )}
                       {channel === 'push' && !push.supported && (
-                        <span className="text-[10px] bg-red-900/30 text-red-400 px-2 py-0.5 rounded-full border border-red-800">
+                        <span className="text-[10px] bg-red-50 text-red-500 px-2 py-0.5 rounded-full border border-red-200">
                           No soportado
                         </span>
                       )}
                       {channel === 'whatsapp' && connected && (
-                        <span className="text-[10px] bg-green-900/30 text-green-400 px-2 py-0.5 rounded-full border border-green-800">
+                        <span className="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full border border-green-200">
                           Conectado
                         </span>
                       )}
                       {channel === 'whatsapp' && !connected && (
-                        <span className="text-[10px] bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full border border-gray-700 cursor-pointer"
+                        <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full border border-gray-200 cursor-pointer"
                           onClick={() => toggleChannel(channel, active)}>
                           Configurar
                         </span>
@@ -436,7 +424,7 @@ export default function NotificationsView({ session, profile }: any) {
                 <div
                   onClick={() => toggleChannel(channel, active)}
                   className={`h-6 w-11 rounded-full relative transition-colors cursor-pointer shrink-0 ${
-                    toggleOn ? 'bg-green-600' : 'bg-gray-700'
+                    toggleOn ? 'bg-green-600' : 'bg-gray-300'
                   }`}
                 >
                   <span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${

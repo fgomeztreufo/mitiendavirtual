@@ -95,7 +95,7 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
         </svg>
       </div>
 
-      <h2 className="text-2xl font-black text-white mb-2 text-center">
+      <h2 className="text-2xl font-black text-gray-900 mb-2 text-center">
         Carga tus productos
       </h2>
       <p className="text-gray-500 text-sm mb-6 text-center">
@@ -108,10 +108,10 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
             <svg className="w-8 h-8 text-emerald-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-sm font-bold text-emerald-300">
+            <p className="text-sm font-bold text-emerald-600">
               {scanDone ? 'Productos cargados desde Instagram' : 'Producto subido'}
             </p>
-            <p className="text-xs text-emerald-400/60 mt-1">Tu bot los aprendera en los proximos minutos.</p>
+            <p className="text-xs text-emerald-600 mt-1">Tu bot los aprendera en los proximos minutos.</p>
           </div>
           <button
             onClick={onNext}
@@ -125,7 +125,7 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
           {/* Opción 1: Manual */}
           <button
             onClick={() => setMode('manual')}
-            className="w-full p-5 rounded-2xl border border-gray-800 bg-gray-900/50 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all text-left group"
+            className="w-full p-5 rounded-2xl border border-gray-200 bg-white hover:border-amber-400 hover:bg-amber-50 shadow-sm transition-all text-left group"
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center flex-shrink-0">
@@ -134,7 +134,7 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
                 </svg>
               </div>
               <div>
-                <p className="text-white font-bold text-sm group-hover:text-amber-300 transition-colors">1 producto de prueba</p>
+                <p className="text-gray-900 font-bold text-sm group-hover:text-amber-600 transition-colors">1 producto de prueba</p>
                 <p className="text-gray-500 text-xs mt-0.5">Sube un producto manualmente con foto</p>
               </div>
             </div>
@@ -147,8 +147,8 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
             disabled={!showScanOption}
             className={`w-full p-5 rounded-2xl border transition-all text-left group ${
               showScanOption
-                ? 'border-gray-800 bg-gray-900/50 hover:border-pink-500/50 hover:bg-pink-500/5'
-                : 'border-gray-800/50 bg-gray-900/30 opacity-50 cursor-not-allowed'
+                ? 'border-gray-200 bg-white hover:border-pink-400 hover:bg-pink-50 shadow-sm'
+                : 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
             }`}
           >
             <div className="flex items-center gap-4">
@@ -156,7 +156,7 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
                 <FaInstagram className="text-white text-xl" />
               </div>
               <div>
-                <p className="font-bold text-sm transition-colors text-white group-hover:text-pink-300">
+                <p className="font-bold text-sm transition-colors text-gray-900 group-hover:text-pink-600">
                   Escanear tu Instagram
                 </p>
                 <p className="text-gray-500 text-xs mt-0.5">
@@ -169,9 +169,9 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
         </div>
       ) : mode === 'scan' ? (
         <div className="w-full text-center space-y-4">
-          <div className="p-6 rounded-2xl bg-pink-500/5 border border-pink-500/20">
+          <div className="p-6 rounded-2xl bg-pink-50 border border-pink-200">
             <FaInstagram className="text-pink-500 text-3xl mx-auto mb-3" />
-            <p className="text-white text-sm font-bold mb-2">Escaneo de Instagram</p>
+            <p className="text-gray-900 text-sm font-bold mb-2">Escaneo de Instagram</p>
             <p className="text-gray-500 text-xs mb-4">
               Podrás escanear y seleccionar productos desde tu Instagram en el Dashboard.
             </p>
@@ -182,7 +182,7 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
               Continuar al Dashboard para escanear
             </button>
           </div>
-          <button onClick={() => setMode('choose')} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+          <button onClick={() => setMode('choose')} className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
             Volver a elegir
           </button>
         </div>
@@ -196,7 +196,7 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Ej: Polera negra premium"
-              className="w-full bg-black border border-gray-800 p-3.5 rounded-xl text-white text-sm outline-none focus:border-amber-500 transition-all"
+              className="w-full bg-gray-50 border border-gray-200 p-3.5 rounded-xl text-gray-900 text-sm outline-none focus:border-indigo-500 transition-all"
             />
           </div>
 
@@ -209,7 +209,7 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
               value={price}
               onChange={e => setPrice(e.target.value)}
               placeholder="Ej: 15990"
-              className="w-full bg-black border border-gray-800 p-3.5 rounded-xl text-white text-sm outline-none focus:border-amber-500 transition-all"
+              className="w-full bg-gray-50 border border-gray-200 p-3.5 rounded-xl text-gray-900 text-sm outline-none focus:border-indigo-500 transition-all"
             />
           </div>
 
@@ -222,7 +222,7 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
               onChange={e => setDescription(e.target.value)}
               placeholder="Ej: Algodon 100%, tallas S a XL"
               rows={2}
-              className="w-full bg-black border border-gray-800 p-3.5 rounded-xl text-white text-sm outline-none focus:border-amber-500 transition-all resize-none"
+              className="w-full bg-gray-50 border border-gray-200 p-3.5 rounded-xl text-gray-900 text-sm outline-none focus:border-indigo-500 transition-all resize-none"
             />
           </div>
 
@@ -231,17 +231,17 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
               Foto del producto
             </label>
             {previewUrl ? (
-              <div className="relative w-full h-40 rounded-xl overflow-hidden border border-white/10">
+              <div className="relative w-full h-40 rounded-xl overflow-hidden border border-gray-200">
                 <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                 <button
                   onClick={() => { setFile(null); if (previewUrl) URL.revokeObjectURL(previewUrl); setPreviewUrl(null) }}
-                  className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/70 text-white text-xs flex items-center justify-center hover:bg-red-500 transition-colors"
+                  className="absolute top-2 right-2 w-6 h-6 rounded-full bg-gray-100/90 text-gray-600 text-xs flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
                 >
                   X
                 </button>
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center w-full h-32 rounded-xl border-2 border-dashed border-gray-800 hover:border-gray-600 cursor-pointer transition-colors">
+              <label className="flex flex-col items-center justify-center w-full h-32 rounded-xl border-2 border-dashed border-gray-300 hover:border-gray-400 cursor-pointer transition-colors">
                 <svg className="w-8 h-8 text-gray-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a2.25 2.25 0 002.25-2.25V5.25a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v13.5a2.25 2.25 0 002.25 2.25z" />
                 </svg>
@@ -267,17 +267,17 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
 
       <div className="flex gap-4 mt-4">
         {mode !== 'choose' && !uploaded && !scanDone && (
-          <button onClick={() => setMode('choose')} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+          <button onClick={() => setMode('choose')} className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
             Volver
           </button>
         )}
         {mode === 'choose' && (
-          <button onClick={onBack} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+          <button onClick={onBack} className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
             Volver
           </button>
         )}
         {!uploaded && !scanDone && (
-          <button onClick={onSkip} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+          <button onClick={onSkip} className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
             Omitir por ahora
           </button>
         )}

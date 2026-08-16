@@ -41,16 +41,16 @@ export default function StepDone({ instance, completedSteps, onFinish }: StepDon
         </svg>
       </div>
 
-      <h2 className="text-3xl font-black text-white mb-3">
+      <h2 className="text-3xl font-black text-gray-900 mb-3">
         Todo listo!
       </h2>
-      <p className="text-gray-400 text-base mb-8">
+      <p className="text-gray-500 text-base mb-8">
         Tu asistente IA esta configurado y listo para empezar a vender.
       </p>
 
       <div className="w-full max-w-xs space-y-2 mb-8">
         {items.map(item => (
-          <div key={item.label} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5">
+          <div key={item.label} className="flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200">
             {item.done ? (
               <svg className="w-5 h-5 text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
@@ -60,7 +60,7 @@ export default function StepDone({ instance, completedSteps, onFinish }: StepDon
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
             )}
-            <span className={`text-sm ${item.done ? 'text-white' : 'text-gray-500'}`}>{item.label}</span>
+            <span className={`text-sm ${item.done ? 'text-gray-900' : 'text-gray-500'}`}>{item.label}</span>
           </div>
         ))}
       </div>

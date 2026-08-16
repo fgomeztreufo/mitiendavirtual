@@ -144,8 +144,6 @@ export default function AgentPersonalitySection({ instanceId, channel, channelCo
         icon: 'success',
         title: 'Personalidad guardada',
         text: `Tu agente de ${CHANNEL_LABELS[channel]} usará esta configuración en los próximos mensajes.`,
-        background: '#111827',
-        color: '#fff',
         timer: 2500,
         showConfirmButton: false,
       })
@@ -158,9 +156,9 @@ export default function AgentPersonalitySection({ instanceId, channel, channelCo
 
   if (loading) {
     return (
-      <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-6">
+      <div className="rounded-2xl bg-white border border-gray-200 p-6 shadow-sm">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
           <span className="text-xs text-gray-500">Cargando personalidad...</span>
         </div>
       </div>
@@ -168,12 +166,12 @@ export default function AgentPersonalitySection({ instanceId, channel, channelCo
   }
 
   return (
-    <div className="rounded-2xl bg-white/[0.03] border border-white/5 overflow-hidden">
-      <div className={`px-6 py-4 border-b border-white/5 bg-gradient-to-r ${channelColor} bg-opacity-10`}>
-        <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+    <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden shadow-sm">
+      <div className={`px-6 py-4 border-b border-gray-100 bg-gradient-to-r ${channelColor}`}>
+        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
           Personalidad del Agente
         </h3>
-        <p className="text-[10px] text-gray-400 mt-0.5">
+        <p className="text-[10px] text-gray-500 mt-0.5">
           Configura cómo se comporta tu asistente IA en {CHANNEL_LABELS[channel]}
         </p>
       </div>
@@ -185,7 +183,7 @@ export default function AgentPersonalitySection({ instanceId, channel, channelCo
               Nombre del agente
             </label>
             <input
-              className="bg-black border border-gray-800 p-3 rounded-xl text-white text-sm outline-none focus:border-blue-500 transition-all"
+              className="bg-gray-50 border border-gray-200 p-3 rounded-xl text-gray-900 text-sm outline-none focus:border-indigo-500 transition-all"
               value={config.ai_name}
               onChange={e => setConfig({ ...config, ai_name: e.target.value })}
               placeholder="Ej: Sofía, Carlos, Asistente"
@@ -198,7 +196,7 @@ export default function AgentPersonalitySection({ instanceId, channel, channelCo
               Tono
             </label>
             <select
-              className="bg-black border border-gray-800 p-3 rounded-xl text-white text-sm outline-none focus:border-blue-500 transition-all appearance-none"
+              className="bg-gray-50 border border-gray-200 p-3 rounded-xl text-gray-900 text-sm outline-none focus:border-indigo-500 transition-all appearance-none"
               value={config.tone}
               onChange={e => setConfig({ ...config, tone: e.target.value })}
             >
@@ -214,13 +212,13 @@ export default function AgentPersonalitySection({ instanceId, channel, channelCo
             Saludo personalizado
           </label>
           <input
-            className="bg-black border border-gray-800 p-3 rounded-xl text-white text-sm outline-none focus:border-blue-500 transition-all"
+            className="bg-gray-50 border border-gray-200 p-3 rounded-xl text-gray-900 text-sm outline-none focus:border-indigo-500 transition-all"
             value={config.greeting}
             onChange={e => setConfig({ ...config, greeting: e.target.value })}
             placeholder="Ej: ¡Hola! Bienvenido a nuestra tienda, ¿en qué te puedo ayudar?"
             maxLength={300}
           />
-          <span className="text-[9px] text-gray-600 text-right">{config.greeting.length}/300</span>
+          <span className="text-[9px] text-gray-400 text-right">{config.greeting.length}/300</span>
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -228,13 +226,13 @@ export default function AgentPersonalitySection({ instanceId, channel, channelCo
             Reglas de negocio
           </label>
           <textarea
-            className="bg-black border border-gray-800 p-3 rounded-xl text-white text-sm outline-none focus:border-blue-500 transition-all h-24 resize-none"
+            className="bg-gray-50 border border-gray-200 p-3 rounded-xl text-gray-900 text-sm outline-none focus:border-indigo-500 transition-all h-24 resize-none"
             value={config.business_rules}
             onChange={e => setConfig({ ...config, business_rules: e.target.value })}
             placeholder={"Ej:\n- No ofrecer descuentos sin autorización\n- Siempre recomendar envío express\n- Responder solo en español"}
             maxLength={500}
           />
-          <span className="text-[9px] text-gray-600 text-right">{config.business_rules.length}/500</span>
+          <span className="text-[9px] text-gray-400 text-right">{config.business_rules.length}/500</span>
         </div>
 
         <button
@@ -242,8 +240,8 @@ export default function AgentPersonalitySection({ instanceId, channel, channelCo
           disabled={saving || !hasChanges}
           className={`w-full py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all ${
             hasChanges
-              ? 'bg-blue-600 hover:bg-blue-500 text-white hover:scale-[1.01]'
-              : 'bg-gray-800 text-gray-600 cursor-not-allowed'
+              ? 'bg-indigo-600 hover:bg-indigo-500 text-white hover:scale-[1.01]'
+              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
           }`}
         >
           {saving ? 'Guardando...' : hasChanges ? 'Guardar Personalidad' : 'Sin cambios'}

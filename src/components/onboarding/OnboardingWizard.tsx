@@ -88,10 +88,10 @@ export default function OnboardingWizard({ session, profile, instance, onComplet
   const progressIndex = progressSteps.indexOf(currentStep)
 
   return (
-    <div className="fixed inset-0 z-[60] bg-[#0a0a0a] overflow-y-auto">
+    <div className="fixed inset-0 z-[60] bg-white overflow-y-auto">
       {/* Progress bar */}
       {currentStep !== 'welcome' && currentStep !== 'done' && (
-        <div className="sticky top-0 z-10 bg-[#0a0a0a]/90 backdrop-blur-sm border-b border-white/5">
+        <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200">
           <div className="max-w-lg mx-auto px-6 py-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
@@ -99,7 +99,7 @@ export default function OnboardingWizard({ session, profile, instance, onComplet
               </span>
               <button
                 onClick={handleSkipAll}
-                className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors"
+                className="text-[10px] text-gray-500 hover:text-gray-700 transition-colors"
               >
                 Saltar todo
               </button>
@@ -111,7 +111,7 @@ export default function OnboardingWizard({ session, profile, instance, onComplet
                   className={`h-1 rounded-full flex-1 transition-all duration-500 ${
                     i <= progressIndex
                       ? 'bg-gradient-to-r from-indigo-500 to-purple-500'
-                      : 'bg-white/5'
+                      : 'bg-gray-200'
                   }`}
                 />
               ))}

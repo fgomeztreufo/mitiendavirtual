@@ -8,18 +8,18 @@ interface FooterProps {
 export default function Footer({ onNavigate, variant = 'transparent' }: FooterProps) {
   const bgStyles = {
     index: 'bg-transparent',
-    login: 'bg-[#0d0d1a]',
-    dashboard: 'bg-[#050505]',
+    login: 'bg-[#F8FAFC]',
+    dashboard: 'bg-[#F8FAFC]',
     transparent: 'bg-transparent'
   };
 
   return (
-    <footer className={`w-full ${bgStyles[variant]} text-gray-400 py-12 px-6 border-t border-white/10 transition-colors duration-500`}>
+    <footer className={`w-full ${bgStyles[variant]} text-gray-500 py-12 px-6 border-t border-gray-100 transition-colors duration-500`}>
       <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-left">
         
         {/* COLUMNA 1: Identidad Visual */}
         <div className="flex flex-col space-y-4">
-          <h3 className="text-white font-bold text-2xl tracking-tighter">
+          <h3 className="text-gray-900 font-bold text-2xl tracking-tighter">
             MiTienda<span className="text-blue-500">Virtual</span>
           </h3>
           <p className="text-xs text-gray-400 leading-relaxed max-w-[220px]">
@@ -35,17 +35,17 @@ export default function Footer({ onNavigate, variant = 'transparent' }: FooterPr
 
         {/* COLUMNA 2: Datos Legales (Crítico para Meta) */}
         <div className="space-y-4">
-          <h4 className="text-blue-400/80 font-semibold uppercase text-[10px] tracking-[0.3em]">
+          <h4 className="text-indigo-500 font-semibold uppercase text-[10px] tracking-[0.3em]">
             Datos del Titular
           </h4>
           <ul className="space-y-3 text-[13px]">
             <li className="flex flex-col">
               <span className="text-[10px] text-gray-500 uppercase tracking-wider">Representante</span>
-              <b className="text-gray-100">FELIPE ALONSO GOMEZ TREUFO</b>
+              <b className="text-gray-900">FELIPE ALONSO GOMEZ TREUFO</b>
             </li>
             <li className="flex flex-col">
               <span className="text-[10px] text-gray-500 uppercase tracking-wider">RUT</span>
-              <span className="text-gray-300">16.208.020-2</span>
+              <span className="text-gray-700">16.208.020-2</span>
             </li>
             <li className="flex flex-col">
               <span className="text-[10px] text-gray-500 uppercase tracking-wider">Domicilio Comercial</span>
@@ -61,12 +61,12 @@ export default function Footer({ onNavigate, variant = 'transparent' }: FooterPr
           </h4>
           <ul className="space-y-3 text-sm flex flex-col md:items-end">
             <li>
-              <button onClick={() => onNavigate('terms')} className="text-gray-300 hover:text-white transition-colors">
+              <button onClick={() => onNavigate('terms')} className="text-gray-600 hover:text-gray-900 transition-colors">
                 Términos de Servicio
               </button>
             </li>
             <li>
-              <button onClick={() => onNavigate('privacy')} className="text-gray-300 hover:text-white transition-colors">
+              <button onClick={() => onNavigate('privacy')} className="text-gray-600 hover:text-gray-900 transition-colors">
                 Privacidad
               </button>
             </li>
@@ -74,7 +74,7 @@ export default function Footer({ onNavigate, variant = 'transparent' }: FooterPr
             <li>
               <button 
                 onClick={() => onNavigate('data-deletion')} 
-                className="text-red-500/70 hover:text-red-400 text-[11px] uppercase tracking-tighter font-bold border-b border-red-900/30 pb-0.5 transition-all"
+                className="text-red-500 hover:text-red-600 text-[11px] uppercase tracking-tighter font-bold border-b border-red-200 pb-0.5 transition-all"
               >
                 Eliminación de Datos
               </button>
@@ -82,7 +82,7 @@ export default function Footer({ onNavigate, variant = 'transparent' }: FooterPr
             <li className="pt-2">
               <button 
                 onClick={() => onNavigate('support')} 
-                className="text-blue-400 font-bold text-xs uppercase tracking-widest hover:text-blue-300"
+                className="text-indigo-600 font-bold text-xs uppercase tracking-widest hover:text-indigo-500"
               >
                 Centro de Ayuda
               </button>
@@ -91,12 +91,12 @@ export default function Footer({ onNavigate, variant = 'transparent' }: FooterPr
         </div>
       </div>
 
-      <div className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="mt-16 pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
         <p className="text-xs text-gray-500 tracking-[0.4em] uppercase font-mono">
           © 2026 MiTiendaVirtual • Santiago, CL
         </p>
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[10px] text-gray-400">
-          <FaMeta className="text-blue-400 text-sm" /> Meta Partner
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-gray-200 bg-gray-50 text-[10px] text-gray-500">
+          <FaMeta className="text-blue-600 text-sm" /> Meta Partner
         </div>
       </div>
     </footer>

@@ -139,19 +139,19 @@ export default function ContabilidadView({ session }: ContabilidadViewProps) {
   const years = Array.from({ length: 3 }, (_, i) => now.getFullYear() - i)
 
   return (
-    <div className="min-h-screen bg-[#050505] text-zinc-400 p-6 md:p-12 font-sans">
+    <div className="min-h-screen bg-white text-gray-500 p-6 md:p-12 font-sans">
       <div className="max-w-7xl mx-auto mb-10">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tighter italic">
-              CONTABILIDAD <span className="text-zinc-800 not-italic font-thin">F29</span>
+            <h1 className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tighter italic">
+              CONTABILIDAD <span className="text-gray-300 not-italic font-thin">F29</span>
             </h1>
-            <p className="text-zinc-500 text-xs mt-2 uppercase tracking-widest font-bold">Resumen Mensual de Ingresos</p>
+            <p className="text-gray-500 text-xs mt-2 uppercase tracking-widest font-bold">Resumen Mensual de Ingresos</p>
           </div>
           <button
             onClick={downloadCSV}
             disabled={payments.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white text-sm font-bold rounded-xl transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-100 disabled:text-gray-400 text-white text-sm font-bold rounded-xl transition-all"
           >
             <FiDownload className="w-4 h-4" />
             Descargar CSV
@@ -159,14 +159,14 @@ export default function ContabilidadView({ session }: ContabilidadViewProps) {
         </div>
 
         {/* Selector de período */}
-        <div className="flex flex-wrap gap-4 items-center bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/50 backdrop-blur-md mb-8">
-          <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-tighter">
+        <div className="flex flex-wrap gap-4 items-center bg-gray-50 p-4 rounded-2xl border border-gray-200 mb-8">
+          <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-tighter">
             <FiCalendar className="text-emerald-500" /> Período:
           </div>
           <select
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
-            className="bg-black border border-zinc-800 text-zinc-300 text-xs rounded-lg px-3 py-2 outline-none focus:border-emerald-500/50"
+            className="bg-white border border-gray-200 text-gray-700 text-xs rounded-lg px-3 py-2 outline-none focus:border-emerald-500"
           >
             {MONTHS.map((m, i) => (
               <option key={i} value={i}>{m}</option>
@@ -175,7 +175,7 @@ export default function ContabilidadView({ session }: ContabilidadViewProps) {
           <select
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
-            className="bg-black border border-zinc-800 text-zinc-300 text-xs rounded-lg px-3 py-2 outline-none focus:border-emerald-500/50"
+            className="bg-white border border-gray-200 text-gray-700 text-xs rounded-lg px-3 py-2 outline-none focus:border-emerald-500"
           >
             {years.map(y => (
               <option key={y} value={y}>{y}</option>
@@ -186,8 +186,8 @@ export default function ContabilidadView({ session }: ContabilidadViewProps) {
 
         {/* Tarjetas resumen */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 mb-8">
-          <SummaryCard label="Ventas Brutas" value={formatCLP(totalBruto)} sub="con IVA (neto)" color="text-white" />
-          <SummaryCard label="Ventas Netas" value={formatCLP(totalNeto)} sub="sin IVA" color="text-emerald-400" />
+          <SummaryCard label="Ventas Brutas" value={formatCLP(totalBruto)} sub="con IVA (neto)" color="text-gray-900" />
+          <SummaryCard label="Ventas Netas" value={formatCLP(totalNeto)} sub="sin IVA" color="text-emerald-600" />
           <SummaryCard label="IVA Débito" value={formatCLP(totalIVA)} sub="19%" color="text-amber-400" />
           <SummaryCard label="Comisión MP" value={formatCLP(totalMPFee)} sub="Mercado Pago" color="text-red-400" />
           <SummaryCard label="Neto Recibido" value={formatCLP(Math.round(totalNetReceived))} sub="en tu cuenta" color="text-blue-400" />
@@ -196,27 +196,27 @@ export default function ContabilidadView({ session }: ContabilidadViewProps) {
         </div>
 
         {/* Tabla detalle */}
-        <div className="bg-zinc-900/20 border border-zinc-800/40 rounded-[32px] overflow-hidden overflow-x-auto">
+        <div className="bg-white border border-gray-200 shadow-sm rounded-[32px] overflow-hidden overflow-x-auto">
           <table className="w-full text-left min-w-[900px]">
             <thead>
-              <tr className="bg-zinc-900/60 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">
-                <th className="px-4 sm:px-6 py-4 border-b border-zinc-800/50">Fecha</th>
-                <th className="px-4 sm:px-6 py-4 border-b border-zinc-800/50">Plan</th>
-                <th className="px-4 sm:px-6 py-4 border-b border-zinc-800/50">Status</th>
-                <th className="px-4 sm:px-6 py-4 border-b border-zinc-800/50">Email Pagador</th>
-                <th className="px-4 sm:px-6 py-4 border-b border-zinc-800/50">Método</th>
-                <th className="px-4 sm:px-6 py-4 border-b border-zinc-800/50 text-right">Bruto</th>
-                <th className="px-4 sm:px-6 py-4 border-b border-zinc-800/50 text-right">Neto</th>
-                <th className="px-4 sm:px-6 py-4 border-b border-zinc-800/50 text-right">IVA</th>
-                <th className="px-4 sm:px-6 py-4 border-b border-zinc-800/50 text-right">Comisión MP</th>
-                <th className="px-4 sm:px-6 py-4 border-b border-zinc-800/50 text-right">Recibido</th>
+              <tr className="bg-gray-50 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                <th className="px-4 sm:px-6 py-4 border-b border-gray-200">Fecha</th>
+                <th className="px-4 sm:px-6 py-4 border-b border-gray-200">Plan</th>
+                <th className="px-4 sm:px-6 py-4 border-b border-gray-200">Status</th>
+                <th className="px-4 sm:px-6 py-4 border-b border-gray-200">Email Pagador</th>
+                <th className="px-4 sm:px-6 py-4 border-b border-gray-200">Método</th>
+                <th className="px-4 sm:px-6 py-4 border-b border-gray-200 text-right">Bruto</th>
+                <th className="px-4 sm:px-6 py-4 border-b border-gray-200 text-right">Neto</th>
+                <th className="px-4 sm:px-6 py-4 border-b border-gray-200 text-right">IVA</th>
+                <th className="px-4 sm:px-6 py-4 border-b border-gray-200 text-right">Comisión MP</th>
+                <th className="px-4 sm:px-6 py-4 border-b border-gray-200 text-right">Recibido</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800/30">
+            <tbody className="divide-y divide-gray-100">
               {payments.length === 0 && !loading && (
                 <tr>
                   <td colSpan={10} className="px-6 py-16 text-center">
-                    <p className="text-zinc-700 text-lg italic font-light">Sin transacciones en {MONTHS[month]} {year}</p>
+                    <p className="text-gray-400 text-lg italic font-light">Sin transacciones en {MONTHS[month]} {year}</p>
                   </td>
                 </tr>
               )}
@@ -233,29 +233,29 @@ export default function ContabilidadView({ session }: ContabilidadViewProps) {
                   : new Date(p.created_at).toLocaleDateString('es-CL')
 
                 return (
-                  <tr key={p.id} className={`group transition-all ${isRefund ? 'bg-red-950/20 hover:bg-red-950/30' : 'hover:bg-white/[0.01]'}`}>
+                  <tr key={p.id} className={`group transition-all ${isRefund ? 'bg-red-50/50 hover:bg-red-50' : 'hover:bg-gray-50'}`}>
                     <td className="px-4 sm:px-6 py-4 text-sm">
-                      <span className={isRefund ? 'text-red-400' : 'text-zinc-300'}>{date}</span>
+                      <span className={isRefund ? 'text-red-400' : 'text-gray-900'}>{date}</span>
                       {isRefund && <span className="text-red-500 text-[10px] font-bold block uppercase tracking-wider">Reversa</span>}
                     </td>
                     <td className="px-4 sm:px-6 py-4">
-                      <span className={`text-sm font-semibold capitalize ${isRefund ? 'text-red-400 line-through' : 'text-zinc-200'}`}>{p.plan_name}</span>
+                      <span className={`text-sm font-semibold capitalize ${isRefund ? 'text-red-400 line-through' : 'text-gray-900'}`}>{p.plan_name}</span>
                     </td>
                     <td className="px-4 sm:px-6 py-4">
                       {isRefund
-                        ? <span className="px-2 py-0.5 bg-red-500/20 text-red-400 text-[10px] font-bold rounded-full uppercase">Reversa</span>
-                        : <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-full uppercase">Aprobado</span>
+                        ? <span className="px-2 py-0.5 bg-red-50 text-red-600 text-[10px] font-bold rounded-full uppercase">Reversa</span>
+                        : <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full uppercase">Aprobado</span>
                       }
                     </td>
-                    <td className="px-4 sm:px-6 py-4 text-zinc-500 text-xs font-mono">{p.payer_email || '-'}</td>
+                    <td className="px-4 sm:px-6 py-4 text-gray-500 text-xs font-mono">{p.payer_email || '-'}</td>
                     <td className="px-4 sm:px-6 py-4">
-                      <span className="text-zinc-400 text-xs">{p.payment_method || '-'}</span>
+                      <span className="text-gray-500 text-xs">{p.payment_method || '-'}</span>
                       {p.payment_type && (
-                        <span className="text-zinc-600 text-[10px] block">{p.payment_type}</span>
+                        <span className="text-gray-500 text-[10px] block">{p.payment_type}</span>
                       )}
                     </td>
-                    <td className={`px-4 sm:px-6 py-4 text-right text-sm font-mono ${isRefund ? 'text-red-400' : 'text-zinc-200'}`}>{formatCLP(bruto)}</td>
-                    <td className={`px-4 sm:px-6 py-4 text-right text-sm font-mono ${isRefund ? 'text-red-400' : 'text-emerald-400'}`}>{formatCLP(neto)}</td>
+                    <td className={`px-4 sm:px-6 py-4 text-right text-sm font-mono ${isRefund ? 'text-red-400' : 'text-gray-900'}`}>{formatCLP(bruto)}</td>
+                    <td className={`px-4 sm:px-6 py-4 text-right text-sm font-mono ${isRefund ? 'text-red-400' : 'text-emerald-600'}`}>{formatCLP(neto)}</td>
                     <td className={`px-4 sm:px-6 py-4 text-right text-sm font-mono ${isRefund ? 'text-red-400' : 'text-amber-400/80'}`}>{formatCLP(iva)}</td>
                     <td className={`px-4 sm:px-6 py-4 text-right text-sm font-mono ${isRefund ? 'text-red-400' : 'text-red-400/80'}`}>{formatCLP(fee)}</td>
                     <td className={`px-4 sm:px-6 py-4 text-right text-sm font-mono ${isRefund ? 'text-red-400' : 'text-blue-400'}`}>{formatCLP(Math.round(received))}</td>
@@ -265,10 +265,10 @@ export default function ContabilidadView({ session }: ContabilidadViewProps) {
             </tbody>
             {payments.length > 0 && (
               <tfoot>
-                <tr className="bg-zinc-900/40 text-sm font-bold">
-                  <td colSpan={5} className="px-4 sm:px-6 py-4 text-zinc-400 uppercase text-xs tracking-widest">Totales</td>
-                  <td className="px-4 sm:px-6 py-4 text-right text-white font-mono">{formatCLP(totalBruto)}</td>
-                  <td className="px-4 sm:px-6 py-4 text-right text-emerald-400 font-mono">{formatCLP(totalNeto)}</td>
+                <tr className="bg-gray-50 text-sm font-bold">
+                  <td colSpan={5} className="px-4 sm:px-6 py-4 text-gray-500 uppercase text-xs tracking-widest">Totales</td>
+                  <td className="px-4 sm:px-6 py-4 text-right text-gray-900 font-mono">{formatCLP(totalBruto)}</td>
+                  <td className="px-4 sm:px-6 py-4 text-right text-emerald-600 font-mono">{formatCLP(totalNeto)}</td>
                   <td className="px-4 sm:px-6 py-4 text-right text-amber-400 font-mono">{formatCLP(totalIVA)}</td>
                   <td className="px-4 sm:px-6 py-4 text-right text-red-400 font-mono">{formatCLP(totalMPFee)}</td>
                   <td className="px-4 sm:px-6 py-4 text-right text-blue-400 font-mono">{formatCLP(Math.round(totalNetReceived))}</td>
@@ -284,10 +284,10 @@ export default function ContabilidadView({ session }: ContabilidadViewProps) {
 
 function SummaryCard({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
   return (
-    <div className="bg-zinc-900/30 border border-zinc-800/40 rounded-2xl p-4">
-      <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-2">{label}</p>
+    <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-4">
+      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">{label}</p>
       <p className={`text-lg sm:text-xl font-black tracking-tight ${color}`}>{value}</p>
-      <p className="text-[10px] text-zinc-600 mt-1">{sub}</p>
+      <p className="text-[10px] text-gray-500 mt-1">{sub}</p>
     </div>
   )
 }

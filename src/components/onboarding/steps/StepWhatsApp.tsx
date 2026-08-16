@@ -131,7 +131,7 @@ export default function StepWhatsApp({ session, onNext, onSkip, onBack, onRefres
         </svg>
       </div>
 
-      <h2 className="text-2xl font-black text-white mb-2 text-center">
+      <h2 className="text-2xl font-black text-gray-900 mb-2 text-center">
         Conecta WhatsApp Business
       </h2>
       <p className="text-gray-500 text-sm mb-6 text-center">
@@ -145,25 +145,25 @@ export default function StepWhatsApp({ session, onNext, onSkip, onBack, onRefres
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>
             <div>
-              <p className="text-sm font-semibold text-amber-300">Antes de continuar</p>
-              <p className="text-xs text-gray-400 mt-1 leading-relaxed">
-                Al conectar WhatsApp Business, seras redirigido a <span className="text-white font-medium">Meta (Facebook)</span> donde deberas:
+              <p className="text-sm font-semibold text-amber-600">Antes de continuar</p>
+              <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                Al conectar WhatsApp Business, seras redirigido a <span className="text-gray-900 font-medium">Meta (Facebook)</span> donde deberas:
               </p>
             </div>
           </div>
           <ul className="space-y-2 pl-8">
             <li className="flex items-start gap-2">
-              <span className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-gray-400">1</span>
-              <span className="text-xs text-gray-400">Seleccionar o crear tu cuenta de WhatsApp Business</span>
+              <span className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-gray-500">1</span>
+              <span className="text-xs text-gray-500">Seleccionar o crear tu cuenta de WhatsApp Business</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-gray-400">2</span>
-              <span className="text-xs text-gray-400">Verificar tu numero de telefono</span>
+              <span className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-gray-500">2</span>
+              <span className="text-xs text-gray-500">Verificar tu numero de telefono</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="w-5 h-5 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-amber-400">3</span>
-              <span className="text-xs text-gray-300">
-                <span className="text-amber-300 font-medium">Agregar un metodo de pago</span> — Meta cobra directamente por el uso de la API de WhatsApp Business (las primeras 1.000 conversaciones/mes son gratis)
+              <span className="w-5 h-5 rounded-full bg-amber-50 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-amber-600">3</span>
+              <span className="text-xs text-gray-600">
+                <span className="text-amber-600 font-medium">Agregar un metodo de pago</span> — Meta cobra directamente por el uso de la API de WhatsApp Business (las primeras 1.000 conversaciones/mes son gratis)
               </span>
             </li>
           </ul>
@@ -175,13 +175,13 @@ export default function StepWhatsApp({ session, onNext, onSkip, onBack, onRefres
 
       {sdkStatus === 'connected' ? (
         <div className="w-full max-w-xs space-y-4">
-          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center">
-            <svg className="w-8 h-8 text-emerald-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
+            <svg className="w-8 h-8 text-emerald-600 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-sm font-bold text-emerald-300">WhatsApp conectado</p>
+            <p className="text-sm font-bold text-emerald-700">WhatsApp conectado</p>
             {connectedPhone && (
-              <p className="text-xs text-emerald-400/60 mt-1 font-mono">{connectedPhone}</p>
+              <p className="text-xs text-emerald-500 mt-1 font-mono">{connectedPhone}</p>
             )}
           </div>
           <button
@@ -216,11 +216,11 @@ export default function StepWhatsApp({ session, onNext, onSkip, onBack, onRefres
       )}
 
       <div className="flex gap-4 mt-6">
-        <button onClick={onBack} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+        <button onClick={onBack} className="text-xs text-gray-600 hover:text-gray-500 transition-colors">
           Volver
         </button>
         {sdkStatus !== 'connected' && (
-          <button onClick={onSkip} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+          <button onClick={onSkip} className="text-xs text-gray-600 hover:text-gray-500 transition-colors">
             Omitir por ahora
           </button>
         )}

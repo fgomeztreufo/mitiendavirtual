@@ -255,7 +255,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
             }
           }, 3000)
 
-          (window as any)._tgPollInterval = interval
+          ;(window as any)._tgPollInterval = interval
         },
         willClose: () => {
           clearInterval((window as any)._tgPollInterval)
@@ -489,37 +489,37 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
   let statusTextClass: string
   let statusLabel: string
   if (limitReached) {
-    statusCardBg = 'bg-red-950/20 border-red-500/30'
+    statusCardBg = 'bg-red-50 border-red-200'
     statusDotClass = 'bg-red-500'
-    statusTextClass = 'text-red-400'
+    statusTextClass = 'text-red-600'
     statusLabel = 'Bot Pausado'
   } else if (hasOwnBot || tokenConnected) {
-    statusCardBg = 'bg-emerald-900/20 border-emerald-700/30'
-    statusDotClass = 'bg-emerald-400 shadow-[0_0_8px_2px_rgba(52,211,153,0.5)]'
-    statusTextClass = 'text-emerald-400'
+    statusCardBg = 'bg-emerald-50 border-emerald-200'
+    statusDotClass = 'bg-emerald-500 shadow-[0_0_8px_2px_rgba(16,185,129,0.4)]'
+    statusTextClass = 'text-emerald-600'
     statusLabel = 'Telegram Conectado'
   } else if (hasNotificationChat) {
-    statusCardBg = 'bg-sky-900/10 border-sky-500/20'
-    statusDotClass = 'bg-sky-400'
-    statusTextClass = 'text-sky-300'
+    statusCardBg = 'bg-sky-50 border-sky-200'
+    statusDotClass = 'bg-sky-500'
+    statusTextClass = 'text-sky-600'
     statusLabel = 'Notificaciones activas'
   } else {
-    statusCardBg = 'bg-gray-900/60 border-white/5'
-    statusDotClass = 'bg-gray-600'
+    statusCardBg = 'bg-gray-50 border-gray-200'
+    statusDotClass = 'bg-gray-400'
     statusTextClass = 'text-gray-500'
     statusLabel = 'Sin Conexión'
   }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 p-4">
-      <h2 className="text-2xl font-bold text-white">Telegram</h2>
-      <p className="text-gray-400 text-sm">Configura el bot de ventas IA para tu tienda en Telegram.</p>
+      <h2 className="text-2xl font-bold text-gray-900">Telegram</h2>
+      <p className="text-gray-500 text-sm">Configura el bot de ventas IA para tu tienda en Telegram.</p>
 
       {/* ── Cards de estado ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
         {/* ESTADO DEL BOT */}
-        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-5 space-y-4 backdrop-blur-sm">
+        <div className="rounded-2xl bg-white border border-gray-200 p-5 space-y-4 shadow-sm">
           <p className="text-[11px] font-bold tracking-[0.18em] text-gray-500 uppercase text-center">Estado del Bot</p>
           <div className={`rounded-xl p-4 text-center space-y-2 border ${statusCardBg}`}>
             <div className={`w-3 h-3 rounded-full mx-auto ${statusDotClass}`} />
@@ -528,33 +528,33 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
             </p>
             {ownBotInfo?.bot_type === 'own' && ownBotInfo?.bot_username && (
               <>
-                <div className="h-px bg-white/5 mx-2" />
+                <div className="h-px bg-gray-200 mx-2" />
                 <p className="text-[10px] tracking-widest text-gray-500 uppercase">Bot vinculado</p>
-                <div className="inline-block bg-black/40 rounded-lg px-3 py-1.5">
-                  <span className="text-xs text-white font-mono">@{ownBotInfo.bot_username}</span>
+                <div className="inline-block bg-gray-100 rounded-lg px-3 py-1.5">
+                  <span className="text-xs text-gray-900 font-mono">@{ownBotInfo.bot_username}</span>
                 </div>
               </>
             )}
             {telegramConfig?.telegram_chat_id && (
               <>
-                <div className="h-px bg-white/5 mx-2" />
+                <div className="h-px bg-gray-200 mx-2" />
                 <p className="text-[10px] tracking-widest text-gray-500 uppercase">Chat ID vinculado</p>
-                <div className="inline-block bg-black/40 rounded-lg px-3 py-1.5">
-                  <span className="text-xs text-white font-mono">{telegramConfig.telegram_chat_id}</span>
+                <div className="inline-block bg-gray-100 rounded-lg px-3 py-1.5">
+                  <span className="text-xs text-gray-900 font-mono">{telegramConfig.telegram_chat_id}</span>
                 </div>
               </>
             )}
           </div>
           {canDisconnectOwnBot ? (
             <button
-              className="w-full text-center text-[10px] text-red-400/80 cursor-pointer hover:text-red-400 transition-colors bg-transparent border-0"
+              className="w-full text-center text-[10px] text-red-400 cursor-pointer hover:text-red-600 transition-colors bg-transparent border-0"
               onClick={disconnectOwnBot}
             >
               DESVINCULAR CUENTA
             </button>
           ) : tokenConnected ? (
             <button
-              className="w-full text-center text-[10px] text-red-400/80 cursor-pointer hover:text-red-400 transition-colors bg-transparent border-0"
+              className="w-full text-center text-[10px] text-red-400 cursor-pointer hover:text-red-600 transition-colors bg-transparent border-0"
               onClick={disconnectLinkToken}
               disabled={disconnectingToken}
             >
@@ -564,36 +564,36 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
         </div>
 
         {/* CRÉDITOS MENSUALES */}
-        <div className={`rounded-2xl bg-white/[0.03] border p-5 space-y-4 backdrop-blur-sm ${limitReached ? 'border-red-500/40' : 'border-white/5'}`}>
+        <div className={`rounded-2xl bg-white border p-5 space-y-4 shadow-sm ${limitReached ? 'border-red-200' : 'border-gray-200'}`}>
           <p className="text-[11px] font-bold tracking-[0.18em] text-gray-500 uppercase text-center">Créditos Mensuales</p>
-          <div className={`rounded-xl border p-4 text-center space-y-3 ${limitReached ? 'bg-red-950/30 border-red-500/30' : 'bg-gray-900/60 border-white/5'}`}>
-            <p className="text-4xl font-black tracking-tight text-white italic">{planCodeToDisplay(planCode).toUpperCase()}</p>
-            <div className="flex justify-between text-xs text-gray-400 px-1">
+          <div className={`rounded-xl border p-4 text-center space-y-3 ${limitReached ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
+            <p className="text-4xl font-black tracking-tight text-gray-900 italic">{planCodeToDisplay(planCode).toUpperCase()}</p>
+            <div className="flex justify-between text-xs text-gray-500 px-1">
               <span>USO</span>
-              <span className="font-mono text-white">
+              <span className="font-mono text-gray-900">
                 {creditsUsed.toLocaleString('es-CL')} / {creditsLimit ? creditsLimit.toLocaleString('es-CL') : '∞'}
               </span>
             </div>
-            <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"
                 style={{ width: creditsLimit ? `${usagePct}%` : '100%', background: creditsLimit ? barColor : '#6366f1', opacity: creditsLimit ? 1 : 0.4 }}
               />
             </div>
             {!creditsLimit && (
-              <p className="text-[10px] text-indigo-400/70 italic">Créditos ilimitados bajo política de uso justo</p>
+              <p className="text-[10px] text-indigo-600/70 italic">Créditos ilimitados bajo política de uso justo</p>
             )}
             {limitReached && (
-              <p className="text-[10px] text-red-400 font-bold tracking-wide uppercase">Límite alcanzado — bot pausado</p>
+              <p className="text-[10px] text-red-600 font-bold tracking-wide uppercase">Límite alcanzado — bot pausado</p>
             )}
             {!limitReached && creditsLimit && usagePct > 85 && (
-              <p className="text-[10px] text-amber-400 italic">Cerca del límite — considera actualizar tu plan</p>
+              <p className="text-[10px] text-amber-600 italic">Cerca del límite — considera actualizar tu plan</p>
             )}
           </div>
           {planCode !== 'escala' && (
             <button
               onClick={() => goToPlans?.()}
-              className="w-full py-2 text-xs font-bold rounded-xl border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 transition-all"
+              className="w-full py-2 text-xs font-bold rounded-xl border border-indigo-300 text-indigo-600 hover:bg-indigo-50 transition-all"
             >
               Ver planes →
             </button>
@@ -602,16 +602,16 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
       </div>
 
       {/* Info: notificaciones están en pestaña separada */}
-      <div className="p-4 rounded-xl bg-blue-900/20 border border-blue-800/40 text-sm text-blue-300">
+      <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-sm text-blue-700">
         💬 Para recibir alertas de ventas e inventario en tu Telegram personal, ve a <button onClick={() => window.dispatchEvent(new CustomEvent('changeTab', { detail: 'notifications' }))} className="underline font-medium">Notificaciones</button>.
       </div>
 
       {/* BLOQUEO POR LÍMITE */}
       {limitReached && (
-        <div className="relative rounded-2xl overflow-hidden border border-red-500/40 bg-red-950/20 p-6 text-center space-y-3">
+        <div className="relative rounded-2xl overflow-hidden border border-red-200 bg-red-50 p-6 text-center space-y-3">
           <div className="text-3xl">🚫</div>
-          <p className="text-red-400 font-bold text-base">Bot pausado — límite mensual alcanzado</p>
-          <p className="text-gray-400 text-sm max-w-sm mx-auto">
+          <p className="text-red-600 font-bold text-base">Bot pausado — límite mensual alcanzado</p>
+          <p className="text-gray-500 text-sm max-w-sm mx-auto">
             Has usado todos tus créditos IA este mes. El bot no responderá hasta que actualices tu plan.
           </p>
           <button
@@ -624,35 +624,35 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
       )}
 
       <div className="grid gap-4">
-            <div className="p-5 rounded-2xl border bg-gray-900 transition-all border-gray-800">
+            <div className="p-5 rounded-2xl border bg-white transition-all border-gray-200 shadow-sm">
               <div className="mb-3">
-                <div className="text-white font-medium">Bot de Ventas IA en Telegram</div>
-                <div className="text-xs text-gray-400">Puedes usar el bot de MiTiendaVirtual o conectar tu propio bot. El token se almacena cifrado.</div>
+                <div className="text-gray-900 font-medium">Bot de Ventas IA en Telegram</div>
+                <div className="text-xs text-gray-500">Puedes usar el bot de MiTiendaVirtual o conectar tu propio bot. El token se almacena cifrado.</div>
               </div>
 
               {/* Bot propio conectado — mostrar estado + QR + desconectar */}
               {ownBotInfo?.bot_type === 'own' && ownBotInfo.bot_username ? (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-900/20 border border-emerald-800/40">
+                  <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-200">
                     <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
                     <div>
-                      <div className="text-sm text-white font-medium">@{ownBotInfo.bot_username}</div>
-                      <div className="text-xs text-gray-400">Bot propio activo</div>
+                      <div className="text-sm text-gray-900 font-medium">@{ownBotInfo.bot_username}</div>
+                      <div className="text-xs text-gray-500">Bot propio activo</div>
                     </div>
                   </div>
 
                   {/* QR para compartir — bot propio */}
-                  <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700">
-                    <p className="text-sm text-gray-300 mb-2 font-medium">Comparte tu bot con clientes</p>
+                  <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                    <p className="text-sm text-gray-700 mb-2 font-medium">Comparte tu bot con clientes</p>
                     <div className="flex flex-col sm:flex-row items-center gap-4">
                       <img
                         src={'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent('https://t.me/' + ownBotInfo.bot_username)}
                         alt="QR Bot propio"
                         className="w-28 h-28 sm:w-32 sm:h-32 shrink-0 rounded-lg bg-white p-1"
                       />
-                      <div className="text-xs text-gray-400 space-y-1 text-center sm:text-left">
+                      <div className="text-xs text-gray-500 space-y-1 text-center sm:text-left">
                         <p>Link directo:</p>
-                        <a href={`https://t.me/${ownBotInfo.bot_username}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline break-all">
+                        <a href={`https://t.me/${ownBotInfo.bot_username}`} target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline break-all">
                           t.me/{ownBotInfo.bot_username}
                         </a>
                         <p className="mt-2">Los clientes abren el bot y hablan directo con tu IA de ventas.</p>
@@ -670,10 +670,10 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
                   <div className="mb-4 flex flex-col sm:flex-row gap-2">
                     <button type="button" onClick={() => {
                       setBotChoice('platform')
-                    }} className={`py-2 px-4 rounded-xl text-sm ${botChoice === 'platform' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300'}`}>
+                    }} className={`py-2 px-4 rounded-xl text-sm ${botChoice === 'platform' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
                       Usar bot de MiTiendaVirtual
                     </button>
-                    <button type="button" onClick={() => setBotChoice('own')} className={`py-2 px-4 rounded-xl text-sm ${botChoice === 'own' ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-300'}`}>
+                    <button type="button" onClick={() => setBotChoice('own')} className={`py-2 px-4 rounded-xl text-sm ${botChoice === 'own' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
                       Usar mi bot
                     </button>
                   </div>
@@ -681,14 +681,14 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
                   {botChoice === 'own' ? (
                     <div className="space-y-3">
                       <div className="flex flex-col sm:flex-row gap-3">
-                        <input value={botToken} onChange={(e) => setBotToken(e.target.value)} placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" className="flex-1 bg-black border border-gray-800 rounded-xl p-3 text-white outline-none text-sm min-w-0" />
+                        <input value={botToken} onChange={(e) => setBotToken(e.target.value)} placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" className="flex-1 bg-gray-50 border border-gray-200 rounded-xl p-3 text-gray-900 outline-none text-sm min-w-0" />
                         <button onClick={() => saveBotToken()} disabled={savingToken} className="py-2 px-4 bg-emerald-600 text-white rounded-xl text-sm whitespace-nowrap">{savingToken ? 'Conectando...' : 'Conectar bot'}</button>
                       </div>
-                      <p className="text-xs text-gray-500">Obtén el token desde <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">@BotFather</a> en Telegram → /newbot o /mybot → API Token.</p>
+                      <p className="text-xs text-gray-500">Obtén el token desde <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline">@BotFather</a> en Telegram → /newbot o /mybot → API Token.</p>
                     </div>
                   ) : (
-                    <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700">
-                      <p className="text-sm text-gray-300 mb-2 font-medium">QR del bot de plataforma</p>
+                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                      <p className="text-sm text-gray-700 mb-2 font-medium">QR del bot de plataforma</p>
                         <div className="flex flex-col sm:flex-row items-center gap-4">
                           <div className="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0">
                             <img
@@ -703,12 +703,12 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
                               </div>
                             </div>
                           </div>
-                          <div className="text-xs text-gray-400 space-y-1">
+                          <div className="text-xs text-gray-500 space-y-1">
                         <p>{platformDeepLink ? 'Comparte este enlace para que tus clientes inicien conversación sin escribir el nombre de la tienda.' : 'Los clientes abren este bot y escriben el nombre de tu tienda.'}</p>
                         {platformDeepLink ? (
                           <>
                             <div className="flex items-center gap-2">
-                              <a href={platformDeepLink} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline break-all">
+                              <a href={platformDeepLink} target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline break-all">
                                 {platformDeepLink}
                               </a>
                               <button
@@ -731,7 +731,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
                               <button onClick={() => void bindPlatformBot()} className="py-1 px-3 rounded text-xs bg-indigo-600 text-white">
                                 Compartir enlace
                               </button>
-                              <button onClick={() => void regeneratePlatformToken()} disabled={platformLinkLoading} className="py-1 px-3 rounded text-xs bg-gray-700 text-white">
+                              <button onClick={() => void regeneratePlatformToken()} disabled={platformLinkLoading} className="py-1 px-3 rounded text-xs bg-gray-200 text-gray-700">
                                 {platformLinkLoading ? 'Generando...' : 'Regenerar token'}
                               </button>
                             </div>
@@ -739,7 +739,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
                         ) : (
                           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                             <div className="flex items-center gap-2 break-words">
-                              <a href="https://t.me/mi_tienda_virtual_bot" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
+                              <a href="https://t.me/mi_tienda_virtual_bot" target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline">
                                 t.me/mi_tienda_virtual_bot
                               </a>
                             </div>
@@ -747,7 +747,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
                               <button onClick={() => void bindPlatformBot()} className="py-1 px-3 rounded text-xs bg-indigo-600 text-white">
                                 Compartir enlace con token
                               </button>
-                              <button onClick={() => void regeneratePlatformToken()} disabled={platformLinkLoading} className="py-1 px-3 rounded text-xs bg-gray-700 text-white">
+                              <button onClick={() => void regeneratePlatformToken()} disabled={platformLinkLoading} className="py-1 px-3 rounded text-xs bg-gray-200 text-gray-700">
                                 {platformLinkLoading ? 'Generando...' : 'Regenerar token'}
                               </button>
                             </div>
@@ -767,7 +767,7 @@ export default function TelegramView({ session, profile, instance, onUpdate, goT
         <AgentPersonalitySection
           instanceId={instance.id}
           channel="telegram"
-          channelColor="from-blue-500/10 to-cyan-500/10"
+          channelColor="from-blue-500/5 to-cyan-500/5"
         />
       )}
     </div>

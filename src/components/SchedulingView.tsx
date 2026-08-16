@@ -92,11 +92,11 @@ const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Vierne
 const DAY_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  confirmed: { label: 'Confirmada', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' },
-  pending: { label: 'Pendiente', color: 'text-amber-400 bg-amber-500/10 border-amber-500/30' },
-  cancelled: { label: 'Cancelada', color: 'text-red-400 bg-red-500/10 border-red-500/30' },
-  completed: { label: 'Completada', color: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
-  no_show: { label: 'No asistió', color: 'text-gray-400 bg-gray-500/10 border-gray-500/30' },
+  confirmed: { label: 'Confirmada', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
+  pending: { label: 'Pendiente', color: 'text-amber-600 bg-amber-50 border-amber-200' },
+  cancelled: { label: 'Cancelada', color: 'text-red-600 bg-red-50 border-red-200' },
+  completed: { label: 'Completada', color: 'text-blue-600 bg-blue-50 border-blue-200' },
+  no_show: { label: 'No asistió', color: 'text-gray-600 bg-gray-50 border-gray-200' },
 }
 
 function escHtml(str: string): string {
@@ -190,8 +190,6 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
         title: 'Google Calendar conectado',
         timer: 3000,
         showConfirmButton: false,
-        background: '#1a1a1a',
-        color: '#fff',
       })
       window.history.replaceState({}, '', window.location.pathname)
     } else if (gcal === 'error') {
@@ -199,8 +197,6 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
         icon: 'error',
         title: 'Error al conectar',
         text: `No se pudo conectar Google Calendar. ${params.get('reason') || ''}`,
-        background: '#1a1a1a',
-        color: '#fff',
       })
       window.history.replaceState({}, '', window.location.pathname)
     }
@@ -239,8 +235,6 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
         confirmButtonText: 'Desactivar',
         cancelButtonText: 'Cancelar',
         confirmButtonColor: '#EF4444',
-        background: '#1a1a1a',
-        color: '#fff',
       })
       if (!confirm.isConfirmed) return
     }
@@ -262,8 +256,6 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
           : 'Tu asistente IA dejó de ofrecer citas.',
         timer: 2500,
         showConfirmButton: false,
-        background: '#1a1a1a',
-        color: '#fff',
       })
       onUpdate?.()
     } catch (err: any) {
@@ -300,8 +292,6 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
       confirmButtonColor: '#ef4444',
       confirmButtonText: 'Desconectar',
       cancelButtonText: 'Cancelar',
-      background: '#1a1a1a',
-      color: '#fff',
     })
     if (!isConfirmed) return
 
@@ -329,19 +319,19 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
   let statusLabel: string
 
   if (!schedulingEnabled) {
-    statusCardBg = 'bg-gray-900/60 border-white/5'
+    statusCardBg = 'bg-gray-50 border-gray-200'
     statusDotClass = 'bg-gray-600'
     statusTextClass = 'text-gray-500'
     statusLabel = 'Desactivado'
   } else if (gcalConnected) {
-    statusCardBg = 'bg-emerald-900/20 border-emerald-700/30'
-    statusDotClass = 'bg-emerald-400 shadow-[0_0_8px_2px_rgba(52,211,153,0.5)]'
-    statusTextClass = 'text-emerald-400'
+    statusCardBg = 'bg-emerald-50 border-emerald-200'
+    statusDotClass = 'bg-emerald-500 shadow-[0_0_8px_2px_rgba(16,185,129,0.3)]'
+    statusTextClass = 'text-emerald-600'
     statusLabel = 'Activo'
   } else {
-    statusCardBg = 'bg-amber-950/20 border-amber-500/30'
+    statusCardBg = 'bg-amber-50 border-amber-200'
     statusDotClass = 'bg-amber-400'
-    statusTextClass = 'text-amber-400'
+    statusTextClass = 'text-amber-600'
     statusLabel = 'Sin Calendar'
   }
 
@@ -360,14 +350,14 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
     <div className="max-w-5xl mx-auto space-y-6 p-4">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-white">Google Calendar</h2>
-        <p className="text-gray-400 text-sm">Gestiona el agendamiento automático de tu negocio.</p>
+        <h2 className="text-2xl font-bold text-gray-900">Google Calendar</h2>
+        <p className="text-gray-500 text-sm">Gestiona el agendamiento automático de tu negocio.</p>
       </div>
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* SCHEDULING STATUS */}
-        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-5 space-y-4 backdrop-blur-sm">
+        <div className="rounded-2xl bg-white border border-gray-200 p-5 space-y-4 shadow-sm">
           <p className="text-[11px] font-bold tracking-[0.18em] text-gray-500 uppercase text-center">Estado de Agendamiento</p>
           <div className={`rounded-xl p-4 text-center space-y-2 border ${statusCardBg}`}>
             <div className={`w-3 h-3 rounded-full mx-auto ${statusDotClass}`} />
@@ -377,18 +367,18 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
 
             {gcalConnected && (
               <>
-                <div className="h-px bg-white/5 mx-2" />
+                <div className="h-px bg-gray-200 mx-2" />
                 <p className="text-[10px] tracking-widest text-gray-500 uppercase">Google Calendar</p>
-                <div className="inline-block bg-black/40 rounded-lg px-3 py-1.5">
-                  <span className="text-xs text-white font-mono">{gcalEmail}</span>
+                <div className="inline-block bg-gray-100 rounded-lg px-3 py-1.5">
+                  <span className="text-xs text-gray-900 font-mono">{gcalEmail}</span>
                 </div>
               </>
             )}
 
             {!gcalConnected && !gcalLoading && (
               <>
-                <div className="h-px bg-white/5 mx-2" />
-                <p className="text-[10px] text-gray-600">Google Calendar no conectado</p>
+                <div className="h-px bg-gray-200 mx-2" />
+                <p className="text-[10px] text-gray-400">Google Calendar no conectado</p>
                 <button
                   onClick={startGcalOAuth}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition-all text-xs mt-1"
@@ -405,8 +395,8 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
             disabled={toggling}
             className={`w-full py-2 text-xs font-bold rounded-xl border transition-all ${
               schedulingEnabled
-                ? 'border-amber-500/30 text-amber-400 hover:bg-amber-500/10'
-                : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
+                ? 'border-amber-200 text-amber-600 hover:bg-amber-50'
+                : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
             }`}
           >
             {toggling
@@ -427,17 +417,17 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
         </div>
 
         {/* MONTHLY CREDITS */}
-        <div className={`rounded-2xl bg-white/[0.03] border p-5 space-y-4 backdrop-blur-sm ${limitReached ? 'border-red-500/40' : 'border-white/5'}`}>
+        <div className={`rounded-2xl bg-white border p-5 space-y-4 shadow-sm ${limitReached ? 'border-red-200' : 'border-gray-200'}`}>
           <p className="text-[11px] font-bold tracking-[0.18em] text-gray-500 uppercase text-center">Créditos Mensuales</p>
-          <div className={`rounded-xl border p-4 text-center space-y-3 ${limitReached ? 'bg-red-950/30 border-red-500/30' : 'bg-gray-900/60 border-white/5'}`}>
-            <p className="text-4xl font-black tracking-tight text-white italic">{planCodeToDisplay(planCode).toUpperCase()}</p>
-            <div className="flex justify-between text-xs text-gray-400 px-1">
+          <div className={`rounded-xl border p-4 text-center space-y-3 ${limitReached ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
+            <p className="text-4xl font-black tracking-tight text-gray-900 italic">{planCodeToDisplay(planCode).toUpperCase()}</p>
+            <div className="flex justify-between text-xs text-gray-500 px-1">
               <span>USO</span>
-              <span className="font-mono text-white">
+              <span className="font-mono text-gray-900">
                 {creditsUsed.toLocaleString('es-CL')} / {planMessagesLimit ? planMessagesLimit.toLocaleString('es-CL') : '∞'}
               </span>
             </div>
-            <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"
                 style={{
@@ -448,19 +438,19 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
               />
             </div>
             {!planMessagesLimit && (
-              <p className="text-[10px] text-indigo-400/70 italic">Créditos ilimitados bajo política de uso justo</p>
+              <p className="text-[10px] text-indigo-500 italic">Créditos ilimitados bajo política de uso justo</p>
             )}
             {limitReached && (
-              <p className="text-[10px] text-red-400 font-bold tracking-wide uppercase">Límite alcanzado</p>
+              <p className="text-[10px] text-red-600 font-bold tracking-wide uppercase">Límite alcanzado</p>
             )}
             {!limitReached && planMessagesLimit && usagePct > 85 && (
-              <p className="text-[10px] text-amber-400 italic">Cerca del límite — considera actualizar tu plan</p>
+              <p className="text-[10px] text-amber-600 italic">Cerca del límite — considera actualizar tu plan</p>
             )}
           </div>
           {planCode !== 'escala' && (
             <button
               onClick={() => goToPlans?.()}
-              className="w-full py-2 text-xs font-bold rounded-xl border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 transition-all"
+              className="w-full py-2 text-xs font-bold rounded-xl border border-indigo-200 text-indigo-600 hover:bg-indigo-50 transition-all"
             >
               Ver planes →
             </button>
@@ -470,31 +460,31 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
 
       {/* INFO BANNER */}
       {schedulingEnabled && gcalConnected && !limitReached && (
-        <div className="p-4 rounded-xl bg-emerald-900/10 border border-emerald-800/30 flex items-start gap-3">
-          <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-3">
+          <svg className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div>
-            <p className="text-sm text-emerald-300 font-semibold">Tu asistente IA está agendando citas</p>
-            <p className="text-xs text-emerald-400/60 mt-0.5">Los clientes pueden agendar citas automáticamente a través de tus canales.</p>
+            <p className="text-sm text-emerald-700 font-semibold">Tu asistente IA está agendando citas</p>
+            <p className="text-xs text-emerald-600 mt-0.5">Los clientes pueden agendar citas automáticamente a través de tus canales.</p>
           </div>
         </div>
       )}
 
       {!schedulingEnabled && (
-        <div className="p-4 rounded-xl bg-amber-900/10 border border-amber-800/30 flex items-start gap-3">
-          <svg className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3">
+          <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.832c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
           </svg>
           <div>
-            <p className="text-sm text-amber-300 font-semibold">Agendamiento desactivado</p>
-            <p className="text-xs text-amber-400/60 mt-0.5">Tu asistente IA no ofrecerá citas a los clientes. Actívalo para que puedan agendar automáticamente.</p>
+            <p className="text-sm text-amber-700 font-semibold">Agendamiento desactivado</p>
+            <p className="text-xs text-amber-600 mt-0.5">Tu asistente IA no ofrecerá citas a los clientes. Actívalo para que puedan agendar automáticamente.</p>
           </div>
         </div>
       )}
 
       {/* Sub-tabs */}
-      <div className="flex gap-1 p-1 rounded-xl bg-white/[0.03] border border-white/5 overflow-x-auto">
+      <div className="flex gap-1 p-1 rounded-xl bg-gray-50 border border-gray-200 overflow-x-auto">
         {([
           { key: 'services', label: 'Servicios' },
           { key: 'staff', label: 'Equipo' },
@@ -507,8 +497,8 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
             onClick={() => setSubTab(t.key)}
             className={`shrink-0 py-2 px-3 text-xs sm:text-sm font-medium rounded-lg transition-all ${
               subTab === t.key
-                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
-                : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.03]'
+                ? 'bg-indigo-50 text-indigo-600 border border-indigo-200'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
             }`}
           >
             {t.label}
@@ -648,23 +638,23 @@ function ServicesPanel({ services, userId, onRefresh }: { services: Service[]; u
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-400">{services.length} servicio(s) registrado(s)</p>
-        <button onClick={addService} className="px-4 py-2 text-xs font-bold rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition-all">
+        <p className="text-sm text-gray-500">{services.length} servicio(s) registrado(s)</p>
+        <button onClick={addService} className="px-4 py-2 text-xs font-bold rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100 transition-all">
           + Nuevo servicio
         </button>
       </div>
 
       {services.length === 0 ? (
-        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-12 text-center">
+        <div className="rounded-2xl bg-white border border-gray-200 p-12 text-center">
           <p className="text-gray-500 text-sm">Aún no tienes servicios. Crea tu primer servicio para empezar.</p>
         </div>
       ) : (
         <div className="grid gap-3">
           {services.map(svc => (
-            <div key={svc.id} className={`rounded-xl border p-4 ${svc.is_active ? 'bg-white/[0.03] border-white/5' : 'bg-gray-900/40 border-white/5 opacity-60'}`}>
+            <div key={svc.id} className={`rounded-xl border p-4 ${svc.is_active ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-200 opacity-60'}`}>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex-1 min-w-0 overflow-hidden">
-                  <p className="text-sm font-bold text-white truncate">{svc.name}</p>
+                  <p className="text-sm font-bold text-gray-900 truncate">{svc.name}</p>
                   {svc.description && <p className="text-xs text-gray-500 line-clamp-2">{svc.description}</p>}
                   <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[10px] text-gray-500 uppercase tracking-wider">
                     <span>{svc.duration_minutes} min</span>
@@ -673,13 +663,13 @@ function ServicesPanel({ services, userId, onRefresh }: { services: Service[]; u
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => editService(svc)} className="text-gray-600 hover:text-indigo-400 transition-colors" title="Editar">
+                  <button onClick={() => editService(svc)} className="text-gray-400 hover:text-indigo-600 transition-colors" title="Editar">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                   </button>
-                  <button onClick={() => toggleActive(svc)} className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${svc.is_active ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10' : 'border-gray-600 text-gray-500 hover:bg-gray-500/10'}`}>
+                  <button onClick={() => toggleActive(svc)} className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${svc.is_active ? 'border-emerald-200 text-emerald-600 hover:bg-emerald-50' : 'border-gray-300 text-gray-500 hover:bg-gray-100'}`}>
                     {svc.is_active ? 'Activo' : 'Inactivo'}
                   </button>
-                  <button onClick={() => deleteService(svc)} className="text-gray-600 hover:text-red-400 transition-colors" title="Eliminar">
+                  <button onClick={() => deleteService(svc)} className="text-gray-400 hover:text-red-600 transition-colors" title="Eliminar">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                   </button>
                 </div>
@@ -786,7 +776,7 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh, branche
     const { value: selected } = await Swal.fire({
       title: `Servicios de ${escHtml(member.name)}`,
       html: activeServices.map(s => `
-        <label class="flex items-center gap-2 p-2 text-sm text-left text-gray-200">
+        <label class="flex items-center gap-2 p-2 text-sm text-left text-gray-700">
           <input type="checkbox" value="${s.id}" ${assigned.includes(s.id) ? 'checked' : ''} class="swal2-checkbox-custom">
           ${escHtml(s.name)} (${s.duration_minutes} min)
         </label>
@@ -831,14 +821,14 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh, branche
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-400">{staff.length} profesional(es)</p>
-        <button onClick={addStaff} className="px-4 py-2 text-xs font-bold rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition-all">
+        <p className="text-sm text-gray-500">{staff.length} profesional(es)</p>
+        <button onClick={addStaff} className="px-4 py-2 text-xs font-bold rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100 transition-all">
           + Nuevo profesional
         </button>
       </div>
 
       {staff.length === 0 ? (
-        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-12 text-center">
+        <div className="rounded-2xl bg-white border border-gray-200 p-12 text-center">
           <p className="text-gray-500 text-sm">Aún no tienes profesionales registrados.</p>
         </div>
       ) : (
@@ -850,7 +840,7 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh, branche
               .filter(Boolean)
 
             return (
-              <div key={member.id} className={`rounded-xl border p-4 ${member.is_active ? 'bg-white/[0.03] border-white/5' : 'bg-gray-900/40 border-white/5 opacity-60'}`}>
+              <div key={member.id} className={`rounded-xl border p-4 ${member.is_active ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-200 opacity-60'}`}>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -858,18 +848,18 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh, branche
                         {member.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white">{member.name}</p>
+                        <p className="text-sm font-bold text-gray-900">{member.name}</p>
                         {member.role && <p className="text-[10px] text-gray-500 uppercase tracking-wider">{member.role}</p>}
-                        {member.specialty && <p className="text-[10px] text-emerald-400/70">{member.specialty}</p>}
+                        {member.specialty && <p className="text-[10px] text-emerald-600">{member.specialty}</p>}
                         {member.branch_id && branches.length > 0 && (
-                          <p className="text-[10px] text-teal-400/70">{branches.find(b => b.id === member.branch_id)?.name}</p>
+                          <p className="text-[10px] text-teal-600">{branches.find(b => b.id === member.branch_id)?.name}</p>
                         )}
                       </div>
                     </div>
                     {memberServices.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-2">
                         {memberServices.map((name, i) => (
-                          <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                          <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200">
                             {name}
                           </span>
                         ))}
@@ -877,16 +867,16 @@ function StaffPanel({ staff, services, staffServices, userId, onRefresh, branche
                     )}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <button onClick={() => editStaff(member)} className="text-[10px] font-bold px-2 py-1 rounded-lg border border-blue-500/30 text-blue-400 hover:bg-blue-500/10 transition-all">
+                    <button onClick={() => editStaff(member)} className="text-[10px] font-bold px-2 py-1 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-all">
                       Editar
                     </button>
-                    <button onClick={() => assignServices(member)} className="text-[10px] font-bold px-2 py-1 rounded-lg border border-purple-500/30 text-purple-400 hover:bg-purple-500/10 transition-all">
+                    <button onClick={() => assignServices(member)} className="text-[10px] font-bold px-2 py-1 rounded-lg border border-purple-200 text-purple-600 hover:bg-purple-50 transition-all">
                       Servicios
                     </button>
-                    <button onClick={() => toggleActive(member)} className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${member.is_active ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10' : 'border-gray-600 text-gray-500 hover:bg-gray-500/10'}`}>
+                    <button onClick={() => toggleActive(member)} className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${member.is_active ? 'border-emerald-200 text-emerald-600 hover:bg-emerald-50' : 'border-gray-300 text-gray-500 hover:bg-gray-100'}`}>
                       {member.is_active ? 'Activo' : 'Inactivo'}
                     </button>
-                    <button onClick={() => deleteStaff(member)} className="text-gray-600 hover:text-red-400 transition-colors">
+                    <button onClick={() => deleteStaff(member)} className="text-gray-400 hover:text-red-600 transition-colors">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     </button>
                   </div>
@@ -922,7 +912,7 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
     }).join('')
     const minOptions = ['00', '15', '30', '45'].map(m => `<option value="${m}">${m}</option>`).join('')
 
-    const selectStyle = 'background:#111;border:1px solid #333;border-radius:8px;color:#fff;padding:10px 8px;font-size:18px;font-family:monospace;text-align:center;appearance:none;-webkit-appearance:none;cursor:pointer'
+    const selectStyle = 'background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;color:#111827;padding:10px 8px;font-size:18px;font-family:monospace;text-align:center;appearance:none;-webkit-appearance:none;cursor:pointer'
 
     const { value: formValues } = await Swal.fire({
       title: `${DAY_NAMES[dayOfWeek]}`,
@@ -997,12 +987,12 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
           <div>
             <label style="display:block;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Fecha</label>
             <input id="swal-block-date" type="date" min="${today}"
-              style="background:#111;border:1px solid #333;border-radius:8px;color:#fff;padding:10px 12px;font-size:14px;width:100%;cursor:pointer">
+              style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;color:#111827;padding:10px 12px;font-size:14px;width:100%;cursor:pointer">
           </div>
           <div>
             <label style="display:block;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Tipo de bloqueo</label>
             <select id="swal-block-type"
-              style="background:#111;border:1px solid #333;border-radius:8px;color:#fff;padding:10px 12px;font-size:14px;width:100%;cursor:pointer"
+              style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;color:#111827;padding:10px 12px;font-size:14px;width:100%;cursor:pointer"
               onchange="document.getElementById('swal-block-time-wrap').style.display = this.value === 'partial' ? 'block' : 'none'">
               <option value="full">Dia completo</option>
               <option value="partial">Desde una hora hasta el cierre</option>
@@ -1011,12 +1001,12 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
           <div id="swal-block-time-wrap" style="display:none">
             <label style="display:block;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Bloquear desde</label>
             <input id="swal-block-start" type="time" value="14:00"
-              style="background:#111;border:1px solid #333;border-radius:8px;color:#fff;padding:10px 12px;font-size:14px;width:100%;cursor:pointer">
+              style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;color:#111827;padding:10px 12px;font-size:14px;width:100%;cursor:pointer">
           </div>
           <div>
             <label style="display:block;font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Motivo (opcional)</label>
             <input id="swal-block-reason" type="text" placeholder="Ej: Vacaciones, emergencia familiar"
-              style="background:#111;border:1px solid #333;border-radius:8px;color:#fff;padding:10px 12px;font-size:14px;width:100%">
+              style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;color:#111827;padding:10px 12px;font-size:14px;width:100%">
           </div>
         </div>
       `,
@@ -1089,7 +1079,7 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
   return (
     <div className="space-y-4">
       {activeStaff.length === 0 ? (
-        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-12 text-center">
+        <div className="rounded-2xl bg-white border border-gray-200 p-12 text-center">
           <p className="text-gray-500 text-sm">Crea al menos un profesional activo para configurar horarios.</p>
         </div>
       ) : (
@@ -1099,10 +1089,10 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
             <select
               value={current}
               onChange={e => onSelectStaff(e.target.value)}
-              className="bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500/50 w-full sm:w-auto"
+              className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-indigo-500 w-full sm:w-auto"
             >
               {activeStaff.map(s => (
-                <option key={s.id} value={s.id} className="bg-gray-900">{s.name}</option>
+                <option key={s.id} value={s.id} className="bg-white">{s.name}</option>
               ))}
             </select>
           </div>
@@ -1114,36 +1104,36 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
                 .filter(s => s.day_of_week === day)
                 .sort((a, b) => a.start_time.localeCompare(b.start_time))
               return (
-                <div key={day} className="rounded-xl bg-white/[0.03] border border-white/5 p-3">
+                <div key={day} className="rounded-xl bg-white border border-gray-200 p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-bold text-gray-300 uppercase tracking-wider">{DAY_SHORT[day]}</p>
+                    <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">{DAY_SHORT[day]}</p>
                     <button
                       onClick={() => addBlock(day)}
-                      className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                      className="text-indigo-600 hover:text-indigo-600 transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
                     </button>
                   </div>
                   {dayBlocks.length === 0 ? (
-                    <p className="text-[10px] text-gray-600 italic">Sin horario</p>
+                    <p className="text-[10px] text-gray-400 italic">Sin horario</p>
                   ) : (
                     <div className="space-y-1">
                       {dayBlocks.map((block, idx) => (
                         <div key={block.id}>
-                          <div className="flex items-center justify-between bg-indigo-500/10 rounded-lg px-2 py-1">
-                            <span className="text-xs text-indigo-300 font-mono">
+                          <div className="flex items-center justify-between bg-indigo-50 rounded-lg px-2 py-1">
+                            <span className="text-xs text-indigo-600 font-mono">
                               {block.start_time.slice(0, 5)} - {block.end_time.slice(0, 5)}
                             </span>
-                            <button onClick={() => deleteBlock(block.id)} className="text-gray-600 hover:text-red-400">
+                            <button onClick={() => deleteBlock(block.id)} className="text-gray-400 hover:text-red-600">
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                           </div>
                           {idx < dayBlocks.length - 1 && block.end_time.slice(0, 5) < dayBlocks[idx + 1].start_time.slice(0, 5) && (
-                            <div className="flex items-center justify-center gap-1 bg-amber-500/10 rounded-lg px-2 py-0.5 my-0.5 border border-dashed border-amber-500/20">
-                              <svg className="w-3 h-3 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <div className="flex items-center justify-center gap-1 bg-amber-50 rounded-lg px-2 py-0.5 my-0.5 border border-dashed border-amber-200">
+                              <svg className="w-3 h-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
-                              <span className="text-[10px] text-amber-400 font-mono">
+                              <span className="text-[10px] text-amber-600 font-mono">
                                 Descanso {block.end_time.slice(0, 5)} - {dayBlocks[idx + 1].start_time.slice(0, 5)}
                               </span>
                             </div>
@@ -1157,7 +1147,7 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
             })}
           </div>
 
-          <p className="text-[10px] text-gray-600 italic">
+          <p className="text-[10px] text-gray-400 italic">
             Tip: Para configurar hora de colacion, agrega dos bloques en el mismo dia (ej: 09:00-13:00 y 14:00-18:00).
           </p>
 
@@ -1165,10 +1155,10 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
           <div className="mt-2">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h4 className="text-sm font-bold text-white">
+                <h4 className="text-sm font-bold text-gray-900">
                   Dias bloqueados
                   {blockedDays.length > 0 && (
-                    <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400">
+                    <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-red-50 text-red-600">
                       {blockedDays.length}
                     </span>
                   )}
@@ -1179,39 +1169,39 @@ function SchedulePanel({ staff, schedules, overrides, onRefresh, selectedStaff, 
               </div>
               <button
                 onClick={addBlockedDay}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30 transition-all"
+                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-all"
               >
                 + Bloquear dia
               </button>
             </div>
 
             {blockedDays.length === 0 ? (
-              <div className="rounded-xl bg-white/[0.03] border border-white/5 p-6 text-center">
-                <p className="text-[10px] text-gray-600 italic">
+              <div className="rounded-xl bg-white border border-gray-200 p-6 text-center">
+                <p className="text-[10px] text-gray-400 italic">
                   No hay dias bloqueados. Los clientes pueden agendar cualquier dia con horario configurado.
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {blockedDays.map(override => (
-                  <div key={override.id} className="flex items-center justify-between bg-red-500/10 rounded-xl px-3 py-2 border border-red-500/20">
+                  <div key={override.id} className="flex items-center justify-between bg-red-50 rounded-xl px-3 py-2 border border-red-200">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-lg bg-red-500/20 flex items-center justify-center">
-                        <svg className="w-3 h-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <div className="w-6 h-6 rounded-lg bg-red-50 flex items-center justify-center">
+                        <svg className="w-3 h-3 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                         </svg>
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-red-300">
+                        <p className="text-xs font-bold text-red-700">
                           {formatOverrideDate(override.override_date)}
                           {override.start_time && !override.end_time && (
-                            <span className="text-red-400/70 font-normal"> — desde las {override.start_time.slice(0, 5)}</span>
+                            <span className="text-red-500 font-normal"> — desde las {override.start_time.slice(0, 5)}</span>
                           )}
                         </p>
                         {override.reason && <p className="text-[10px] text-gray-500">{override.reason}</p>}
                       </div>
                     </div>
-                    <button onClick={() => deleteBlockedDay(override)} className="text-gray-600 hover:text-red-400 transition-colors">
+                    <button onClick={() => deleteBlockedDay(override)} className="text-gray-400 hover:text-red-600 transition-colors">
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                   </div>
@@ -1393,8 +1383,8 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh, b
               onClick={() => setFilterStatus(s)}
               className={`text-[10px] font-bold px-2.5 py-1.5 rounded-lg border transition-all ${
                 filterStatus === s
-                  ? 'border-indigo-500/30 text-indigo-300 bg-indigo-500/10'
-                  : 'border-white/5 text-gray-500 hover:text-gray-300'
+                  ? 'border-indigo-200 text-indigo-600 bg-indigo-50'
+                  : 'border-gray-200 text-gray-500 hover:text-gray-700'
               }`}
             >
               {s === 'all' ? 'Todas' : STATUS_LABELS[s]?.label || s}
@@ -1403,64 +1393,64 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh, b
         </div>
         <div className="flex items-center gap-2">
           {branches.length > 0 && (
-            <select value={filterBranch} onChange={e => setFilterBranch(e.target.value)} className="px-3 py-2 text-[10px] font-bold rounded-lg bg-white/[0.03] border border-white/5 text-gray-300">
+            <select value={filterBranch} onChange={e => setFilterBranch(e.target.value)} className="px-3 py-2 text-[10px] font-bold rounded-lg bg-white border border-gray-200 text-gray-600">
               <option value="all">Todas las sucursales</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
           )}
-          <button onClick={createManual} className="px-4 py-2 text-xs font-bold rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition-all w-fit">
+          <button onClick={createManual} className="px-4 py-2 text-xs font-bold rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100 transition-all w-fit">
             + Cita manual
           </button>
         </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-12 text-center">
+        <div className="rounded-2xl bg-white border border-gray-200 p-12 text-center">
           <p className="text-gray-500 text-sm">No hay citas {filterStatus !== 'all' ? `con estado "${STATUS_LABELS[filterStatus]?.label}"` : ''}.</p>
         </div>
       ) : (
         <div className="space-y-2">
           {filtered.map(appt => {
-            const st = STATUS_LABELS[appt.status] || { label: appt.status, color: 'text-gray-400' }
+            const st = STATUS_LABELS[appt.status] || { label: appt.status, color: 'text-gray-500' }
             return (
-              <div key={appt.id} className="rounded-xl bg-white/[0.03] border border-white/5 p-4">
+              <div key={appt.id} className="rounded-xl bg-white border border-gray-200 p-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-bold text-white">{appt.client_name}</p>
+                      <p className="text-sm font-bold text-gray-900">{appt.client_name}</p>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${st.color}`}>
                         {st.label}
                       </span>
-                      <span className="text-[10px] text-gray-600 uppercase">{appt.source}</span>
+                      <span className="text-[10px] text-gray-400 uppercase">{appt.source}</span>
                     </div>
-                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-gray-400">
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-gray-500">
                       <span>{formatDate(appt.starts_at)}</span>
                       <span className="font-mono">{formatTime(appt.starts_at)} – {formatTime(appt.ends_at)}</span>
                       <span>{appt.staff_members?.name || '—'}</span>
                       <span>{appt.services?.name || '—'}</span>
                     </div>
-                    <p className="text-[10px] text-gray-600 font-mono mt-0.5">{appt.client_phone}</p>
+                    <p className="text-[10px] text-gray-400 font-mono mt-0.5">{appt.client_phone}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5 pt-1 sm:pt-0">
                     {appt.status === 'confirmed' && (
                       <>
-                        <button onClick={() => updateStatus(appt, 'completed')} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-blue-500/30 text-blue-400 hover:bg-blue-500/10">
+                        <button onClick={() => updateStatus(appt, 'completed')} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50">
                           Completar
                         </button>
-                        <button onClick={() => updateStatus(appt, 'cancelled')} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10">
+                        <button onClick={() => updateStatus(appt, 'cancelled')} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50">
                           Cancelar
                         </button>
-                        <button onClick={() => updateStatus(appt, 'no_show')} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-gray-500/30 text-gray-400 hover:bg-gray-500/10">
+                        <button onClick={() => updateStatus(appt, 'no_show')} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100">
                           No asistió
                         </button>
                       </>
                     )}
                     {appt.status === 'pending' && (
                       <>
-                        <button onClick={() => updateStatus(appt, 'confirmed')} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
+                        <button onClick={() => updateStatus(appt, 'confirmed')} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-emerald-200 text-emerald-600 hover:bg-emerald-50">
                           Confirmar
                         </button>
-                        <button onClick={() => updateStatus(appt, 'cancelled')} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10">
+                        <button onClick={() => updateStatus(appt, 'cancelled')} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50">
                           Cancelar
                         </button>
                       </>
@@ -1609,18 +1599,18 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
   return (
     <div className="space-y-6">
       {/* Estado de conexión */}
-      <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-4 sm:p-6">
+      <div className="rounded-2xl bg-white border border-gray-200 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3 sm:gap-4">
-            <div className={`w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-xl flex items-center justify-center ${connected ? 'bg-emerald-500/10' : 'bg-blue-500/10'}`}>
-              <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${connected ? 'text-emerald-400' : 'text-blue-400'}`} viewBox="0 0 24 24" fill="currentColor">
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-xl flex items-center justify-center ${connected ? 'bg-emerald-50' : 'bg-blue-50'}`}>
+              <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${connected ? 'text-emerald-600' : 'text-blue-600'}`} viewBox="0 0 24 24" fill="currentColor">
                 <path d="M19.5 3.5h-2V2h-1v1.5h-9V2h-1v1.5h-2C3.67 3.5 3 4.17 3 5v14c0 .83.67 1.5 1.5 1.5h15c.83 0 1.5-.67 1.5-1.5V5c0-.83-.67-1.5-1.5-1.5zm0 15.5h-15V8.5h15V19z" />
               </svg>
             </div>
             <div className="min-w-0">
-              <h3 className="text-sm font-bold text-white">Google Calendar</h3>
+              <h3 className="text-sm font-bold text-gray-900">Google Calendar</h3>
               {connected ? (
-                <p className="text-xs text-emerald-400 truncate">Conectado como {googleEmail}</p>
+                <p className="text-xs text-emerald-600 truncate">Conectado como {googleEmail}</p>
               ) : (
                 <p className="text-xs text-gray-500">No conectado</p>
               )}
@@ -1629,7 +1619,7 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
           {connected ? (
             <button
               onClick={disconnect}
-              className="px-4 py-2 text-xs font-bold rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all w-fit"
+              className="px-4 py-2 text-xs font-bold rounded-xl border border-red-200 text-red-600 hover:bg-red-50 transition-all w-fit"
             >
               Desconectar
             </button>
@@ -1646,8 +1636,8 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
       </div>
 
       {!connected && (
-        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-8 text-center space-y-3">
-          <p className="text-sm text-gray-400 max-w-md mx-auto">
+        <div className="rounded-2xl bg-white border border-gray-200 p-8 text-center space-y-3">
+          <p className="text-sm text-gray-500 max-w-md mx-auto">
             Conecta tu cuenta de Google para sincronizar automáticamente la disponibilidad de tus profesionales.
             Los horarios ocupados en Google Calendar se bloquearán en el sistema de agendamiento.
           </p>
@@ -1656,25 +1646,25 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
 
       {/* Asignación de calendarios */}
       {connected && activeStaff.length > 0 && (
-        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-6 space-y-4">
+        <div className="rounded-2xl bg-white border border-gray-200 p-6 space-y-4">
           <div>
-            <h4 className="text-sm font-bold text-white">Asignar calendarios</h4>
+            <h4 className="text-sm font-bold text-gray-900">Asignar calendarios</h4>
             <p className="text-xs text-gray-500 mt-1">Asigna un calendario de Google a cada profesional para sincronizar su disponibilidad.</p>
           </div>
 
           <div className="space-y-3">
             {activeStaff.map(member => (
-              <div key={member.id} className="bg-white/[0.02] rounded-xl p-3 border border-white/5 space-y-2">
+              <div key={member.id} className="bg-white rounded-xl p-3 border border-gray-200 space-y-2">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
                     {member.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-white truncate">{member.name}</p>
+                    <p className="text-sm font-bold text-gray-900 truncate">{member.name}</p>
                     {member.role && <p className="text-[10px] text-gray-500 uppercase tracking-wider">{member.role}</p>}
                   </div>
                   {member.google_calendar_id && assigning !== member.id && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 shrink-0">
                       Sincronizado
                     </span>
                   )}
@@ -1686,11 +1676,11 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
                   value={member.google_calendar_id || ''}
                   onChange={e => assignCalendar(member.id, e.target.value)}
                   disabled={assigning === member.id}
-                  className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500/50"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="" className="bg-gray-900">Sin asignar</option>
+                  <option value="" className="bg-white">Sin asignar</option>
                   {calendars.map(cal => (
-                    <option key={cal.id} value={cal.id} className="bg-gray-900">
+                    <option key={cal.id} value={cal.id} className="bg-white">
                       {cal.summary}{cal.primary ? ' (Principal)' : ''}
                     </option>
                   ))}
@@ -1703,14 +1693,14 @@ function GoogleCalendarPanel({ staff, session, onRefresh }: {
 
       {/* Info de sincronización */}
       {connected && (
-        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-6 space-y-3">
-          <h4 className="text-sm font-bold text-white">Sincronización</h4>
+        <div className="rounded-2xl bg-white border border-gray-200 p-6 space-y-3">
+          <h4 className="text-sm font-bold text-gray-900">Sincronización</h4>
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0 mt-0.5">
-              <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
+              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
             </div>
             <div>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-500">
                 La disponibilidad se sincroniza automáticamente cada 15 minutos.
                 Los eventos en Google Calendar bloquearán automáticamente los horarios correspondientes.
               </p>

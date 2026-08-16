@@ -232,8 +232,6 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
       confirmButtonText: newActive ? 'Reactivar' : 'Pausar',
       cancelButtonText: 'Cancelar',
       confirmButtonColor: newActive ? '#10B981' : '#EF4444',
-      background: '#1a1a1a',
-      color: '#fff'
     })
     if (!confirm.isConfirmed) return
 
@@ -252,8 +250,6 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
         text: newActive ? 'Tu bot está recibiendo mensajes nuevamente.' : 'Tu bot dejó de recibir mensajes.',
         timer: 2500,
         showConfirmButton: false,
-        background: '#1a1a1a',
-        color: '#fff'
       })
       onUpdate?.()
     } catch (err: any) {
@@ -280,8 +276,6 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
       confirmButtonText: 'Sí, desvincular',
       cancelButtonText: 'Cancelar',
       confirmButtonColor: '#EF4444',
-      background: '#1a1a1a',
-      color: '#fff'
     })
     if (!confirm.isConfirmed) return
 
@@ -316,8 +310,6 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
         text: metaOk
           ? 'Tu número fue deregistrado de Meta y desvinculado de la plataforma.'
           : 'Se desvinculó de la plataforma. Si el deregistro en Meta no se completó, revisa tu cuenta de Meta Business.',
-        background: '#1a1a1a',
-        color: '#fff',
         confirmButtonColor: '#10B981'
       })
       onUpdate?.()
@@ -344,24 +336,24 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
   let statusLabel: string
 
   if (!connection) {
-    statusCardBg = 'bg-gray-900/60 border-white/5'
-    statusDotClass = 'bg-gray-600'
+    statusCardBg = 'bg-gray-50 border-gray-200'
+    statusDotClass = 'bg-gray-400'
     statusTextClass = 'text-gray-500'
     statusLabel = 'Sin Conexión'
   } else if (limitReached) {
-    statusCardBg = 'bg-red-950/20 border-red-500/30'
+    statusCardBg = 'bg-red-50 border-red-200'
     statusDotClass = 'bg-red-500'
-    statusTextClass = 'text-red-400'
+    statusTextClass = 'text-red-600'
     statusLabel = 'Bot Pausado — Límite'
   } else if (!connection.active) {
-    statusCardBg = 'bg-amber-950/20 border-amber-500/30'
-    statusDotClass = 'bg-amber-400'
-    statusTextClass = 'text-amber-400'
+    statusCardBg = 'bg-amber-50 border-amber-200'
+    statusDotClass = 'bg-amber-500'
+    statusTextClass = 'text-amber-600'
     statusLabel = 'Pausado'
   } else {
-    statusCardBg = 'bg-emerald-900/20 border-emerald-700/30'
-    statusDotClass = 'bg-emerald-400 shadow-[0_0_8px_2px_rgba(52,211,153,0.5)]'
-    statusTextClass = 'text-emerald-400'
+    statusCardBg = 'bg-emerald-50 border-emerald-200'
+    statusDotClass = 'bg-emerald-500 shadow-[0_0_8px_2px_rgba(16,185,129,0.4)]'
+    statusTextClass = 'text-emerald-600'
     statusLabel = 'En Línea'
   }
 
@@ -383,16 +375,16 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
     <div className="max-w-4xl mx-auto space-y-6 p-4">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-white">WhatsApp</h2>
-        <p className="text-gray-400 text-sm">Vincula tu número de WhatsApp Business para que tu asistente IA responda a tus clientes.</p>
+        <h2 className="text-2xl font-bold text-gray-900">WhatsApp</h2>
+        <p className="text-gray-500 text-sm">Vincula tu número de WhatsApp Business para que tu asistente IA responda a tus clientes.</p>
       </div>
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
         {/* CONNECTION STATUS */}
-        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-5 space-y-4 backdrop-blur-sm">
-          <p className="text-[11px] font-bold tracking-[0.18em] text-gray-500 uppercase text-center">Estado de WhatsApp</p>
+        <div className="rounded-2xl bg-white border border-gray-200 p-5 space-y-4 shadow-sm">
+          <p className="text-[11px] font-bold tracking-[0.18em] text-gray-400 uppercase text-center">Estado de WhatsApp</p>
           <div className={`rounded-xl p-4 text-center space-y-2 border ${statusCardBg}`}>
             <div className={`w-3 h-3 rounded-full mx-auto ${statusDotClass}`} />
             <p className={`text-sm font-extrabold tracking-widest uppercase ${statusTextClass}`}>
@@ -401,13 +393,13 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
 
             {connection && (
               <>
-                <div className="h-px bg-white/5 mx-2" />
-                <p className="text-[10px] tracking-widest text-gray-500 uppercase">Número vinculado</p>
-                <div className="inline-block bg-black/40 rounded-lg px-3 py-1.5">
-                  <span className="text-xs text-white font-mono">{connection.display_phone_number}</span>
+                <div className="h-px bg-gray-100 mx-2" />
+                <p className="text-[10px] tracking-widest text-gray-400 uppercase">Número vinculado</p>
+                <div className="inline-block bg-gray-100 rounded-lg px-3 py-1.5">
+                  <span className="text-xs text-gray-900 font-mono">{connection.display_phone_number}</span>
                 </div>
                 {connection.phone_number_id && (
-                  <p className="text-[10px] text-gray-600 font-mono">{connection.phone_number_id}</p>
+                  <p className="text-[10px] text-gray-400 font-mono">{connection.phone_number_id}</p>
                 )}
               </>
             )}
@@ -420,8 +412,8 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
                 disabled={toggling}
                 className={`w-full py-2 text-xs font-bold rounded-xl border transition-all ${
                   connection.active
-                    ? 'border-amber-500/30 text-amber-400 hover:bg-amber-500/10'
-                    : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
+                    ? 'border-amber-300 text-amber-600 hover:bg-amber-50'
+                    : 'border-emerald-300 text-emerald-600 hover:bg-emerald-50'
                 }`}
               >
                 {toggling
@@ -433,7 +425,7 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
               <button
                 onClick={handleDisconnect}
                 disabled={disconnecting}
-                className="w-full py-2 text-[10px] font-black text-red-500/50 hover:text-red-500 uppercase tracking-widest transition-all disabled:opacity-40"
+                className="w-full py-2 text-[10px] font-black text-red-400 hover:text-red-600 uppercase tracking-widest transition-all disabled:opacity-40"
               >
                 {disconnecting ? 'Desvinculando...' : 'Desvincular cuenta'}
               </button>
@@ -442,17 +434,17 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
         </div>
 
         {/* MONTHLY CREDITS */}
-        <div className={`rounded-2xl bg-white/[0.03] border p-5 space-y-4 backdrop-blur-sm ${limitReached ? 'border-red-500/40' : 'border-white/5'}`}>
-          <p className="text-[11px] font-bold tracking-[0.18em] text-gray-500 uppercase text-center">Créditos Mensuales</p>
-          <div className={`rounded-xl border p-4 text-center space-y-3 ${limitReached ? 'bg-red-950/30 border-red-500/30' : 'bg-gray-900/60 border-white/5'}`}>
-            <p className="text-4xl font-black tracking-tight text-white italic">{planCodeToDisplay(planCode).toUpperCase()}</p>
-            <div className="flex justify-between text-xs text-gray-400 px-1">
+        <div className={`rounded-2xl bg-white border p-5 space-y-4 shadow-sm ${limitReached ? 'border-red-300' : 'border-gray-200'}`}>
+          <p className="text-[11px] font-bold tracking-[0.18em] text-gray-400 uppercase text-center">Créditos Mensuales</p>
+          <div className={`rounded-xl border p-4 text-center space-y-3 ${limitReached ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
+            <p className="text-4xl font-black tracking-tight text-gray-900 italic">{planCodeToDisplay(planCode).toUpperCase()}</p>
+            <div className="flex justify-between text-xs text-gray-500 px-1">
               <span>USO</span>
-              <span className="font-mono text-white">
+              <span className="font-mono text-gray-900">
                 {creditsUsed.toLocaleString('es-CL')} / {planMessagesLimit ? planMessagesLimit.toLocaleString('es-CL') : '∞'}
               </span>
             </div>
-            <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"
                 style={{
@@ -463,19 +455,19 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
               />
             </div>
             {!planMessagesLimit && (
-              <p className="text-[10px] text-emerald-400/70 italic">Créditos ilimitados bajo política de uso justo</p>
+              <p className="text-[10px] text-emerald-600/70 italic">Créditos ilimitados bajo política de uso justo</p>
             )}
             {limitReached && (
-              <p className="text-[10px] text-red-400 font-bold tracking-wide uppercase">Límite alcanzado — bot pausado</p>
+              <p className="text-[10px] text-red-600 font-bold tracking-wide uppercase">Límite alcanzado — bot pausado</p>
             )}
             {!limitReached && planMessagesLimit && usagePct > 85 && (
-              <p className="text-[10px] text-amber-400 italic">Cerca del límite — considera actualizar tu plan</p>
+              <p className="text-[10px] text-amber-600 italic">Cerca del límite — considera actualizar tu plan</p>
             )}
           </div>
           {planCode !== 'escala' && (
             <button
               onClick={() => goToPlans?.()}
-              className="w-full py-2 text-xs font-bold rounded-xl border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 transition-all"
+              className="w-full py-2 text-xs font-bold rounded-xl border border-emerald-300 text-emerald-600 hover:bg-emerald-50 transition-all"
             >
               Ver planes →
             </button>
@@ -485,14 +477,14 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
 
       {/* CONNECT CARD — shown when no connection exists */}
       {!connection && (
-        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-8 backdrop-blur-sm text-center space-y-6">
+        <div className="rounded-2xl bg-white border border-gray-200 p-8 shadow-sm text-center space-y-6">
           <div className="w-16 h-16 mx-auto rounded-2xl bg-[#25D366]/10 flex items-center justify-center">
             <svg className="w-8 h-8 text-[#25D366]" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
             </svg>
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white mb-1">Conecta tu WhatsApp Business</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Conecta tu WhatsApp Business</h3>
             <p className="text-sm text-gray-500">Vincula tu cuenta de Meta Business para recibir y responder mensajes automáticamente.</p>
           </div>
           <button
@@ -511,44 +503,44 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
               : sdkStatus === 'exchanging' ? 'Vinculando...'
               : 'Conectar con WhatsApp'}
           </button>
-          {errorMsg && <p className="text-sm text-red-400">{errorMsg}</p>}
+          {errorMsg && <p className="text-sm text-red-500">{errorMsg}</p>}
         </div>
       )}
 
       {/* INFO BANNER when connected */}
       {connection && connection.active && !limitReached && (
-        <div className="p-4 rounded-xl bg-emerald-900/10 border border-emerald-800/30 flex items-start gap-3">
-          <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-3">
+          <svg className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div>
-            <p className="text-sm text-emerald-300 font-semibold">Tu asistente IA está activo</p>
-            <p className="text-xs text-emerald-400/60 mt-0.5">Los mensajes que lleguen a <span className="font-mono">{connection.display_phone_number}</span> serán respondidos automáticamente por tu bot.</p>
+            <p className="text-sm text-emerald-700 font-semibold">Tu asistente IA está activo</p>
+            <p className="text-xs text-emerald-600/70 mt-0.5">Los mensajes que lleguen a <span className="font-mono">{connection.display_phone_number}</span> serán respondidos automáticamente por tu bot.</p>
           </div>
         </div>
       )}
 
       {connection && !connection.active && (
-        <div className="p-4 rounded-xl bg-amber-900/10 border border-amber-800/30 flex items-start gap-3">
-          <svg className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3">
+          <svg className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.832c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
           </svg>
           <div>
-            <p className="text-sm text-amber-300 font-semibold">Recepción pausada</p>
-            <p className="text-xs text-amber-400/60 mt-0.5">Tu número <span className="font-mono">{connection.display_phone_number}</span> está vinculado pero no está respondiendo mensajes. Haz clic en "Reactivar" para volver a recibir.</p>
+            <p className="text-sm text-amber-700 font-semibold">Recepción pausada</p>
+            <p className="text-xs text-amber-600/70 mt-0.5">Tu número <span className="font-mono">{connection.display_phone_number}</span> está vinculado pero no está respondiendo mensajes. Haz clic en "Reactivar" para volver a recibir.</p>
           </div>
         </div>
       )}
 
       {/* TEMPLATE STATUS */}
       {connection && (
-        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-5 backdrop-blur-sm space-y-4">
+        <div className="rounded-2xl bg-white border border-gray-200 p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold tracking-[0.18em] text-gray-500 uppercase">Plantillas de Mensaje</p>
+            <p className="text-[11px] font-bold tracking-[0.18em] text-gray-400 uppercase">Plantillas de Mensaje</p>
             <button
               onClick={fetchTemplates}
               disabled={templatesLoading}
-              className="text-[10px] text-gray-500 hover:text-white transition-colors disabled:opacity-40"
+              className="text-[10px] text-gray-500 hover:text-gray-900 transition-colors disabled:opacity-40"
             >
               {templatesLoading ? 'Cargando...' : '↻ Actualizar'}
             </button>
@@ -556,25 +548,25 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
 
           {templatesLoading && templates.length === 0 ? (
             <div className="flex justify-center py-4">
-              <svg className="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
             </div>
           ) : templates.length === 0 ? (
-            <p className="text-xs text-gray-600 text-center py-2">No se encontraron plantillas.</p>
+            <p className="text-xs text-gray-400 text-center py-2">No se encontraron plantillas.</p>
           ) : (
             <div className="space-y-2">
               {templates.map((t) => (
-                <div key={`${t.name}-${t.language}`} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                <div key={`${t.name}-${t.language}`} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-200">
                   <div className="min-w-0">
-                    <p className="text-sm text-white font-medium truncate">{t.name.replace(/_/g, ' ')}</p>
+                    <p className="text-sm text-gray-900 font-medium truncate">{t.name.replace(/_/g, ' ')}</p>
                     <p className="text-[10px] text-gray-500 mt-0.5">{t.category} · {t.language}</p>
                   </div>
                   <span className={`flex-shrink-0 ml-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                    t.status === 'APPROVED' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' :
-                    t.status === 'REJECTED' ? 'bg-red-500/15 text-red-400 border border-red-500/20' :
-                    'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                    t.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
+                    t.status === 'REJECTED' ? 'bg-red-50 text-red-600 border border-red-200' :
+                    'bg-amber-50 text-amber-600 border border-amber-200'
                   }`}>
                     {t.status === 'APPROVED' ? '✓ Aprobada' :
                      t.status === 'REJECTED' ? '✗ Rechazada' :
@@ -585,7 +577,7 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
             </div>
           )}
 
-          <p className="text-[10px] text-gray-600 text-center">
+          <p className="text-[10px] text-gray-400 text-center">
             Las plantillas se crean automáticamente al vincular WhatsApp. Meta las revisa en minutos.
           </p>
         </div>
@@ -596,7 +588,7 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
         <AgentPersonalitySection
           instanceId={instance.id}
           channel="whatsapp"
-          channelColor="from-green-500/10 to-emerald-500/10"
+          channelColor="from-green-500/5 to-emerald-500/5"
         />
       )}
     </div>

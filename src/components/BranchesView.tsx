@@ -81,7 +81,7 @@ export default function BranchesView({ session, profile, goToPlans }: BranchesVi
     if (!formValues) return
 
     const { error } = await supabase.from('branches').insert({ ...formValues, user_id: userId })
-    if (error) { Swal.fire({ icon: 'error', title: 'Error', text: error.message, background: '#1a1a1a', color: '#fff' }); return }
+    if (error) { Swal.fire({ icon: 'error', title: 'Error', text: error.message }); return }
     loadBranches()
   }
 
@@ -117,7 +117,7 @@ export default function BranchesView({ session, profile, goToPlans }: BranchesVi
     if (!formValues) return
 
     const { error } = await supabase.from('branches').update(formValues).eq('id', branch.id)
-    if (error) { Swal.fire({ icon: 'error', title: 'Error', text: error.message, background: '#1a1a1a', color: '#fff' }); return }
+    if (error) { Swal.fire({ icon: 'error', title: 'Error', text: error.message }); return }
     loadBranches()
   }
 
@@ -157,16 +157,16 @@ export default function BranchesView({ session, profile, goToPlans }: BranchesVi
     <div className="max-w-5xl mx-auto space-y-6 p-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white">Sucursales</h2>
-          <p className="text-gray-400 text-sm">Gestiona las ubicaciones de tu negocio.</p>
+          <h2 className="text-2xl font-bold text-gray-900">Sucursales</h2>
+          <p className="text-gray-500 text-sm">Gestiona las ubicaciones de tu negocio.</p>
         </div>
-        <button onClick={addBranch} className="px-4 py-2 text-xs font-bold rounded-xl bg-teal-500/20 text-teal-300 border border-teal-500/30 hover:bg-teal-500/30 transition-all">
+        <button onClick={addBranch} className="px-4 py-2 text-xs font-bold rounded-xl bg-teal-500/10 text-teal-700 border border-teal-500/30 hover:bg-teal-500/20 transition-all">
           + Nueva sucursal
         </button>
       </div>
 
       {branches.length === 0 ? (
-        <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-12 text-center space-y-4">
+        <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-12 text-center space-y-4">
           <div className="w-16 h-16 mx-auto rounded-2xl bg-teal-500/10 flex items-center justify-center">
             <svg className="w-8 h-8 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -182,7 +182,7 @@ export default function BranchesView({ session, profile, goToPlans }: BranchesVi
           {branches.map(branch => {
             const staffCount = branch.staff_members?.[0]?.count ?? 0
             return (
-              <div key={branch.id} className={`rounded-xl border p-5 transition-all ${branch.is_active ? 'bg-white/[0.03] border-white/5 hover:border-teal-500/30' : 'bg-gray-900/40 border-white/5 opacity-60'}`}>
+              <div key={branch.id} className={`rounded-xl border p-5 transition-all ${branch.is_active ? 'bg-white border-gray-200 shadow-sm hover:border-teal-500/30' : 'bg-gray-50 border-gray-200 opacity-60'}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -190,7 +190,7 @@ export default function BranchesView({ session, profile, goToPlans }: BranchesVi
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white">{branch.name}</p>
+                        <p className="text-sm font-bold text-gray-900">{branch.name}</p>
                         {branch.city && <p className="text-[10px] text-gray-500">{branch.city}{branch.region ? `, ${branch.region}` : ''}</p>}
                       </div>
                     </div>
@@ -201,9 +201,9 @@ export default function BranchesView({ session, profile, goToPlans }: BranchesVi
 
                     <div className="flex flex-wrap gap-2 mt-3 pl-11">
                       {branch.phone && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-400 border border-white/5">{branch.phone}</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">{branch.phone}</span>
                       )}
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/20">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-600 border border-teal-500/20">
                         {staffCount} profesional{staffCount !== 1 ? 'es' : ''}
                       </span>
                     </div>

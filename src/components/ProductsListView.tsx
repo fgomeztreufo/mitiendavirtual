@@ -194,7 +194,7 @@ export default function ProductsListView({ session, onUpdate, businessType }: an
         icon: 'success',
         title: `¡${labels.product} actualizado!`,
         text: 'Tu bot conocerá los cambios en los próximos 30 minutos.',
-        background: '#111827', color: '#fff', timer: 3000, showConfirmButton: false,
+        timer: 3000, showConfirmButton: false,
       })
 
       setEditingProduct(null)
@@ -249,7 +249,6 @@ export default function ProductsListView({ session, onUpdate, businessType }: an
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
       confirmButtonText: 'Sí, eliminar todo',
-      background: '#111827', color: '#fff',
     })
 
     if (result.isConfirmed) {
@@ -277,7 +276,7 @@ export default function ProductsListView({ session, onUpdate, businessType }: an
 
         Swal.fire({
           icon: 'success', title: 'Eliminado', text: 'Capacidad actualizada.',
-          background: '#111827', color: '#fff', timer: 1500, showConfirmButton: false,
+          timer: 1500, showConfirmButton: false,
         })
 
         fetchProducts()
@@ -293,8 +292,8 @@ export default function ProductsListView({ session, onUpdate, businessType }: an
   const currentItems = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
 
-  const inputClass = 'w-full bg-black border border-gray-800 p-4 rounded-2xl text-white text-sm outline-none focus:border-blue-500'
-  const selectClass = 'w-full bg-black border border-gray-800 p-4 rounded-2xl text-white text-sm outline-none focus:border-blue-500 appearance-none'
+  const inputClass = 'w-full bg-gray-50 border border-gray-200 p-4 rounded-2xl text-gray-900 text-sm outline-none focus:border-indigo-500'
+  const selectClass = 'w-full bg-gray-50 border border-gray-200 p-4 rounded-2xl text-gray-900 text-sm outline-none focus:border-indigo-500 appearance-none'
 
   const opLabel = (v: string) => OPERATION_TYPES.find(o => o.value === v)?.label || v
   const propLabel = (v: string) => PROPERTY_TYPES.find(p => p.value === v)?.label || v
@@ -304,20 +303,20 @@ export default function ProductsListView({ session, onUpdate, businessType }: an
     <div className="animate-fade-in space-y-6 pb-10 text-left">
       {/* MODAL EDICIÓN */}
       {editingProduct && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-          <div className="bg-[#111827] border border-gray-800 w-full max-w-xl rounded-[2.5rem] p-8 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-black italic uppercase text-white mb-6">Editar {labels.product}</h2>
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+          <div className="bg-white border border-gray-200 shadow-xl w-full max-w-xl rounded-[2.5rem] p-8 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-black italic uppercase text-gray-900 mb-6">Editar {labels.product}</h2>
             <form onSubmit={handleUpdate} className="space-y-4">
-              <div className="flex flex-col items-center gap-4 bg-black/40 p-4 rounded-3xl border border-gray-800 text-center">
+              <div className="flex flex-col items-center gap-4 bg-gray-50 p-4 rounded-3xl border border-gray-200 text-center">
                 <img
                   src={editPreviewUrl ?? editingProduct.image_url}
-                  className="w-24 h-24 object-cover rounded-xl border border-gray-700"
+                  className="w-24 h-24 object-cover rounded-xl border border-gray-200"
                 />
                 {editPreviewUrl && (
-                  <span className="text-[9px] text-green-400 font-bold uppercase">Nueva imagen seleccionada</span>
+                  <span className="text-[9px] text-green-600 font-bold uppercase">Nueva imagen seleccionada</span>
                 )}
                 <input type="file" ref={fileInputRef} accept="image/jpeg,image/png,image/webp"
-                  className="text-[10px] text-gray-400"
+                  className="text-[10px] text-gray-500"
                   onChange={e => { const f = e.target.files?.[0]; if (f) setEditPreviewUrl(URL.createObjectURL(f)) }}
                 />
               </div>
@@ -374,11 +373,11 @@ export default function ProductsListView({ session, onUpdate, businessType }: an
                   </select>
 
                   {/* Galería */}
-                  <div className="bg-black/40 p-4 rounded-2xl border border-gray-800">
+                  <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200">
                     <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Galería de Fotos</p>
                     <div className="flex flex-wrap gap-2">
                       {gallery.map(img => (
-                        <div key={img.id} className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-700">
+                        <div key={img.id} className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200">
                           <img src={img.image_url} className="w-full h-full object-cover" />
                           <button type="button" onClick={() => deleteGalleryImage(img)}
                             className="absolute top-0.5 right-0.5 w-4 h-4 bg-red-500 rounded-full text-white text-[8px] flex items-center justify-center hover:bg-red-400"
@@ -386,7 +385,7 @@ export default function ProductsListView({ session, onUpdate, businessType }: an
                         </div>
                       ))}
                       {newGalleryPreviews.map((url, i) => (
-                        <div key={`new-${i}`} className="relative w-16 h-16 rounded-lg overflow-hidden border border-green-700">
+                        <div key={`new-${i}`} className="relative w-16 h-16 rounded-lg overflow-hidden border border-green-300">
                           <img src={url} className="w-full h-full object-cover" />
                           <button type="button" onClick={() => removeNewGallery(i)}
                             className="absolute top-0.5 right-0.5 w-4 h-4 bg-red-500 rounded-full text-white text-[8px] flex items-center justify-center"
@@ -394,7 +393,7 @@ export default function ProductsListView({ session, onUpdate, businessType }: an
                         </div>
                       ))}
                       {gallery.length + newGalleryFiles.length < 10 && (
-                        <label className="w-16 h-16 border-2 border-dashed border-gray-700 rounded-lg flex items-center justify-center cursor-pointer hover:border-blue-500/50">
+                        <label className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-indigo-400">
                           <span className="text-gray-600 text-lg">+</span>
                           <input type="file" className="hidden" onChange={handleGalleryFiles} accept="image/*" multiple />
                         </label>
@@ -404,13 +403,13 @@ export default function ProductsListView({ session, onUpdate, businessType }: an
                 </>
               )}
 
-              <textarea placeholder="Descripción" className="w-full bg-black border border-gray-800 p-4 rounded-2xl text-white text-sm h-24 outline-none focus:border-blue-500"
+              <textarea placeholder="Descripción" className="w-full bg-gray-50 border border-gray-200 p-4 rounded-2xl text-gray-900 text-sm h-24 outline-none focus:border-indigo-500"
                 value={editData.description} onChange={e => setEditData({ ...editData, description: e.target.value })} />
               <div className="flex gap-3">
                 <button type="button" onClick={() => { setEditingProduct(null); newGalleryPreviews.forEach(u => URL.revokeObjectURL(u)); setNewGalleryFiles([]); setNewGalleryPreviews([]) }}
                   className="flex-1 text-gray-500 font-bold uppercase text-[10px]">Cancelar</button>
                 <button type="submit" disabled={uploading}
-                  className="flex-1 bg-blue-600 py-4 rounded-2xl font-black text-[10px] text-white uppercase">{uploading ? 'Guardando...' : 'Confirmar'}</button>
+                  className="flex-1 bg-indigo-600 py-4 rounded-2xl font-black text-[10px] text-white uppercase">{uploading ? 'Guardando...' : 'Confirmar'}</button>
               </div>
             </form>
           </div>
@@ -418,64 +417,64 @@ export default function ProductsListView({ session, onUpdate, businessType }: an
       )}
 
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 bg-[#111827] p-4 sm:p-6 rounded-[2rem] border border-gray-800">
-        <h1 className="text-xl font-black text-white italic uppercase tracking-tighter">{labels.inventory}</h1>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 bg-white p-4 sm:p-6 rounded-[2rem] border border-gray-200 shadow-sm">
+        <h1 className="text-xl font-black text-gray-900 italic uppercase tracking-tighter">{labels.inventory}</h1>
         <div className="flex flex-wrap gap-2 items-center">
           {isRealEstate && (
             <>
               <select value={filterOp} onChange={e => setFilterOp(e.target.value)}
-                className="bg-black border border-gray-800 rounded-xl py-2 px-3 text-[10px] font-black uppercase text-white outline-none">
+                className="bg-white border border-gray-200 rounded-xl py-2 px-3 text-[10px] font-black uppercase text-gray-700 outline-none">
                 <option value="all">Operación</option>
                 {OPERATION_TYPES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
               <select value={filterPropType} onChange={e => setFilterPropType(e.target.value)}
-                className="bg-black border border-gray-800 rounded-xl py-2 px-3 text-[10px] font-black uppercase text-white outline-none">
+                className="bg-white border border-gray-200 rounded-xl py-2 px-3 text-[10px] font-black uppercase text-gray-700 outline-none">
                 <option value="all">Tipo</option>
                 {PROPERTY_TYPES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
               </select>
               <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-                className="bg-black border border-gray-800 rounded-xl py-2 px-3 text-[10px] font-black uppercase text-white outline-none">
+                className="bg-white border border-gray-200 rounded-xl py-2 px-3 text-[10px] font-black uppercase text-gray-700 outline-none">
                 <option value="all">Estado</option>
                 {PROPERTY_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </>
           )}
           <input placeholder={`FILTRAR ${labels.products.toUpperCase()}...`}
-            className="w-full sm:w-auto bg-black border border-gray-800 rounded-xl py-2 px-4 text-[10px] font-black uppercase text-white outline-none focus:border-blue-500"
+            className="w-full sm:w-auto bg-white border border-gray-200 rounded-xl py-2 px-4 text-[10px] font-black uppercase text-gray-700 outline-none focus:border-indigo-500"
             onChange={e => setSearchTerm(e.target.value)} />
         </div>
       </div>
 
       {/* TABLA */}
-      <div className="bg-[#111827] border border-gray-800 rounded-[2rem] overflow-hidden overflow-x-auto">
+      <div className="bg-white border border-gray-200 shadow-sm rounded-[2rem] overflow-hidden overflow-x-auto">
         <table className="w-full min-w-[400px]">
-          <thead className="bg-gray-900/50 border-b border-gray-800 text-left">
+          <thead className="bg-gray-50 border-b border-gray-200 text-left">
             <tr>
               <th className="p-5 text-[10px] font-black text-gray-500 uppercase">{labels.product}</th>
               {isRealEstate && <th className="p-5 text-[10px] font-black text-gray-500 uppercase hidden sm:table-cell">Detalles</th>}
               <th className="p-5 text-[10px] font-black text-gray-500 uppercase text-center">Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-800">
+          <tbody className="divide-y divide-gray-100">
             {currentItems.map((product) => (
-              <tr key={product.id} className="hover:bg-blue-600/5 transition-all group">
+              <tr key={product.id} className="hover:bg-indigo-50 transition-all group">
                 <td className="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
                   <img src={product.image_url} className="w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-lg object-cover" />
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-xs text-white uppercase">{product.name}</span>
+                      <span className="font-bold text-xs text-gray-900 uppercase">{product.name}</span>
                       {product.activo === false && (
-                        <span className="text-[8px] font-black uppercase bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-full px-2 py-0.5">
+                        <span className="text-[8px] font-black uppercase bg-yellow-50 text-yellow-600 border border-yellow-200 rounded-full px-2 py-0.5">
                           Suspendido
                         </span>
                       )}
                       {isRealEstate && product.operation_type && (
-                        <span className={`text-[8px] font-black uppercase rounded-full px-2 py-0.5 ${product.operation_type === 'venta' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-sky-500/10 text-sky-400 border border-sky-500/30'}`}>
+                        <span className={`text-[8px] font-black uppercase rounded-full px-2 py-0.5 ${product.operation_type === 'venta' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-sky-50 text-sky-600 border border-sky-200'}`}>
                           {opLabel(product.operation_type)}
                         </span>
                       )}
                       {isRealEstate && product.property_status && product.property_status !== 'disponible' && (
-                        <span className="text-[8px] font-black uppercase bg-orange-500/10 text-orange-400 border border-orange-500/30 rounded-full px-2 py-0.5">
+                        <span className="text-[8px] font-black uppercase bg-orange-50 text-orange-600 border border-orange-200 rounded-full px-2 py-0.5">
                           {statusLabel(product.property_status)}
                         </span>
                       )}
@@ -500,7 +499,7 @@ export default function ProductsListView({ session, onUpdate, businessType }: an
                 </td>
                 {isRealEstate && (
                   <td className="p-4 hidden sm:table-cell">
-                    <div className="text-[10px] text-gray-400 space-x-2">
+                    <div className="text-[10px] text-gray-500 space-x-2">
                       {product.bedrooms != null && <span>{product.bedrooms}D</span>}
                       {product.bathrooms != null && <span>{product.bathrooms}B</span>}
                       {product.parking_spots != null && <span>{product.parking_spots}E</span>}
@@ -512,11 +511,11 @@ export default function ProductsListView({ session, onUpdate, businessType }: an
                     <button
                       onClick={() => startEdit(product)}
                       disabled={product.activo === false}
-                      className="p-2 bg-blue-600/10 hover:bg-blue-600 text-blue-500 hover:text-white rounded-xl transition-all font-black text-[10px] uppercase px-4 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-blue-600/10 disabled:hover:text-blue-500"
+                      className="p-2 bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white rounded-xl transition-all font-black text-[10px] uppercase px-4 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-indigo-50 disabled:hover:text-indigo-600"
                     >Edit</button>
                     <button
                       onClick={() => handleDelete(product)}
-                      className="p-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl transition-all font-black text-[10px] uppercase px-4"
+                      className="p-2 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded-xl transition-all font-black text-[10px] uppercase px-4"
                     >Delete</button>
                   </div>
                 </td>
@@ -526,10 +525,10 @@ export default function ProductsListView({ session, onUpdate, businessType }: an
         </table>
 
         {totalPages > 1 && (
-          <div className="p-4 border-t border-gray-800 flex justify-between bg-gray-900/20">
-            <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="text-[10px] font-black text-blue-500 disabled:opacity-20 uppercase">Anterior</button>
+          <div className="p-4 border-t border-gray-200 flex justify-between bg-gray-50">
+            <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="text-[10px] font-black text-indigo-600 disabled:opacity-20 uppercase">Anterior</button>
             <span className="text-[10px] text-gray-500 font-black">Pág {currentPage} / {totalPages}</span>
-            <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="text-[10px] font-black text-blue-500 disabled:opacity-20 uppercase">Siguiente</button>
+            <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="text-[10px] font-black text-indigo-600 disabled:opacity-20 uppercase">Siguiente</button>
           </div>
         )}
       </div>

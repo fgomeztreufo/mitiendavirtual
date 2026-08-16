@@ -36,15 +36,15 @@ export default function PaymentResult({ session }: PaymentResultProps) {
   }, [searchParams])
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-white text-gray-900 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Fondo ambiental */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black z-0" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-500/[0.07] via-white to-white z-0" />
 
       <motion.div 
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="relative z-10 max-w-md w-full bg-gray-900 border border-gray-800 rounded-2xl p-8 text-center shadow-2xl"
+        className="relative z-10 max-w-md w-full bg-white border border-gray-200 rounded-2xl p-8 text-center shadow-xl"
       >
         
         {/* --- CASO ÉXITO --- */}
@@ -57,7 +57,7 @@ export default function PaymentResult({ session }: PaymentResultProps) {
                     🎉
                 </motion.div>
                 <h1 className="text-3xl font-bold mb-2">¡Pago Exitoso!</h1>
-                <p className="text-gray-400 mb-8">
+                <p className="text-gray-500 mb-8">
                     Tu suscripción ha sido activada correctamente. Ya puedes usar todo el poder de tu vendedor virtual.
                 </p>
                 <button
@@ -90,7 +90,7 @@ export default function PaymentResult({ session }: PaymentResultProps) {
                     ✕
                 </motion.div>
                 <h1 className="text-3xl font-bold mb-2">Hubo un problema</h1>
-                <p className="text-gray-400 mb-8">
+                <p className="text-gray-500 mb-8">
                     El pago no pudo procesarse. No te preocupes, no se ha realizado ningún cargo.
                 </p>
                 <div className="space-y-3">
@@ -103,11 +103,11 @@ export default function PaymentResult({ session }: PaymentResultProps) {
                             navigate(data.session ? '/dashboard?activeTab=plans' : '/login')
                           }
                         }}
-                        className="w-full py-3 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-xl transition-all"
+                        className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold rounded-xl transition-all"
                     >
                         Intentar de nuevo
                     </button>
-                    <button onClick={() => navigate(session ? '/dashboard' : '/login')} className="text-sm text-gray-500 hover:text-gray-300">
+                    <button onClick={() => navigate(session ? '/dashboard' : '/login')} className="text-sm text-gray-500 hover:text-gray-700">
                         Volver al inicio
                     </button>
                 </div>
@@ -124,7 +124,7 @@ export default function PaymentResult({ session }: PaymentResultProps) {
                     ⏳
                 </motion.div>
                 <h1 className="text-3xl font-bold mb-2">Pago en Proceso</h1>
-                <p className="text-gray-400 mb-8">
+                <p className="text-gray-500 mb-8">
                     Estamos esperando la confirmación de tu banco. Esto puede tardar unos minutos.
                 </p>
                 <button

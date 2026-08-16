@@ -30,7 +30,7 @@ export default function StepInstagram({ session, instance, onNext, onSkip, onBac
         </svg>
       </div>
 
-      <h2 className="text-2xl font-black text-white mb-2 text-center">
+      <h2 className="text-2xl font-black text-gray-900 mb-2 text-center">
         Conecta tu Instagram
       </h2>
       <p className="text-gray-500 text-sm mb-6 text-center">
@@ -44,8 +44,8 @@ export default function StepInstagram({ session, instance, onNext, onSkip, onBac
               <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
             </svg>
             <div>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Seras redirigido a <span className="text-white font-medium">Meta</span> para autorizar el acceso a tu cuenta de Instagram Business. No tiene costo. Al finalizar, volveras aqui automaticamente.
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Seras redirigido a <span className="text-gray-900 font-medium">Meta</span> para autorizar el acceso a tu cuenta de Instagram Business. No tiene costo. Al finalizar, volveras aqui automaticamente.
               </p>
               <p className="text-[10px] text-gray-600 mt-2">
                 Necesitas una cuenta de Instagram conectada a una Pagina de Facebook.
@@ -57,12 +57,12 @@ export default function StepInstagram({ session, instance, onNext, onSkip, onBac
 
       {isConnected ? (
         <div className="w-full max-w-xs space-y-4">
-          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center">
-            <svg className="w-8 h-8 text-emerald-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
+            <svg className="w-8 h-8 text-emerald-600 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-sm font-bold text-emerald-300">Instagram conectado</p>
-            <p className="text-xs text-emerald-400/60 mt-1 font-mono">{instance.provider_id}</p>
+            <p className="text-sm font-bold text-emerald-700">Instagram conectado</p>
+            <p className="text-xs text-emerald-500 mt-1 font-mono">{instance.provider_id}</p>
           </div>
           <button
             onClick={onNext}
@@ -86,11 +86,11 @@ export default function StepInstagram({ session, instance, onNext, onSkip, onBac
       )}
 
       <div className="flex gap-4 mt-6">
-        <button onClick={onBack} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+        <button onClick={onBack} className="text-xs text-gray-600 hover:text-gray-500 transition-colors">
           Volver
         </button>
         {!isConnected && (
-          <button onClick={onSkip} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+          <button onClick={onSkip} className="text-xs text-gray-600 hover:text-gray-500 transition-colors">
             Omitir por ahora
           </button>
         )}

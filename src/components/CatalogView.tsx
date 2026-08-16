@@ -243,27 +243,27 @@ export default function CatalogView({ session, profile, onProductAdded, goToPlan
     }
   }
 
-  const inputClass = 'bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all text-sm'
-  const selectClass = 'bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all text-sm appearance-none'
+  const inputClass = 'bg-gray-50 border border-gray-200 p-4 rounded-2xl text-gray-900 outline-none focus:border-indigo-500 transition-all text-sm'
+  const selectClass = 'bg-gray-50 border border-gray-200 p-4 rounded-2xl text-gray-900 outline-none focus:border-indigo-500 transition-all text-sm appearance-none'
 
   return (
     <div className="animate-fade-in p-4 md:p-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter uppercase">{labels.catalog}</h1>
+          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 italic tracking-tighter uppercase">{labels.catalog}</h1>
           {planCode === 'escala' && (
-            <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/50 px-3 py-1 rounded-full text-[10px] font-black flex items-center gap-1 animate-pulse">
+            <span className="bg-yellow-50 text-yellow-600 border border-yellow-200 px-3 py-1 rounded-full text-[10px] font-black flex items-center gap-1 animate-pulse">
               VIP ESCALA
             </span>
           )}
         </div>
 
-        <div className="p-4 rounded-2xl w-full md:w-64 border transition-all bg-gray-900 border-gray-800">
+        <div className="p-4 rounded-2xl w-full md:w-64 border transition-all bg-white border-gray-200 shadow-sm">
           <div className="flex justify-between text-[10px] font-black mb-2 tracking-widest uppercase">
             <span className="text-gray-500">Capacidad</span>
-            <span className="text-white">{`${currentCount} / ${limit.toLocaleString('es-CL')}`}</span>
+            <span className="text-gray-900">{`${currentCount} / ${limit.toLocaleString('es-CL')}`}</span>
           </div>
-          <div className="h-1.5 w-full bg-black rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
             <div
               className={`h-full transition-all duration-1000 ${isFull ? 'bg-red-500' : percentage > 80 ? 'bg-amber-500' : 'bg-emerald-500'}`}
               style={{ width: `${percentage}%` }}
@@ -273,12 +273,12 @@ export default function CatalogView({ session, profile, onProductAdded, goToPlan
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
-        <div className="lg:col-span-3 bg-[#111827] border border-gray-800 rounded-[2rem] p-8 relative overflow-hidden">
+        <div className="lg:col-span-3 bg-white border border-gray-200 shadow-sm rounded-[2rem] p-8 relative overflow-hidden">
           {isFull && (
-            <div className="absolute inset-0 bg-black/90 backdrop-blur-md z-20 flex flex-col items-center justify-center p-6 text-center">
+            <div className="absolute inset-0 bg-white/90 backdrop-blur-md z-20 flex flex-col items-center justify-center p-6 text-center">
               <span className="text-4xl mb-4">🔒</span>
-              <h3 className="text-xl font-bold text-white mb-2 uppercase">Plan {planCodeToDisplay(planCode)} al máximo</h3>
-              <p className="text-gray-400 text-xs mb-8">Has alcanzado el límite de {limit} {labels.products.toLowerCase()}.</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-2 uppercase">Plan {planCodeToDisplay(planCode)} al máximo</h3>
+              <p className="text-gray-500 text-xs mb-8">Has alcanzado el límite de {limit} {labels.products.toLowerCase()}.</p>
               <button
                 type="button"
                 onClick={goToPlans}
@@ -431,7 +431,7 @@ export default function CatalogView({ session, profile, onProductAdded, goToPlan
 
             <div className="flex flex-col gap-2 text-left">
               <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Foto Principal</label>
-              <label className="h-40 border-2 border-dashed border-gray-800 rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-blue-500/5 transition-all overflow-hidden relative group">
+              <label className="h-40 border-2 border-dashed border-gray-300 rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-indigo-50 transition-all overflow-hidden relative group">
                 {previewUrl ? (
                   <img src={previewUrl} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform" alt="Preview" />
                 ) : (
@@ -450,7 +450,7 @@ export default function CatalogView({ session, profile, onProductAdded, goToPlan
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Fotos Adicionales (máx. 10)</label>
                 <div className="flex flex-wrap gap-3">
                   {extraPreviews.map((url, i) => (
-                    <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-700">
+                    <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-300">
                       <img src={url} className="w-full h-full object-cover" alt={`Extra ${i + 1}`} />
                       <button type="button" onClick={() => removeExtraFile(i)}
                         className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center hover:bg-red-400"
@@ -458,7 +458,7 @@ export default function CatalogView({ session, profile, onProductAdded, goToPlan
                     </div>
                   ))}
                   {extraFiles.length < 10 && (
-                    <label className="w-20 h-20 border-2 border-dashed border-gray-700 rounded-xl flex items-center justify-center cursor-pointer hover:border-blue-500/50 transition-colors">
+                    <label className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center cursor-pointer hover:border-indigo-400 transition-colors">
                       <span className="text-gray-600 text-xl">+</span>
                       <input type="file" className="hidden" onChange={handleExtraFiles} accept="image/*" multiple />
                     </label>
@@ -469,7 +469,7 @@ export default function CatalogView({ session, profile, onProductAdded, goToPlan
 
             <div className="flex flex-col gap-2 text-left">
               <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{labels.descLabel}</label>
-              <textarea required className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-blue-500 transition-all text-sm h-24"
+              <textarea required className="bg-gray-50 border border-gray-200 p-4 rounded-2xl text-gray-900 outline-none focus:border-indigo-500 transition-all text-sm h-24"
                 value={formData.description}
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                 placeholder={labels.descPlaceholder}
@@ -477,7 +477,7 @@ export default function CatalogView({ session, profile, onProductAdded, goToPlan
             </div>
 
             <button type="submit" disabled={loading || isFull}
-              className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-xl ${loading ? 'bg-gray-800 text-gray-600' : 'bg-blue-600 hover:bg-blue-500 hover:scale-[1.01] shadow-blue-900/20'}`}
+              className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-xl ${loading ? 'bg-gray-200 text-gray-400' : 'bg-indigo-600 hover:bg-indigo-500 hover:scale-[1.01] shadow-indigo-200 text-white'}`}
             >
               {loading ? 'Subiendo...' : labels.addProduct}
             </button>

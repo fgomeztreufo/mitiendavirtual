@@ -4,18 +4,18 @@ import { supabase } from '../supabaseClient';
 
 // --- LAYOUT BASE (MODO OVERLAY) ---
 const LegalLayout = ({ title, subtitle, children, onClose }: { title: string, subtitle: string, children: React.ReactNode, onClose: () => void }) => (
-  <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col overflow-y-auto animate-in fade-in duration-300 font-sans">
+  <div className="fixed inset-0 z-[100] bg-white/[0.98] backdrop-blur-xl flex flex-col overflow-y-auto animate-in fade-in duration-300 font-sans">
     <div className="max-w-4xl mx-auto w-full p-6 md:p-20 flex-grow">
       
       {/* Cabecera con Botón de Cierre Funcional */}
-      <div className="flex items-center justify-between mb-12 border-b border-white/10 pb-8">
+      <div className="flex items-center justify-between mb-12 border-b border-gray-200 pb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight uppercase">{title}</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 tracking-tight uppercase">{title}</h1>
           <p className="text-blue-500 font-mono text-xs mt-2 tracking-[0.3em] uppercase">{subtitle}</p>
         </div>
         <button 
           onClick={onClose}
-          className="group flex items-center gap-3 px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xs font-bold text-gray-400 hover:text-white hover:bg-red-500/20 hover:border-red-500/50 transition-all uppercase tracking-widest shadow-2xl active:scale-95"
+          className="group flex items-center gap-3 px-6 py-3 bg-gray-50 border border-gray-200 rounded-full text-xs font-bold text-gray-500 hover:text-gray-900 hover:bg-red-50 hover:border-red-300 transition-all uppercase tracking-widest shadow-sm active:scale-95"
         >
           <span>Cerrar</span>
           <svg className="w-5 h-5 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,14 +25,14 @@ const LegalLayout = ({ title, subtitle, children, onClose }: { title: string, su
       </div>
 
       {/* Contenido Profesional */}
-      <div className="bg-[#0A0B10] border border-white/5 rounded-3xl p-8 md:p-12 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-        <div className="space-y-10 text-gray-400 text-[16px] leading-relaxed font-light">
+      <div className="bg-gray-50 border border-gray-200 rounded-3xl p-8 md:p-12 shadow-sm">
+        <div className="space-y-10 text-gray-600 text-[16px] leading-relaxed font-light">
           {children}
         </div>
       </div>
 
       <div className="mt-12 text-center pb-12">
-        <p className="text-[10px] text-gray-700 uppercase tracking-[0.5em]">
+        <p className="text-[10px] text-gray-400 uppercase tracking-[0.5em]">
           Documentación Oficial • MiTiendaVirtual • 2026
         </p>
       </div>
@@ -51,25 +51,25 @@ export const TermsOfService = ({ onClose }: { onClose: () => void }) => {
   <LegalLayout title="Términos" subtitle="Contrato de Servicio y Uso" onClose={onClose}>
 
     <section className="space-y-6">
-      <h3 className="text-white font-bold text-xl border-l-4 border-blue-500 pl-4 uppercase tracking-tight">1. Estructura de Planes y Precios</h3>
+      <h3 className="text-gray-900 font-bold text-xl border-l-4 border-blue-500 pl-4 uppercase tracking-tight">1. Estructura de Planes y Precios</h3>
       <p className="text-sm">
         El acceso a MiTiendaVirtual se rige por niveles de suscripción mensual. Los precios y capacidades vigentes para el año 2026 en Chile son:
       </p>
 
-      <div className="overflow-hidden overflow-x-auto rounded-xl border border-white/10 bg-white/5 shadow-inner">
-        <table className="w-full text-left text-sm text-gray-300 min-w-[500px]">
+      <div className="overflow-hidden overflow-x-auto rounded-xl border border-gray-200 bg-gray-50 shadow-sm">
+        <table className="w-full text-left text-sm text-gray-700 min-w-[500px]">
           <thead>
-            <tr className="bg-white/10 text-[10px] uppercase tracking-widest text-blue-400">
+            <tr className="bg-gray-100 text-[10px] uppercase tracking-widest text-indigo-600">
               <th className="px-3 sm:px-6 py-3 sm:py-4">Nivel de Plan</th>
               <th className="px-3 sm:px-6 py-3 sm:py-4">Inversión Mensual</th>
               <th className="px-3 sm:px-6 py-3 sm:py-4">Catálogo</th>
               <th className="px-3 sm:px-6 py-3 sm:py-4">Mensajes AI</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className="divide-y divide-gray-100">
             {plans.map((plan) => (
-              <tr key={plan.code} className="hover:bg-white/5 transition-colors text-xs">
-                <td className="px-6 py-4 font-bold text-white uppercase">{plan.display_name}</td>
+              <tr key={plan.code} className="hover:bg-gray-50 transition-colors text-xs">
+                <td className="px-6 py-4 font-bold text-gray-900 uppercase">{plan.display_name}</td>
                 <td className="px-6 py-4">{plan.monthly_price_clp === 0 ? '$0 (Costo Cero)' : `$${Number(plan.monthly_price_clp).toLocaleString('es-CL')} CLP`}</td>
                 <td className="px-6 py-4">Hasta {Number(plan.products_limit).toLocaleString('es-CL')} productos</td>
                 <td className="px-6 py-4">{plan.messages_limit ? `${Number(plan.messages_limit).toLocaleString('es-CL')} créditos IA` : 'Ilimitados*'}</td>
@@ -79,8 +79,8 @@ export const TermsOfService = ({ onClose }: { onClose: () => void }) => {
         </table>
       </div>
 
-      <div className="bg-blue-500/10 border border-blue-500/20 p-5 rounded-2xl text-xs space-y-3">
-        <p className="text-white font-bold uppercase">Aviso de Agotamiento de Cupo:</p>
+      <div className="bg-indigo-50 border border-indigo-200 p-5 rounded-2xl text-xs space-y-3">
+        <p className="text-gray-900 font-bold uppercase">Aviso de Agotamiento de Cupo:</p>
         <p className="leading-relaxed">
           Si el usuario consume la totalidad de sus créditos IA asignados antes del cierre de su ciclo mensual, el bot de IA será pausado hasta la renovación del plan. Las funciones correspondientes al plan originalmente contratado se reactivarán únicamente tras el pago de un nuevo ciclo o la renovación automática del periodo.
         </p>
@@ -88,12 +88,12 @@ export const TermsOfService = ({ onClose }: { onClose: () => void }) => {
     </section>
 
     <section className="space-y-6">
-      <h3 className="text-white font-bold text-xl border-l-4 border-red-500 pl-4 uppercase tracking-tight">2. Blindaje Legal y Garantía de Software</h3>
+      <h3 className="text-gray-900 font-bold text-xl border-l-4 border-red-500 pl-4 uppercase tracking-tight">2. Blindaje Legal y Garantía de Software</h3>
       <div className="text-sm space-y-4">
         <p>
           El software MiTiendaVirtual se entrega bajo la modalidad de <strong>"As Is" (Tal Cual Es)</strong>. El Titular no se responsabiliza por:
         </p>
-        <ul className="list-disc ml-6 space-y-2 text-gray-400 italic">
+        <ul className="list-disc ml-6 space-y-2 text-gray-500 italic">
           <li>Errores técnicos imprevistos (bugs), caídas de servidores o fallos de conexión externa.</li>
           <li>Alteraciones en las APIs de Meta (Instagram/WhatsApp) que afecten la integración.</li>
           <li>Pérdidas económicas o de ventas derivadas del tiempo de respuesta del soporte técnico o mantenimientos programados.</li>
@@ -102,7 +102,7 @@ export const TermsOfService = ({ onClose }: { onClose: () => void }) => {
     </section>
 
     <section className="space-y-6">
-      <h3 className="text-white font-bold text-xl border-l-4 border-emerald-500 pl-4 uppercase tracking-tight">3. Política de Pagos y Devoluciones</h3>
+      <h3 className="text-gray-900 font-bold text-xl border-l-4 border-emerald-500 pl-4 uppercase tracking-tight">3. Política de Pagos y Devoluciones</h3>
       <div className="text-sm space-y-4 leading-relaxed">
         <p>
           <strong>Política de "No Reembolso":</strong> Dado que el servicio ofrece acceso inmediato a infraestructura digital y modelos de inteligencia artificial, MiTiendaVirtual <strong>no realiza devoluciones de dinero</strong> una vez procesado el pago mensual.
@@ -114,12 +114,12 @@ export const TermsOfService = ({ onClose }: { onClose: () => void }) => {
     </section>
 
     <section className="space-y-6">
-      <h3 className="text-white font-bold text-xl border-l-4 border-purple-500 pl-4 uppercase tracking-tight">4. Escaneo de Productos desde Instagram</h3>
+      <h3 className="text-gray-900 font-bold text-xl border-l-4 border-purple-500 pl-4 uppercase tracking-tight">4. Escaneo de Productos desde Instagram</h3>
       <div className="text-sm space-y-4 leading-relaxed">
         <p>
           La funcionalidad de escaneo e importación de productos desde publicaciones de Instagram es un servicio exclusivo para clientes activos de MiTiendaVirtual. Al utilizar esta función, usted autoriza a MiTiendaVirtual a:
         </p>
-        <ul className="list-disc ml-6 space-y-2 text-gray-400 italic">
+        <ul className="list-disc ml-6 space-y-2 text-gray-500 italic">
           <li>Acceder a las publicaciones de su cuenta de Instagram Business vinculada.</li>
           <li>Analizar el contenido mediante inteligencia artificial para identificar productos.</li>
           <li>Descargar y almacenar las imágenes que usted seleccione para importar a su catálogo.</li>
@@ -130,7 +130,7 @@ export const TermsOfService = ({ onClose }: { onClose: () => void }) => {
       </div>
     </section>
 
-    <footer className="pt-8 border-t border-white/5 mt-8 text-[11px] text-gray-600">
+    <footer className="pt-8 border-t border-gray-200 mt-8 text-[11px] text-gray-500">
       Titular Responsable: FELIPE ALONSO GOMEZ TREUFO • RUT: 16.208.020-2 • Domicilio Comercial: Los Castaños 1088, Puente Alto, Santiago, Chile.
     </footer>
   </LegalLayout>
@@ -144,7 +144,7 @@ export const PrivacyPolicy = ({ onClose }: { onClose: () => void }) => (
       <p>MiTiendaVirtual garantiza el cumplimiento de la <strong>Ley 19.628</strong> sobre Protección de la Vida Privada en territorio chileno. Esta política describe cómo recopilamos, usamos, almacenamos y protegemos su información.</p>
 
       <div>
-        <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-3">1. Datos que recopilamos</h3>
+        <h3 className="text-gray-900 font-bold text-xs uppercase tracking-widest mb-3">1. Datos que recopilamos</h3>
         <ul className="space-y-3">
           <li className="flex gap-4"><span className="text-blue-500 font-bold">01.</span><p><strong>Datos de cuenta:</strong> nombre, correo electrónico y método de autenticación (email o Google OAuth).</p></li>
           <li className="flex gap-4"><span className="text-blue-500 font-bold">02.</span><p><strong>Datos de negocio:</strong> catálogo de productos, preguntas frecuentes (FAQs), servicios y configuración de agentes IA.</p></li>
@@ -156,7 +156,7 @@ export const PrivacyPolicy = ({ onClose }: { onClose: () => void }) => (
       </div>
 
       <div>
-        <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-3">2. Uso de los datos</h3>
+        <h3 className="text-gray-900 font-bold text-xs uppercase tracking-widest mb-3">2. Uso de los datos</h3>
         <ul className="space-y-3">
           <li className="flex gap-4"><span className="text-blue-500 font-bold">01.</span><p>Entrenamiento y respuesta de su asistente IA personalizado.</p></li>
           <li className="flex gap-4"><span className="text-blue-500 font-bold">02.</span><p>Gestión de leads y pipeline de ventas (CRM).</p></li>
@@ -167,7 +167,7 @@ export const PrivacyPolicy = ({ onClose }: { onClose: () => void }) => (
       </div>
 
       <div>
-        <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-3">3. Compartición de datos</h3>
+        <h3 className="text-gray-900 font-bold text-xs uppercase tracking-widest mb-3">3. Compartición de datos</h3>
         <ul className="space-y-3">
           <li className="flex gap-4"><span className="text-blue-500 font-bold">01.</span><p>No comercializamos bases de datos con terceros bajo ninguna circunstancia.</p></li>
           <li className="flex gap-4"><span className="text-blue-500 font-bold">02.</span><p>Los datos se comparten únicamente con los proveedores necesarios para el servicio: Supabase (base de datos), Meta Platforms (mensajería de Instagram y WhatsApp), Telegram y Google (Calendar).</p></li>
@@ -176,7 +176,7 @@ export const PrivacyPolicy = ({ onClose }: { onClose: () => void }) => (
       </div>
 
       <div>
-        <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-3">4. Almacenamiento y seguridad</h3>
+        <h3 className="text-gray-900 font-bold text-xs uppercase tracking-widest mb-3">4. Almacenamiento y seguridad</h3>
         <ul className="space-y-3">
           <li className="flex gap-4"><span className="text-blue-500 font-bold">01.</span><p>Los datos se almacenan en servidores de Supabase con seguridad a nivel de fila (RLS) por usuario.</p></li>
           <li className="flex gap-4"><span className="text-blue-500 font-bold">02.</span><p>Las credenciales de integración se almacenan con encriptación PGP (pgp_sym_encrypt).</p></li>
@@ -186,16 +186,16 @@ export const PrivacyPolicy = ({ onClose }: { onClose: () => void }) => (
       </div>
 
       <div>
-        <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-3">5. Retención de datos</h3>
+        <h3 className="text-gray-900 font-bold text-xs uppercase tracking-widest mb-3">5. Retención de datos</h3>
         <p>Sus datos se mantienen mientras su cuenta esté activa. Al solicitar eliminación, todos los datos asociados (catálogo, leads, mensajes, credenciales) se eliminan en un plazo de 24 a 48 horas hábiles.</p>
       </div>
 
       <div>
-        <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-3">6. Sus derechos</h3>
+        <h3 className="text-gray-900 font-bold text-xs uppercase tracking-widest mb-3">6. Sus derechos</h3>
         <p>Usted tiene derecho a acceder, rectificar, cancelar y oponerse al tratamiento de sus datos personales (derechos ARCO), según lo establecido en la Ley 19.628. También puede solicitar la eliminación completa de su cuenta y datos asociados en cualquier momento.</p>
       </div>
 
-      <p className="pt-6 border-t border-white/5 italic text-gray-500">
+      <p className="pt-6 border-t border-gray-200 italic text-gray-500">
         Para ejercer sus derechos o consultas sobre esta política, contacte a: contacto@mitiendavirtual.cl
       </p>
 
@@ -207,16 +207,16 @@ export const PrivacyPolicy = ({ onClose }: { onClose: () => void }) => (
 // --- VISTA: ELIMINACIÓN DE DATOS (REQUISITO META) ---
 export const DataDeletion = ({ onClose }: { onClose: () => void }) => (
   <LegalLayout title="Eliminación" subtitle="Protocolo de Borrado Definitivo" onClose={onClose}>
-    <div className="bg-red-500/5 border border-red-500/20 p-8 rounded-3xl text-center space-y-6">
-      <h3 className="text-red-500 font-bold text-2xl uppercase tracking-tighter">Solicitud de Derecho al Olvido</h3>
-      <p className="text-gray-400 max-w-lg mx-auto text-sm leading-relaxed">
+    <div className="bg-red-50 border border-red-200 p-8 rounded-3xl text-center space-y-6">
+      <h3 className="text-red-600 font-bold text-2xl uppercase tracking-tighter">Solicitud de Derecho al Olvido</h3>
+      <p className="text-gray-600 max-w-lg mx-auto text-sm leading-relaxed">
         En cumplimiento con las políticas de Meta Platforms, Inc., usted tiene el derecho de solicitar la eliminación total de sus datos de negocio e integraciones.
       </p>
       
-      <div className="bg-gray-950 p-6 rounded-2xl border border-gray-800 shadow-inner inline-block">
+      <div className="bg-gray-100 p-6 rounded-2xl border border-gray-200 shadow-sm inline-block">
         <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-2">Enviar Correo Electrónico a:</p>
-        <p className="text-xl font-mono text-white select-all border-b border-blue-500/30 pb-1">contacto@mitiendavirtual.cl</p>
-        <p className="text-[10px] text-blue-500 mt-2 font-bold italic">ASUNTO: ELIMINACIÓN DE DATOS - [SU NOMBRE/RUT]</p>
+        <p className="text-xl font-mono text-gray-900 select-all border-b border-indigo-300 pb-1">contacto@mitiendavirtual.cl</p>
+        <p className="text-[10px] text-indigo-600 mt-2 font-bold italic">ASUNTO: ELIMINACIÓN DE DATOS - [SU NOMBRE/RUT]</p>
       </div>
 
       <div className="text-[11px] text-gray-500 text-left max-w-sm mx-auto space-y-2">
@@ -234,13 +234,13 @@ export const SupportPage = ({ onClose }: { onClose: () => void }) => {
   return (
   <LegalLayout title="Soporte" subtitle="Centro de Asistencia" onClose={onClose}>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <a href="mailto:contacto@mitiendavirtual.cl" className="p-8 bg-blue-600/10 border border-blue-500/20 rounded-3xl text-center hover:scale-[1.02] transition-all">
-        <h4 className="text-white font-bold text-xl uppercase tracking-tight">Canal de Email</h4>
-        <p className="text-blue-400 mt-2 font-mono text-sm">contacto@mitiendavirtual.cl</p>
+      <a href="mailto:contacto@mitiendavirtual.cl" className="p-8 bg-indigo-50 border border-indigo-200 rounded-3xl text-center hover:scale-[1.02] transition-all">
+        <h4 className="text-gray-900 font-bold text-xl uppercase tracking-tight">Canal de Email</h4>
+        <p className="text-indigo-600 mt-2 font-mono text-sm">contacto@mitiendavirtual.cl</p>
       </a>
-      <a href={`https://wa.me/${phone}`} target="_blank" className="p-8 bg-emerald-600/10 border border-emerald-500/20 rounded-3xl text-center hover:scale-[1.02] transition-all">
-        <h4 className="text-white font-bold text-xl uppercase tracking-tight">WhatsApp Directo</h4>
-        <p className="text-emerald-400 mt-2 font-mono text-sm">{formatted}</p>
+      <a href={`https://wa.me/${phone}`} target="_blank" className="p-8 bg-emerald-50 border border-emerald-200 rounded-3xl text-center hover:scale-[1.02] transition-all">
+        <h4 className="text-gray-900 font-bold text-xl uppercase tracking-tight">WhatsApp Directo</h4>
+        <p className="text-emerald-600 mt-2 font-mono text-sm">{formatted}</p>
       </a>
     </div>
   </LegalLayout>

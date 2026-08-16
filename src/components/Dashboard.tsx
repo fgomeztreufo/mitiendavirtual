@@ -105,7 +105,7 @@ export default function Dashboard({ session }: { session: Session }) {
     if (params.get('payment') === 'success') {
         Swal.fire({ title: '¡Pago Recibido!', icon: 'success', confirmButtonColor: '#10B981' });
         window.history.replaceState({}, document.title, window.location.pathname);
-        getData(); setActiveTab('plans'); 
+        getData(); setActiveTab('plans');
     }
   }, []);
 
@@ -118,7 +118,7 @@ export default function Dashboard({ session }: { session: Session }) {
       ecommerce: '🛍️', inmobiliaria: '🏠', clinica: '🏥', servicios: '✂️', restaurant: '🍽️',
     }
     const cardsHtml = Object.entries(BUSINESS_TYPES)
-      .map(([k, v]) => `<button type="button" data-btype="${k}" class="btype-card" style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px;margin:6px 0;border-radius:12px;border:1px solid ${k === current ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.08)'};background:${k === current ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.03)'};color:#e5e7eb;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.15s;text-align:left"><span style="font-size:20px">${icons[k] || '📦'}</span><span>${v}</span></button>`)
+      .map(([k, v]) => `<button type="button" data-btype="${k}" class="btype-card" style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px;margin:6px 0;border-radius:12px;border:1px solid ${k === current ? 'rgba(99,102,241,0.5)' : '#e5e7eb'};background:${k === current ? 'rgba(99,102,241,0.08)' : '#f9fafb'};color:#374151;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.15s;text-align:left"><span style="font-size:20px">${icons[k] || '📦'}</span><span>${v}</span></button>`)
       .join('')
     const { isConfirmed, value } = await Swal.fire({
       title: '¿Qué tipo de negocio tienes?',
@@ -129,11 +129,11 @@ export default function Dashboard({ session }: { session: Session }) {
         document.querySelectorAll('.btype-card').forEach(btn => {
           btn.addEventListener('click', () => {
             document.querySelectorAll('.btype-card').forEach(b => {
-              (b as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)';
-              (b as HTMLElement).style.background = 'rgba(255,255,255,0.03)';
+              (b as HTMLElement).style.borderColor = '#e5e7eb';
+              (b as HTMLElement).style.background = '#f9fafb';
             });
             (btn as HTMLElement).style.borderColor = 'rgba(99,102,241,0.5)';
-            (btn as HTMLElement).style.background = 'rgba(99,102,241,0.1)';
+            (btn as HTMLElement).style.background = 'rgba(99,102,241,0.08)';
             (document.getElementById('swal-btype') as HTMLInputElement).value = (btn as HTMLElement).dataset.btype || 'ecommerce';
           })
         })
@@ -181,20 +181,20 @@ export default function Dashboard({ session }: { session: Session }) {
         icon: 'error',
         title: 'Error de conexión',
         text: 'No se pudieron cargar tus datos. Intenta recargar la página.',
-        
+
       })
     }
   }
 
   return (
-    <div className="flex h-screen bg-[#050505] text-white overflow-hidden font-sans">
+    <div className="flex h-screen bg-white text-gray-900 overflow-hidden font-sans">
       {/* MOBILE TOP BAR */}
-      <div className="fixed top-0 left-0 right-0 z-50 md:hidden bg-[#0a0a0f]/90 backdrop-blur-md border-b border-white/5 px-4 py-3 flex items-center justify-between">
+      <div className="fixed top-0 left-0 right-0 z-50 md:hidden bg-white/90 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center font-bold text-sm shadow-[0_4px_12px_rgba(99,102,241,0.3)]">M</div>
-          <span className="font-bold text-sm">MiTienda<span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">Virtual</span></span>
+          <div className="w-7 h-7 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center font-bold text-sm text-white shadow-[0_4px_12px_rgba(99,102,241,0.3)]">M</div>
+          <span className="font-bold text-sm">MiTienda<span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Virtual</span></span>
         </div>
-        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 hover:bg-white/5 rounded-lg transition-colors">
+        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
           {mobileMenuOpen ? (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
           ) : (
@@ -206,10 +206,10 @@ export default function Dashboard({ session }: { session: Session }) {
       {/* MOBILE MENU OVERLAY */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setMobileMenuOpen(false)} />
-          <div className="absolute top-14 left-0 right-0 bg-[#0a0a0f]/95 backdrop-blur-lg border-b border-white/5 p-4 space-y-1 max-h-[70vh] overflow-y-auto">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
+          <div className="absolute top-14 left-0 right-0 bg-white/95 backdrop-blur-lg border-b border-gray-100 p-4 space-y-1 max-h-[70vh] overflow-y-auto shadow-xl">
             <MobileNavBtn label="Panel de Agentes" active={activeTab === 'home'} onClick={() => { setActiveTab('home'); setMobileMenuOpen(false); }} />
-            <p className="text-xs font-bold text-gray-500 uppercase px-2 mb-2 tracking-widest">Canales</p>
+            <p className="text-xs font-bold text-gray-400 uppercase px-2 mb-2 tracking-widest">Canales</p>
             <MobileNavBtn label="Ventas Capturadas" active={activeTab === 'leads'} onClick={() => { setActiveTab('leads'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Telegram" active={activeTab === 'telegram'} onClick={() => { setActiveTab('telegram'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Leads Telegram" active={activeTab === 'telegram-leads'} onClick={() => { setActiveTab('telegram-leads'); setMobileMenuOpen(false); }} />
@@ -217,7 +217,7 @@ export default function Dashboard({ session }: { session: Session }) {
             <MobileNavBtn label="Leads WhatsApp" active={activeTab === 'wpp-leads'} onClick={() => { setActiveTab('wpp-leads'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Google Calendar" active={activeTab === 'scheduling'} onClick={() => { setActiveTab('scheduling'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Sucursales" active={activeTab === 'branches'} onClick={() => { setActiveTab('branches'); setMobileMenuOpen(false); }} />
-            <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-4 mb-2 tracking-widest">Configuración</p>
+            <p className="text-xs font-bold text-gray-400 uppercase px-2 mt-4 mb-2 tracking-widest">Configuración</p>
             <MobileNavBtn label="Notificaciones" active={activeTab === 'notifications'} onClick={() => { setActiveTab('notifications'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Configura tu Instagram" active={activeTab === 'instagram'} onClick={() => { setActiveTab('instagram'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Configura tu Telegram" active={activeTab === 'telegram'} onClick={() => { setActiveTab('telegram'); setMobileMenuOpen(false); }} />
@@ -229,8 +229,8 @@ export default function Dashboard({ session }: { session: Session }) {
             <MobileNavBtn label={bLabels.services} active={activeTab === 'services'} onClick={() => { setActiveTab('services'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Planes" active={activeTab === 'plans'} onClick={() => { setActiveTab('plans'); setMobileMenuOpen(false); }} />
             <MobileNavBtn label="Referidos" active={activeTab === 'referrals'} onClick={() => { setActiveTab('referrals'); setMobileMenuOpen(false); }} />
-            <div className="pt-3 border-t border-white/5 mt-3">
-              <button onClick={() => supabase.auth.signOut({ scope: 'local' })} className="w-full text-left text-red-500 p-3 hover:bg-red-500/10 rounded-xl flex items-center gap-2 transition-colors text-sm">
+            <div className="pt-3 border-t border-gray-100 mt-3">
+              <button onClick={() => supabase.auth.signOut({ scope: 'local' })} className="w-full text-left text-red-500 p-3 hover:bg-red-50 rounded-xl flex items-center gap-2 transition-colors text-sm">
                 Cerrar Sesión
               </button>
             </div>
@@ -239,13 +239,13 @@ export default function Dashboard({ session }: { session: Session }) {
       )}
 
       {/* SIDEBAR */}
-      <aside className="w-64 bg-[#0a0a0f]/80 backdrop-blur-md border-r border-white/5 flex flex-col hidden md:flex">
-        <div className="p-6 border-b border-indigo-500/20 bg-gradient-to-r from-indigo-600/10 via-purple-600/10 to-transparent relative overflow-hidden">
-             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-600/5 pointer-events-none" />
-             <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-purple-500/10 blur-2xl pointer-events-none" />
+      <aside className="w-64 bg-white/80 backdrop-blur-md border-r border-gray-100 flex flex-col hidden md:flex">
+        <div className="p-6 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 via-purple-50 to-transparent relative overflow-hidden">
+             <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 pointer-events-none" />
+             <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-purple-200/30 blur-2xl pointer-events-none" />
              <div className="flex items-center gap-3 relative z-10">
-                <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center font-bold text-white shadow-[0_4px_16px_rgba(99,102,241,0.4)] ring-2 ring-indigo-400/20">M</div>
-                <span className="font-bold text-lg">MiTienda<span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 to-purple-300">Virtual</span></span>
+                <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center font-bold text-white shadow-[0_4px_16px_rgba(99,102,241,0.4)] ring-2 ring-indigo-200">M</div>
+                <span className="font-bold text-lg">MiTienda<span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Virtual</span></span>
              </div>
         </div>
 
@@ -257,7 +257,7 @@ export default function Dashboard({ session }: { session: Session }) {
             onClick={() => { setActiveTab('home'); setLegalView(null) }}
           />
 
-          <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Canales</p>
+          <p className="text-xs font-bold text-gray-400 uppercase px-2 mt-6 mb-2 tracking-widest">Canales</p>
 
           {/* Instagram — siempre disponible */}
           <SidebarBtn
@@ -269,7 +269,7 @@ export default function Dashboard({ session }: { session: Session }) {
             isOpen={instagramMenuOpen}
           />
           {instagramMenuOpen && (
-            <div className="ml-4 border-l border-white/5 pl-4 space-y-1">
+            <div className="ml-4 border-l border-gray-100 pl-4 space-y-1">
               <SidebarSubBtn
                 label="Ventas Capturadas"
                 active={activeTab === 'leads'}
@@ -281,14 +281,14 @@ export default function Dashboard({ session }: { session: Session }) {
           {/* Telegram */}
           <SidebarBtn
             label="Telegram"
-            icon={<FaTelegram className="text-sky-400" />}
+            icon={<FaTelegram className="text-sky-500" />}
             active={activeTab === 'telegram-leads'}
             onClick={() => setTelegramMenuOpen(!telegramMenuOpen)}
             isParent
             isOpen={telegramMenuOpen}
           />
           {telegramMenuOpen && (
-            <div className="ml-4 border-l border-white/5 pl-4 space-y-1">
+            <div className="ml-4 border-l border-gray-100 pl-4 space-y-1">
               <SidebarSubBtn
                 label="Leads"
                 active={activeTab === 'telegram-leads'}
@@ -300,14 +300,14 @@ export default function Dashboard({ session }: { session: Session }) {
           {/* WhatsApp */}
           <SidebarBtn
             label="WhatsApp"
-            icon={<FaWhatsapp className="text-green-400" />}
+            icon={<FaWhatsapp className="text-green-500" />}
             active={activeTab === 'wpp-messages' || activeTab === 'wpp-leads'}
             onClick={() => setWhatsappMenuOpen(!whatsappMenuOpen)}
             isParent
             isOpen={whatsappMenuOpen}
           />
           {whatsappMenuOpen && (
-            <div className="ml-4 border-l border-white/5 pl-4 space-y-1">
+            <div className="ml-4 border-l border-gray-100 pl-4 space-y-1">
               <SidebarSubBtn
                 label="Leads"
                 active={activeTab === 'wpp-leads'}
@@ -324,21 +324,21 @@ export default function Dashboard({ session }: { session: Session }) {
           {/* Sucursales */}
           <SidebarBtn
             label="Sucursales"
-            icon={<svg className="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+            icon={<svg className="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
             active={activeTab === 'branches'}
             onClick={() => { setActiveTab('branches'); setLegalView(null) }}
           />
 
-          <p className="text-xs font-bold text-gray-500 uppercase px-2 mt-6 mb-2 tracking-widest">Configuración</p>
+          <p className="text-xs font-bold text-gray-400 uppercase px-2 mt-6 mb-2 tracking-widest">Configuración</p>
 
           {/* Entrenamiento IA */}
-          <div className="mb-2 mx-1 rounded-xl bg-gradient-to-r from-purple-600/10 to-indigo-600/10 border border-purple-500/20 overflow-hidden">
+          <div className="mb-2 mx-1 rounded-xl bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 overflow-hidden">
             <button
               onClick={() => setKnowledgeOpen(!knowledgeOpen)}
               className={`w-full flex items-center gap-2.5 p-3 text-sm transition-all duration-200 ${
                 activeTab === 'faqs' || activeTab === 'knowlower' || activeTab === 'catalog' || activeTab === 'inventory' || activeTab === 'ig-scanner'
-                  ? 'text-purple-300'
-                  : 'text-gray-300 hover:text-purple-300'
+                  ? 'text-purple-600'
+                  : 'text-gray-600 hover:text-purple-600'
               }`}
             >
               <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-xs shadow-[0_2px_8px_rgba(139,92,246,0.3)]">🧠</span>
@@ -346,25 +346,25 @@ export default function Dashboard({ session }: { session: Session }) {
               <svg className={`w-4 h-4 ml-auto transition-transform duration-200 ${knowledgeOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
             </button>
             {knowledgeOpen && (
-              <div className="px-3 pb-3 space-y-1 border-t border-purple-500/10">
-                <button onClick={() => setActiveTab('faqs')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'faqs' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
+              <div className="px-3 pb-3 space-y-1 border-t border-purple-100">
+                <button onClick={() => setActiveTab('faqs')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'faqs' ? 'text-purple-600 bg-purple-100' : 'text-gray-500 hover:text-purple-600 hover:bg-purple-50'}`}>
                   FAQs / Base Conocimiento
                 </button>
-                <button onClick={() => setActiveTab('knowlower')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'knowlower' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
+                <button onClick={() => setActiveTab('knowlower')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'knowlower' ? 'text-purple-600 bg-purple-100' : 'text-gray-500 hover:text-purple-600 hover:bg-purple-50'}`}>
                   Cerebro IA
                 </button>
                 {bLabels.showCatalog && (
-                  <button onClick={() => setActiveTab('catalog')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'catalog' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
+                  <button onClick={() => setActiveTab('catalog')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'catalog' ? 'text-purple-600 bg-purple-100' : 'text-gray-500 hover:text-purple-600 hover:bg-purple-50'}`}>
                     {bLabels.catalog}
                   </button>
                 )}
                 {bLabels.showCatalog && (
-                  <button onClick={() => setActiveTab('inventory')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'inventory' ? 'text-purple-300 bg-purple-500/10' : 'text-gray-500 hover:text-purple-300 hover:bg-purple-500/5'}`}>
+                  <button onClick={() => setActiveTab('inventory')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg ${activeTab === 'inventory' ? 'text-purple-600 bg-purple-100' : 'text-gray-500 hover:text-purple-600 hover:bg-purple-50'}`}>
                     {bLabels.inventory}
                   </button>
                 )}
                 {!['clinica', 'servicios'].includes(profile?.business_type || '') && (
-                <button onClick={() => setActiveTab('ig-scanner')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'ig-scanner' ? 'text-pink-400 bg-pink-500/10' : 'text-gray-500 hover:text-pink-400 hover:bg-pink-500/5'}`}>
+                <button onClick={() => setActiveTab('ig-scanner')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'ig-scanner' ? 'text-pink-600 bg-pink-50' : 'text-gray-500 hover:text-pink-600 hover:bg-pink-50'}`}>
                   <FaInstagram className="text-pink-500 text-sm" /> Cargar desde Instagram
                 </button>
                 )}
@@ -373,13 +373,13 @@ export default function Dashboard({ session }: { session: Session }) {
           </div>
 
           {/* Configura Agentes */}
-          <div className="mb-2 mx-1 rounded-xl bg-gradient-to-r from-indigo-600/10 to-sky-600/10 border border-indigo-500/20 overflow-hidden">
+          <div className="mb-2 mx-1 rounded-xl bg-gradient-to-r from-indigo-50 to-sky-50 border border-indigo-200 overflow-hidden">
             <button
               onClick={() => setConfigAgentsOpen(!configAgentsOpen)}
               className={`w-full flex items-center gap-2.5 p-3 text-sm transition-all duration-200 ${
                 activeTab === 'instagram' || activeTab === 'telegram' || activeTab === 'whatsapp' || activeTab === 'scheduling'
-                  ? 'text-indigo-300'
-                  : 'text-gray-300 hover:text-indigo-300'
+                  ? 'text-indigo-600'
+                  : 'text-gray-600 hover:text-indigo-600'
               }`}
             >
               <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center text-white text-xs shadow-[0_2px_8px_rgba(99,102,241,0.3)]">⚙️</span>
@@ -387,18 +387,18 @@ export default function Dashboard({ session }: { session: Session }) {
               <svg className={`w-4 h-4 ml-auto transition-transform duration-200 ${configAgentsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
             </button>
             {configAgentsOpen && (
-              <div className="px-3 pb-3 space-y-1 border-t border-indigo-500/10">
-                <button onClick={() => setActiveTab('instagram')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'instagram' ? 'text-pink-400 bg-pink-500/10' : 'text-gray-500 hover:text-pink-400 hover:bg-pink-500/5'}`}>
+              <div className="px-3 pb-3 space-y-1 border-t border-indigo-100">
+                <button onClick={() => setActiveTab('instagram')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'instagram' ? 'text-pink-600 bg-pink-50' : 'text-gray-500 hover:text-pink-600 hover:bg-pink-50'}`}>
                   <FaInstagram className="text-pink-500 text-sm" /> Instagram
                 </button>
-                <button onClick={() => setActiveTab('telegram')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'telegram' ? 'text-sky-400 bg-sky-500/10' : 'text-gray-500 hover:text-sky-400 hover:bg-sky-500/5'}`}>
-                  <FaTelegram className="text-sm text-sky-400" /> Telegram
+                <button onClick={() => setActiveTab('telegram')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'telegram' ? 'text-sky-600 bg-sky-50' : 'text-gray-500 hover:text-sky-600 hover:bg-sky-50'}`}>
+                  <FaTelegram className="text-sm text-sky-500" /> Telegram
                 </button>
-                <button onClick={() => setActiveTab('whatsapp')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'whatsapp' ? 'text-green-400 bg-green-500/10' : 'text-gray-500 hover:text-green-400 hover:bg-green-500/5'}`}>
-                  <FaWhatsapp className="text-sm text-green-400" /> WhatsApp
+                <button onClick={() => setActiveTab('whatsapp')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'whatsapp' ? 'text-green-600 bg-green-50' : 'text-gray-500 hover:text-green-600 hover:bg-green-50'}`}>
+                  <FaWhatsapp className="text-sm text-green-500" /> WhatsApp
                 </button>
-                <button onClick={() => setActiveTab('scheduling')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'scheduling' ? 'text-blue-400 bg-blue-500/10' : 'text-gray-500 hover:text-blue-400 hover:bg-blue-500/5'}`}>
-                  <FaGoogle className="text-sm text-blue-400" /> Google Calendar
+                <button onClick={() => setActiveTab('scheduling')} className={`w-full text-left py-2 px-3 text-xs font-medium uppercase tracking-wider transition-colors rounded-lg flex items-center gap-2 ${activeTab === 'scheduling' ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'}`}>
+                  <FaGoogle className="text-sm text-blue-500" /> Google Calendar
                 </button>
               </div>
             )}
@@ -427,12 +427,12 @@ export default function Dashboard({ session }: { session: Session }) {
 
         </nav>
 
-        <div className="p-4 border-t border-white/5 space-y-1">
-            <button onClick={pickBusinessType} className="w-full text-left text-gray-500 p-2.5 hover:bg-white/5 rounded-xl flex items-center gap-2 transition-all text-xs">
+        <div className="p-4 border-t border-gray-100 space-y-1">
+            <button onClick={pickBusinessType} className="w-full text-left text-gray-500 p-2.5 hover:bg-gray-50 rounded-xl flex items-center gap-2 transition-all text-xs">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
               <span>{BUSINESS_TYPES[businessType] || 'Tipo de negocio'}</span>
             </button>
-            <button onClick={() => supabase.auth.signOut({ scope: 'local' })} className="w-full text-left text-red-400/80 p-2.5 hover:bg-red-500/10 rounded-xl flex items-center gap-2 transition-all text-sm">
+            <button onClick={() => supabase.auth.signOut({ scope: 'local' })} className="w-full text-left text-red-500 p-2.5 hover:bg-red-50 rounded-xl flex items-center gap-2 transition-all text-sm">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
               <span>Cerrar Sesión</span>
             </button>
@@ -440,16 +440,16 @@ export default function Dashboard({ session }: { session: Session }) {
       </aside>
 
       {/* ÁREA DE CONTENIDO */}
-      <main className="flex-1 overflow-y-auto flex flex-col bg-[#050505] pt-14 md:pt-0 relative">
+      <main className="flex-1 overflow-y-auto flex flex-col bg-gray-50 pt-14 md:pt-0 relative">
         {/* Subtle glow in content area */}
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-gradient-to-bl from-indigo-600/5 to-transparent blur-[100px] pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-gradient-to-bl from-indigo-500/[0.05] to-transparent blur-[100px] pointer-events-none" />
         <div className="max-w-5xl mx-auto p-4 sm:p-6 md:p-10 w-full flex-grow relative z-10">
           {/* Banner plan expirado o créditos agotados */}
           {planCode === 'expired' && (
-            <div className="mb-6 p-4 rounded-2xl border border-red-500/20 bg-red-500/5 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="mb-6 p-4 rounded-2xl border border-red-200 bg-red-50 flex flex-col sm:flex-row items-start sm:items-center gap-3">
               <div className="flex-1">
-                <p className="text-sm font-semibold text-red-400">Tu plan ha expirado</p>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-sm font-semibold text-red-600">Tu plan ha expirado</p>
+                <p className="text-xs text-gray-500 mt-0.5">
                   {(profile?.bonus_credits ?? 0) > 0
                     ? `Te quedan ${(profile.bonus_credits).toLocaleString('es-CL')} créditos de recarga. Renueva tu plan para seguir operando.`
                     : 'No tienes créditos disponibles. Contrata un plan o compra una bolsa de recarga.'}
@@ -502,7 +502,7 @@ export default function Dashboard({ session }: { session: Session }) {
               <WhatsAppMessagesView session={session} />
             )}
             {activeTab === 'telegram-leads' && <TelegramLeadsView userId={session.user.id} />}
-            
+
             {/* VISTA DE FAQs RE-INCORPORADA */}
             {activeTab === 'faqs' && <FaqsView session={session} />}
             {activeTab === 'leads' && <LeadsView userId={session.user.id}/>}
@@ -557,22 +557,22 @@ export default function Dashboard({ session }: { session: Session }) {
             {activeTab === 'referrals' && <ReferralsView session={session} />}
           </Suspense>
         </div>
-        
+
         {/* Footer compacto */}
-        <div className="border-t border-white/5 bg-black/40 backdrop-blur-sm px-4 sm:px-6 py-6">
+        <div className="border-t border-gray-100 bg-[#F8FAFC] px-4 sm:px-6 py-6">
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
-            <span className="text-sm font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+            <span className="text-sm font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
               MiTiendaVirtual
             </span>
-            <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-500">
-              <button onClick={() => setLegalView('terms')} className="hover:text-white transition-colors">Términos</button>
-              <button onClick={() => setLegalView('privacy')} className="hover:text-white transition-colors">Privacidad</button>
-              <button onClick={() => setLegalView('data-deletion')} className="hover:text-red-400 transition-colors">Eliminar datos</button>
-              <button onClick={() => setLegalView('support')} className="hover:text-blue-300 transition-colors">Ayuda</button>
+            <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-400">
+              <button onClick={() => setLegalView('terms')} className="hover:text-gray-900 transition-colors">Términos</button>
+              <button onClick={() => setLegalView('privacy')} className="hover:text-gray-900 transition-colors">Privacidad</button>
+              <button onClick={() => setLegalView('data-deletion')} className="hover:text-red-500 transition-colors">Eliminar datos</button>
+              <button onClick={() => setLegalView('support')} className="hover:text-indigo-600 transition-colors">Ayuda</button>
             </div>
-            <p className="text-[10px] text-gray-600 font-mono tracking-widest uppercase">© 2026 • Santiago, CL</p>
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[10px] text-gray-400">
-              <FaMeta className="text-blue-400 text-sm" /> Meta Partner
+            <p className="text-[10px] text-gray-400 font-mono tracking-widest uppercase">© 2026 • Santiago, CL</p>
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-gray-200 bg-gray-50 text-[10px] text-gray-500">
+              <FaMeta className="text-blue-600 text-sm" /> Meta Partner
             </div>
           </div>
         </div>
@@ -609,8 +609,8 @@ const SidebarBtn = ({ label, icon, active, onClick, isParent, isOpen }: any) => 
     onClick={onClick}
     className={`w-full flex items-center gap-2 p-3 rounded-xl text-sm transition-all duration-200 ${
       active
-        ? 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 shadow-[0_2px_8px_rgba(99,102,241,0.08)]'
-        : 'text-gray-400 hover:bg-white/[0.03] hover:text-gray-200'
+        ? 'bg-indigo-50 text-indigo-600 border border-indigo-200 shadow-[0_2px_8px_rgba(99,102,241,0.08)]'
+        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
     }`}
   >
     {icon && <span className="text-base shrink-0">{icon}</span>}
@@ -624,12 +624,12 @@ const SidebarBtn = ({ label, icon, active, onClick, isParent, isOpen }: any) => 
 )
 
 const SidebarSubBtn = ({ label, active, onClick }: any) => (
-  <button onClick={onClick} className={`w-full text-left py-2 text-xs font-medium uppercase tracking-wider transition-colors ${active ? 'text-indigo-300' : 'text-gray-500 hover:text-gray-300'}`}>{label}</button>
+  <button onClick={onClick} className={`w-full text-left py-2 text-xs font-medium uppercase tracking-wider transition-colors ${active ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}>{label}</button>
 )
 
 const MobileNavBtn = ({ label, active, onClick }: any) => (
   <button onClick={onClick} className={`w-full text-left p-3 rounded-xl text-sm font-medium transition-all flex items-center justify-between ${
-    active ? 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20' : 'text-gray-400 hover:bg-white/[0.03] hover:text-gray-200'
+    active ? 'bg-indigo-50 text-indigo-600 border border-indigo-200' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
   }`}>
     <span>{label}</span>
   </button>

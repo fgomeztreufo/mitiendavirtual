@@ -99,7 +99,6 @@ export default function ServicesView({ session, profile, onUpdate, businessType 
         Swal.fire({
           icon: 'success',
           title: `${bLabels.product} actualizado`,
-          background: '#111827', color: '#fff',
           timer: 2000, showConfirmButton: false,
         })
       } else {
@@ -112,7 +111,6 @@ export default function ServicesView({ session, profile, onUpdate, businessType 
           icon: 'success',
           title: `¡${bLabels.product} creado!`,
           text: bLabels.uploadSuccess,
-          background: '#111827', color: '#fff',
           timer: 2500, showConfirmButton: false,
         })
       }
@@ -164,13 +162,13 @@ export default function ServicesView({ session, profile, onUpdate, businessType 
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter uppercase">{bLabels.services}</h1>
+          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 italic tracking-tighter uppercase">{bLabels.services}</h1>
         </div>
-        <div className="p-4 rounded-2xl w-full md:w-auto bg-gray-900 border border-gray-800">
+        <div className="p-4 rounded-2xl w-full md:w-auto bg-gray-50 border border-gray-200">
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 bg-emerald-500 rounded-full" />
-              <span className="text-gray-400">{activeCount} activo{activeCount !== 1 ? 's' : ''}</span>
+              <span className="text-gray-500">{activeCount} activo{activeCount !== 1 ? 's' : ''}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 bg-gray-600 rounded-full" />
@@ -182,11 +180,11 @@ export default function ServicesView({ session, profile, onUpdate, businessType 
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
         {/* FORMULARIO */}
-        <div className="lg:col-span-3 bg-[#111827] border border-gray-800 rounded-[2rem] p-8 relative overflow-hidden">
+        <div className="lg:col-span-3 bg-white border border-gray-200 rounded-[2rem] p-8 relative overflow-hidden">
           {editingService && (
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
-              <p className="text-xs text-indigo-400 font-bold uppercase tracking-widest">Editando: {editingService.name}</p>
-              <button onClick={resetForm} className="text-xs text-gray-500 hover:text-white transition-colors">Cancelar edición</button>
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+              <p className="text-xs text-indigo-600 font-bold uppercase tracking-widest">Editando: {editingService.name}</p>
+              <button onClick={resetForm} className="text-xs text-gray-500 hover:text-gray-900 transition-colors">Cancelar edición</button>
             </div>
           )}
 
@@ -196,7 +194,7 @@ export default function ServicesView({ session, profile, onUpdate, businessType 
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Nombre del {bLabels.product}</label>
                 <input
                   required
-                  className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all text-sm"
+                  className="bg-gray-50 border border-gray-200 p-4 rounded-2xl text-gray-900 outline-none focus:border-indigo-500 transition-all text-sm"
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
                   placeholder={bLabels.namePlaceholder}
@@ -206,7 +204,7 @@ export default function ServicesView({ session, profile, onUpdate, businessType 
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Precio ($ CLP) <span className="text-gray-700 normal-case">(opcional)</span></label>
                 <input
                   type="number"
-                  className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all text-sm"
+                  className="bg-gray-50 border border-gray-200 p-4 rounded-2xl text-gray-900 outline-none focus:border-indigo-500 transition-all text-sm"
                   value={formData.price}
                   onChange={e => setFormData({ ...formData, price: e.target.value })}
                   placeholder="15000"
@@ -215,11 +213,11 @@ export default function ServicesView({ session, profile, onUpdate, businessType 
             </div>
 
             {/* SECCIÓN COLAPSABLE: AGENDA */}
-            <div className="rounded-xl border border-gray-800 overflow-hidden">
+            <div className="rounded-xl border border-gray-200 overflow-hidden">
               <button
                 type="button"
                 onClick={() => setShowSchedulingConfig(!showSchedulingConfig)}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-white/[0.02] transition-colors"
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <span className="text-sm">📅</span>
@@ -231,13 +229,13 @@ export default function ServicesView({ session, profile, onUpdate, businessType 
                 </svg>
               </button>
               {showSchedulingConfig && (
-                <div className="px-4 pb-4 pt-2 border-t border-gray-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="px-4 pb-4 pt-2 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-2">
                     <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Duración (minutos)</label>
                     <input
                       type="number"
                       min="5"
-                      className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all text-sm"
+                      className="bg-gray-50 border border-gray-200 p-4 rounded-2xl text-gray-900 outline-none focus:border-indigo-500 transition-all text-sm"
                       value={formData.duration_minutes}
                       onChange={e => setFormData({ ...formData, duration_minutes: e.target.value })}
                       placeholder="30"
@@ -249,7 +247,7 @@ export default function ServicesView({ session, profile, onUpdate, businessType 
                     <input
                       type="number"
                       min="0"
-                      className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all text-sm"
+                      className="bg-gray-50 border border-gray-200 p-4 rounded-2xl text-gray-900 outline-none focus:border-indigo-500 transition-all text-sm"
                       value={formData.buffer_minutes}
                       onChange={e => setFormData({ ...formData, buffer_minutes: e.target.value })}
                       placeholder="0"
@@ -263,7 +261,7 @@ export default function ServicesView({ session, profile, onUpdate, businessType 
             <div className="flex flex-col gap-2 text-left">
               <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Descripción para la IA</label>
               <textarea
-                className="bg-black border border-gray-800 p-4 rounded-2xl text-white outline-none focus:border-indigo-500 transition-all text-sm h-24 resize-none"
+                className="bg-gray-50 border border-gray-200 p-4 rounded-2xl text-gray-900 outline-none focus:border-indigo-500 transition-all text-sm h-24 resize-none"
                 value={formData.description}
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                 placeholder={bLabels.descPlaceholder}
@@ -275,7 +273,7 @@ export default function ServicesView({ session, profile, onUpdate, businessType 
               disabled={saving || !formData.name.trim()}
               className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-xl ${
                 saving || !formData.name.trim()
-                  ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   : editingService
                     ? 'bg-indigo-600 hover:bg-indigo-500 hover:scale-[1.01] shadow-indigo-900/20'
                     : 'bg-blue-600 hover:bg-blue-500 hover:scale-[1.01] shadow-blue-900/20'
@@ -327,12 +325,12 @@ export default function ServicesView({ session, profile, onUpdate, businessType 
             </div>
 
             {loading ? (
-              <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-8 text-center">
-                <div className="w-6 h-6 border-2 border-gray-600 border-t-indigo-500 rounded-full animate-spin mx-auto mb-2" />
+              <div className="rounded-2xl bg-gray-50 border border-gray-200 p-8 text-center">
+                <div className="w-6 h-6 border-2 border-gray-300 border-t-indigo-500 rounded-full animate-spin mx-auto mb-2" />
                 <p className="text-xs text-gray-600">Cargando...</p>
               </div>
             ) : services.length === 0 ? (
-              <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-8 text-center">
+              <div className="rounded-2xl bg-gray-50 border border-gray-200 p-8 text-center">
                 <span className="text-2xl mb-2 block">📋</span>
                 <p className="text-gray-500 text-xs">Aún no tienes {bLabels.products.toLowerCase()}. Crea tu primer {bLabels.product.toLowerCase()} con el formulario.</p>
               </div>
@@ -343,15 +341,15 @@ export default function ServicesView({ session, profile, onUpdate, businessType 
                     key={svc.id}
                     className={`rounded-xl border p-3 transition-all ${
                       editingService?.id === svc.id
-                        ? 'bg-indigo-500/10 border-indigo-500/30'
+                        ? 'bg-indigo-50 border-indigo-200'
                         : svc.is_active
-                          ? 'bg-white/[0.03] border-white/5 hover:border-white/10'
-                          : 'bg-gray-900/40 border-white/5 opacity-60'
+                          ? 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                          : 'bg-gray-100/60 border-gray-200 opacity-60'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-white truncate">{svc.name}</p>
+                        <p className="text-sm font-bold text-gray-900 truncate">{svc.name}</p>
                         <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5 text-[10px] text-gray-500 uppercase tracking-wider">
                           <span>{svc.duration_minutes} min</span>
                           {svc.price != null && <span>${svc.price.toLocaleString('es-CL')}</span>}
@@ -361,7 +359,7 @@ export default function ServicesView({ session, profile, onUpdate, businessType 
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => startEdit(svc)}
-                          className="p-1.5 text-gray-600 hover:text-indigo-400 transition-colors"
+                          className="p-1.5 text-gray-600 hover:text-indigo-600 transition-colors"
                           title="Editar"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -372,15 +370,15 @@ export default function ServicesView({ session, profile, onUpdate, businessType 
                           onClick={() => toggleActive(svc)}
                           className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border transition-all ${
                             svc.is_active
-                              ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
-                              : 'border-gray-600 text-gray-500 hover:bg-gray-500/10'
+                              ? 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
+                              : 'border-gray-300 text-gray-500 hover:bg-gray-100'
                           }`}
                         >
                           {svc.is_active ? 'On' : 'Off'}
                         </button>
                         <button
                           onClick={() => deleteService(svc)}
-                          className="p-1.5 text-gray-600 hover:text-red-400 transition-colors"
+                          className="p-1.5 text-gray-600 hover:text-red-600 transition-colors"
                           title="Eliminar"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

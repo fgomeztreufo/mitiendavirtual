@@ -21,10 +21,10 @@ export default function StepWelcome({ profile, onNext, onSkipAll }: StepWelcomeP
         </svg>
       </div>
 
-      <h1 className="text-3xl font-black text-white mb-3 tracking-tight">
+      <h1 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">
         Tu asistente IA esta listo
       </h1>
-      <p className="text-gray-400 text-base mb-2">
+      <p className="text-gray-500 text-base mb-2">
         Vamos a configurar tu agente de ventas en menos de 5 minutos.
       </p>
       <p className="text-gray-500 text-sm mb-8">
@@ -40,7 +40,7 @@ export default function StepWelcome({ profile, onNext, onSkipAll }: StepWelcomeP
 
       <button
         onClick={onSkipAll}
-        className="mt-4 text-xs text-gray-600 hover:text-gray-400 transition-colors"
+        className="mt-4 text-xs text-gray-600 hover:text-gray-500 transition-colors"
       >
         Saltar configuracion
       </button>

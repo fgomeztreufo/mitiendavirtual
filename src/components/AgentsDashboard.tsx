@@ -52,11 +52,11 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
   const [loading, setLoading] = useState(true);
   const [branches, setBranches] = useState<any[]>([]);
   const [filterBranch, setFilterBranch] = useState('all');
-  const AWAKE_TIMEOUT = 2 * 60 * 1000; // 5 minutos sin actividad → vuelve a dormir
+  const AWAKE_TIMEOUT = 2 * 60 * 1000;
   const [channelLastActive, setChannelLastActive] = useState<Record<string, number>>({
     instagram: 0, whatsapp: 0, telegram: 0, calendar: 0,
   });
-  const [, setTick] = useState(0); // force re-render para timeout check
+  const [, setTick] = useState(0);
   const channelLastActiveRef = useRef(channelLastActive);
 
   useEffect(() => {
@@ -123,7 +123,6 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
       setLeadsToday(todayCount);
       setAgentLeadStats(nextAgentStats);
 
-      // Seed channelLastActive: si hay leads de hoy, marcar como activo ahora
       const now = Date.now();
       setChannelLastActive(prev => {
         const next = { ...prev };
@@ -134,7 +133,6 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
         return next;
       });
 
-      // Comprobar si el usuario tiene un token de Telegram usado (vinculado)
       try {
         const { count: tgCount, error: tgError } = await supabase
           .from('telegram_link_tokens')
@@ -207,12 +205,9 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
     fetchStats();
   }, [session.user.id, fetchStats, filterBranch]);
 
-  // Refs para detectar qué canal consumió créditos comparando contadores per-channel
   const lastMsgCountsRef = useRef({ ig: 0, tg: 0, wpp: 0 });
 
-  // Realtime: leads INSERT, appointments INSERT, profiles UPDATE (per-channel), whatsapp_messages INSERT
   useEffect(() => {
-    // Cargar contadores iniciales
     supabase.from('profiles').select('messages_used, messages_used_tl, messages_used_wpp').eq('id', session.user.id).single()
       .then(({ data }) => {
         if (data) {
@@ -289,7 +284,6 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
     return () => { supabase.removeChannel(channel); };
   }, [session.user.id, fetchStats]);
 
-  // Interval: cada 30s re-evalúa si algún canal debe volver a dormir
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
@@ -334,9 +328,9 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
       id: 'instagram',
       name: 'Agente Instagram',
       status: isConnected ? 'Activo' : 'Desconectado',
-      color: isConnected ? 'from-pink-500 to-purple-600' : 'from-gray-600 to-gray-700',
-      statusColor: isConnected ? 'text-green-400' : 'text-red-400',
-      dotColor: isConnected ? 'bg-green-400' : 'bg-red-400',
+      color: isConnected ? 'from-pink-500 to-purple-600' : 'from-gray-300 to-gray-400',
+      statusColor: isConnected ? 'text-green-600' : 'text-red-500',
+      dotColor: isConnected ? 'bg-green-500' : 'bg-red-400',
       icon: (
         <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5">
           <rect x="2" y="2" width="20" height="20" rx="5" />
@@ -357,9 +351,9 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
       id: 'whatsapp',
       name: 'Agente WhatsApp',
       status: whatsappConnected ? 'Activo' : 'Desconectado',
-      color: whatsappConnected ? 'from-green-500 to-emerald-600' : 'from-gray-700 to-gray-800',
-      statusColor: whatsappConnected ? 'text-green-400' : 'text-red-400',
-      dotColor: whatsappConnected ? 'bg-green-400' : 'bg-red-400',
+      color: whatsappConnected ? 'from-green-500 to-emerald-600' : 'from-gray-300 to-gray-400',
+      statusColor: whatsappConnected ? 'text-green-600' : 'text-red-500',
+      dotColor: whatsappConnected ? 'bg-green-500' : 'bg-red-400',
       icon: (
         <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
@@ -379,9 +373,9 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
       id: 'telegram',
       name: 'Agente Telegram',
       status: telegramConnected ? 'Activo' : 'Desconectado',
-      color: telegramConnected ? 'from-blue-500 to-cyan-600' : 'from-gray-700 to-gray-800',
-      statusColor: telegramConnected ? 'text-green-400' : 'text-red-400',
-      dotColor: telegramConnected ? 'bg-green-400' : 'bg-red-400',
+      color: telegramConnected ? 'from-blue-500 to-cyan-600' : 'from-gray-300 to-gray-400',
+      statusColor: telegramConnected ? 'text-green-600' : 'text-red-500',
+      dotColor: telegramConnected ? 'bg-green-500' : 'bg-red-400',
       icon: (
         <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M22 2L11 13" />
@@ -401,9 +395,9 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
       id: 'google-calendar',
       name: 'Agente Calendar',
       status: !profile?.scheduling_enabled ? 'Desactivado' : calendarConnected ? 'Activo' : 'Desconectado',
-      color: !profile?.scheduling_enabled ? 'from-gray-700 to-gray-800' : calendarConnected ? 'from-blue-500 to-indigo-600' : 'from-gray-700 to-gray-800',
-      statusColor: !profile?.scheduling_enabled ? 'text-gray-400' : calendarConnected ? 'text-green-400' : 'text-red-400',
-      dotColor: !profile?.scheduling_enabled ? 'bg-gray-500' : calendarConnected ? 'bg-green-400' : 'bg-red-400',
+      color: !profile?.scheduling_enabled ? 'from-gray-300 to-gray-400' : calendarConnected ? 'from-blue-500 to-indigo-600' : 'from-gray-300 to-gray-400',
+      statusColor: !profile?.scheduling_enabled ? 'text-gray-400' : calendarConnected ? 'text-green-600' : 'text-red-500',
+      dotColor: !profile?.scheduling_enabled ? 'bg-gray-400' : calendarConnected ? 'bg-green-500' : 'bg-red-400',
       icon: (
         <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5">
           <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -429,10 +423,10 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white">
-            Panel de Agentes <span className="text-blue-400">IA</span>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+            Panel de Agentes <span className="text-indigo-600">IA</span>
           </h1>
-          <p className="text-gray-400 text-sm mt-1">
+          <p className="text-gray-500 text-sm mt-1">
             Monitorea el rendimiento de tus agentes inteligentes • Plan {planType}
           </p>
         </div>
@@ -440,7 +434,7 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
           <select
             value={filterBranch}
             onChange={e => setFilterBranch(e.target.value)}
-            className="px-3 py-2 text-xs rounded-xl bg-white/[0.03] border border-white/10 text-gray-300 w-fit"
+            className="px-3 py-2 text-xs rounded-xl bg-white border border-gray-200 text-gray-700 w-fit"
           >
             <option value="all">Todas las sucursales</option>
             {branches.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -453,19 +447,18 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
         {agents.map((agent) => (
           <div
             key={agent.id}
-            className="relative bg-gray-900/80 border border-gray-800 rounded-2xl overflow-hidden hover:border-gray-600 transition-all group"
+            className="relative bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-gray-300 hover:shadow-md transition-all group shadow-sm"
           >
             {/* Header con gradiente */}
             <div className={`bg-gradient-to-r ${agent.color} p-4 flex items-center gap-3`}>
-              {/* Avatar robot */}
-              <div className="w-14 h-14 rounded-xl bg-black/30 backdrop-blur-sm flex items-center justify-center border border-white/10 text-white">
+              <div className="w-14 h-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/20 text-white">
                 {agent.icon}
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-white font-bold text-sm truncate">{agent.name}</h3>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className={`w-2 h-2 rounded-full ${agent.dotColor} animate-pulse`} />
-                  <span className={`text-xs font-medium ${agent.statusColor}`}>{agent.status}</span>
+                  <span className={`text-xs font-medium ${agent.statusColor === 'text-green-600' ? 'text-green-100' : agent.statusColor === 'text-red-500' ? 'text-red-100' : 'text-gray-200'}`}>{agent.status}</span>
                 </div>
               </div>
             </div>
@@ -478,9 +471,9 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
                 return (
                 <div key={`${agent.id}-${stat.label}`} className="flex items-center justify-between">
                   <span className="text-xs text-gray-500">{stat.label}</span>
-                  <span className="text-sm font-bold text-white tabular-nums">
+                  <span className="text-sm font-bold text-gray-900 tabular-nums">
                     {loading && typeof stat.value === 'number' ? (
-                      <span className="inline-block w-8 h-4 bg-gray-800 rounded animate-pulse" />
+                      <span className="inline-block w-8 h-4 bg-gray-100 rounded animate-pulse" />
                     ) : (
                       displayValue
                     )}
@@ -495,7 +488,7 @@ export default function AgentsDashboard({ session, profile, instance, onNavigate
                 onClick={agent.action}
                 className={`w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
                   agent.connected
-                    ? 'bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-gray-700 hover:border-gray-500'
+                    ? 'bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-300'
                     : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white border border-indigo-500/30'
                 }`}
               >
