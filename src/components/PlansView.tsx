@@ -83,6 +83,45 @@ export default function PlansView({ session, profile }: PlansViewProps) {
         if (data) setPacks(data)
     }
 
+    const handleDowngradeToFree = async () => {
+        const result = await Swal.fire({
+            title: '¿Cambiar al plan Gratis?',
+            text: 'Tu plan actual será reemplazado por el plan gratuito. Perderás los beneficios de tu plan pagado.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#6366f1',
+            cancelButtonColor: '#d1d5db',
+            confirmButtonText: 'Sí, cambiar a Gratis',
+            cancelButtonText: 'Cancelar',
+        })
+        if (!result.isConfirmed) return
+
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ plan_type: 'free', plan_expires_at: null })
+                .eq('id', session.user.id)
+
+            if (error) throw error
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Plan actualizado',
+                text: 'Ahora estás en el plan Gratis.',
+                timer: 2000,
+                showConfirmButton: false,
+            })
+            setTimeout(() => window.location.reload(), 2100)
+        } catch (error) {
+            console.error(error)
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo cambiar el plan. Intenta de nuevo.',
+            })
+        }
+    }
+
     const handleBuyPlan = async (planName: string, amount: number) => {
         try {
             Swal.fire({
@@ -176,10 +215,10 @@ export default function PlansView({ session, profile }: PlansViewProps) {
         <div className="animate-fade-in-up p-4 max-w-7xl mx-auto">
             <div className="text-center mb-16">
                 <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-                    Elige el motor de tu crecimiento
+                    ¿Quieres cambiar tu plan?
                 </h1>
                 <p className="text-gray-500 max-w-2xl mx-auto text-base">
-                    Automatiza tus ventas con IA en todos tus canales. Sin contratos, pagas por mes.
+                    Elige el plan que mejor se adapte a tu negocio. Sin contratos, pagas por mes.
                     Todos los canales abiertos desde el día 1. La diferencia está en los créditos IA.
                 </p>
             </div>
@@ -338,7 +377,14 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                             </p>
                         )}
                         <button
-                            onClick={() => { if (!isButtonDisabled) handleBuyPlan(plan.display_name, price) }}
+                            onClick={() => {
+                                if (isButtonDisabled) return
+                                if (code === 'free' && !isCurrent) {
+                                    handleDowngradeToFree()
+                                } else {
+                                    handleBuyPlan(plan.display_name, price)
+                                }
+                            }}
                             className={`${buttonDefault} ${isButtonDisabled ? buttonDisabled : isCurrentPaid ? 'border-2 border-emerald-500 text-emerald-600 bg-emerald-50 hover:bg-emerald-100' : buttonPrimary}`}
                             disabled={isButtonDisabled}
                         >
