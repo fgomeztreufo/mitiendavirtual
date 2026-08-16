@@ -55,6 +55,7 @@ interface Appointment {
   notes: string | null
   created_at: string
   branch_id: string | null
+  google_event_id?: string | null
   staff_members?: { name: string }
   services?: { name: string; duration_minutes: number; price: number | null }
   branches?: { name: string }
@@ -137,7 +138,7 @@ export default function SchedulingView({ session, profile, instance, onUpdate, g
         supabase.from('staff_services').select('*'),
         supabase.from('schedules').select('*'),
         supabase.from('appointments')
-          .select('*, staff_members(name), services(name, duration_minutes, price), branches(name)')
+          .select('*, google_event_id, staff_members(name), services(name, duration_minutes, price), branches(name)')
           .eq('user_id', userId)
           .order('starts_at', { ascending: false })
           .limit(50),
@@ -1364,6 +1365,178 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh, b
     onRefresh()
   }
 
+  const editAppointment = async (appt: Appointment) => {
+    const activeStaff = staff.filter(s => s.is_active)
+    const activeServices = services.filter(s => s.is_active)
+    if (activeStaff.length === 0 || activeServices.length === 0) {
+      Swal.fire('Faltan datos', 'Necesitas al menos un profesional y un servicio activos.', 'info')
+      return
+    }
+
+    const apptDate = new Date(appt.starts_at)
+    const dateVal = apptDate.toISOString().slice(0, 10)
+    const timeVal = apptDate.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', hour12: false })
+
+    const branchSelect = branches.length > 0
+      ? `<select id="swal-branch" class="swal2-select">${[`<option value="">Sin sucursal</option>`, ...branches.map(b => `<option value="${b.id}"${b.id === appt.branch_id ? ' selected' : ''}>${escHtml(b.name)}</option>`)].join('')}</select>`
+      : ''
+
+    const { value: formValues } = await Swal.fire({
+      title: 'Editar Cita',
+      html: `
+        <input id="swal-client-name" class="swal2-input" placeholder="Nombre del cliente" value="${escHtml(appt.client_name)}">
+        <input id="swal-client-phone" class="swal2-input" placeholder="Teléfono (ej: 56912345678)" value="${escHtml(appt.client_phone)}">
+        <select id="swal-service" class="swal2-select">
+          ${activeServices.map(s => `<option value="${s.id}"${s.id === appt.service_id ? ' selected' : ''}>${escHtml(s.name)} (${s.duration_minutes} min)</option>`).join('')}
+        </select>
+        <select id="swal-staff" class="swal2-select">
+          ${activeStaff.map(s => `<option value="${s.id}"${s.id === appt.staff_id ? ' selected' : ''}>${escHtml(s.name)}${s.specialty ? ` — ${escHtml(s.specialty)}` : ''}</option>`).join('')}
+        </select>
+        ${branchSelect}
+        <input id="swal-date" class="swal2-input" type="date" value="${dateVal}">
+        <input id="swal-time" class="swal2-input" type="time" value="${timeVal}">
+        <textarea id="swal-notes" class="swal2-textarea" placeholder="Notas (opcional)">${escHtml(appt.notes || '')}</textarea>
+      `,
+      confirmButtonText: 'Guardar cambios',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        const clientName = (document.getElementById('swal-client-name') as HTMLInputElement).value.trim()
+        const clientPhone = (document.getElementById('swal-client-phone') as HTMLInputElement).value.trim()
+        const serviceId = (document.getElementById('swal-service') as HTMLSelectElement).value
+        const staffId = (document.getElementById('swal-staff') as HTMLSelectElement).value
+        const date = (document.getElementById('swal-date') as HTMLInputElement).value
+        const time = (document.getElementById('swal-time') as HTMLInputElement).value
+        const notes = (document.getElementById('swal-notes') as HTMLTextAreaElement).value.trim()
+        const branchEl = document.getElementById('swal-branch') as HTMLSelectElement | null
+        if (!clientName || !clientPhone || !date || !time) {
+          Swal.showValidationMessage('Nombre, teléfono, fecha y hora son obligatorios')
+          return false
+        }
+        return { clientName, clientPhone, serviceId, staffId, date, time, notes, branchId: branchEl?.value || null }
+      }
+    })
+    if (!formValues) return
+
+    const startsAt = new Date(`${formValues.date}T${formValues.time}:00`)
+    const service = services.find(s => s.id === formValues.serviceId)
+    const endsAt = new Date(startsAt.getTime() + (service?.duration_minutes || 30) * 60000)
+
+    const { error } = await supabase.from('appointments').update({
+      client_name: formValues.clientName,
+      client_phone: formValues.clientPhone,
+      staff_id: formValues.staffId,
+      service_id: formValues.serviceId,
+      starts_at: startsAt.toISOString(),
+      ends_at: endsAt.toISOString(),
+      notes: formValues.notes || null,
+      branch_id: formValues.branchId || null,
+    }).eq('id', appt.id)
+    if (error) { Swal.fire('Error', error.message, 'error'); return }
+
+    if (appt.google_event_id) {
+      supabase.auth.getSession().then(({ data: { session: s } }) => {
+        if (!s?.access_token) return
+        fetch(`/api/google-calendar?action=event`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${s.access_token}` },
+          body: JSON.stringify({ appointment_id: appt.id, action: 'delete' }),
+        }).then(() =>
+          fetch(`/api/google-calendar?action=event`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${s.access_token}` },
+            body: JSON.stringify({ appointment_id: appt.id, action: 'create' }),
+          })
+        ).catch(() => {})
+      })
+    }
+
+    const serviceName = service?.name || 'Cita'
+    const staffName = staff.find(s => s.id === formValues.staffId)?.name || ''
+    const dateStr = startsAt.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })
+    const timeStr = startsAt.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', hour12: false })
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      if (!s?.access_token) return
+      fetch('/api/send-push-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${s.access_token}` },
+        body: JSON.stringify({
+          user_id: userId,
+          title: 'Cita actualizada',
+          body: `${serviceName} - ${formValues.clientName} | ${dateStr} ${timeStr}`,
+        }),
+      }).catch(() => {})
+      fetch('/api/whatsapp-send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${s.access_token}` },
+        body: JSON.stringify({
+          type: 'template',
+          contact_phone: formValues.clientPhone,
+          template_name: 'appointment_confirmation',
+          template_language: 'es',
+          components: [{
+            type: 'body',
+            parameters: [
+              { type: 'text', text: formValues.clientName },
+              { type: 'text', text: serviceName },
+              { type: 'text', text: dateStr },
+              { type: 'text', text: timeStr },
+              { type: 'text', text: staffName },
+            ]
+          }]
+        }),
+      }).catch(() => {})
+    })
+
+    Swal.fire({ icon: 'success', title: 'Cita actualizada', timer: 2000, showConfirmButton: false })
+    onRefresh()
+  }
+
+  const deleteAppointment = async (appt: Appointment) => {
+    const { isConfirmed } = await Swal.fire({
+      title: `¿Eliminar cita de ${appt.client_name}?`,
+      text: 'Se eliminará la cita permanentemente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+    })
+    if (!isConfirmed) return
+
+    if (appt.google_event_id) {
+      try {
+        const { data: { session: s } } = await supabase.auth.getSession()
+        if (s?.access_token) {
+          await fetch(`/api/google-calendar?action=event`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${s.access_token}` },
+            body: JSON.stringify({ appointment_id: appt.id, action: 'delete' }),
+          })
+        }
+      } catch {}
+    }
+
+    const { error } = await supabase.from('appointments').delete().eq('id', appt.id)
+    if (error) { Swal.fire('Error', error.message, 'error'); return }
+
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      if (!s?.access_token) return
+      fetch('/api/send-push-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${s.access_token}` },
+        body: JSON.stringify({
+          user_id: userId,
+          title: 'Cita eliminada',
+          body: `Se eliminó la cita de ${appt.client_name}`,
+        }),
+      }).catch(() => {})
+    })
+
+    Swal.fire({ icon: 'success', title: 'Cita eliminada', timer: 2000, showConfirmButton: false })
+    onRefresh()
+  }
+
   const formatDate = (iso: string) => {
     const d = new Date(iso)
     return d.toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric', month: 'short' })
@@ -1432,6 +1605,14 @@ function AppointmentsPanel({ appointments, staff, services, userId, onRefresh, b
                     <p className="text-[10px] text-gray-400 font-mono mt-0.5">{appt.client_phone}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5 pt-1 sm:pt-0">
+                    {(appt.status === 'confirmed' || appt.status === 'pending') && (
+                      <button onClick={() => editAppointment(appt)} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-indigo-200 text-indigo-600 hover:bg-indigo-50" title="Editar cita">
+                        ✏️ Editar
+                      </button>
+                    )}
+                    <button onClick={() => deleteAppointment(appt)} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50" title="Eliminar cita">
+                      🗑️ Eliminar
+                    </button>
                     {appt.status === 'confirmed' && (
                       <>
                         <button onClick={() => updateStatus(appt, 'completed')} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50">

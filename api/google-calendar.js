@@ -298,7 +298,8 @@ async function handleEvent(req, res) {
   const secret = req.headers['x-gcal-sync-secret']
   const auth = (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
   if (!safeEqual(secret, GCAL_SYNC_SECRET) && !safeEqual(auth, SUPABASE_SERVICE_ROLE_KEY)) {
-    return res.status(401).json({ message: 'No autorizado' })
+    const user = await verifyUser(auth)
+    if (!user) return res.status(401).json({ message: 'No autorizado' })
   }
 
   const body = await parseBody(req)
