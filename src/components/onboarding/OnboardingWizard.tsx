@@ -56,6 +56,20 @@ export default function OnboardingWizard({ session, profile, instance, onComplet
     }))
   }, [instance?.provider_id])
 
+  useEffect(() => {
+    supabase
+      .from('whatsapp_connections')
+      .select('id')
+      .eq('user_id', session.user.id)
+      .eq('active', true)
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setCompletedSteps(prev => ({ ...prev, whatsapp: true }))
+        }
+      })
+  }, [session.user.id])
+
   const currentStep = steps[currentStepIndex]
 
   const goNext = () => {

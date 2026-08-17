@@ -27,22 +27,37 @@ export default function StepWhatsApp({ session, onNext, onSkip, onBack, onRefres
   const sessionInfoRef = useRef<any>(null)
 
   useEffect(() => {
-    if (window.FB) {
-      setSdkStatus('ready')
-      return
+    const checkExisting = async () => {
+      const { data } = await supabase
+        .from('whatsapp_connections')
+        .select('display_phone_number, active')
+        .eq('user_id', session.user.id)
+        .eq('active', true)
+        .limit(1)
+      if (data && data.length > 0) {
+        setConnectedPhone(data[0].display_phone_number || '')
+        setSdkStatus('connected')
+        return
+      }
+
+      if (window.FB) {
+        setSdkStatus('ready')
+        return
+      }
+      window.fbAsyncInit = function () {
+        window.FB.init({ appId: APP_ID, cookie: true, xfbml: true, version: 'v25.0' })
+        setSdkStatus('ready')
+      }
+      const scriptId = 'facebook-jssdk'
+      if (!document.getElementById(scriptId)) {
+        const js = document.createElement('script')
+        js.id = scriptId
+        js.src = 'https://connect.facebook.net/en_US/sdk.js'
+        document.body.appendChild(js)
+      }
     }
-    window.fbAsyncInit = function () {
-      window.FB.init({ appId: APP_ID, cookie: true, xfbml: true, version: 'v25.0' })
-      setSdkStatus('ready')
-    }
-    const scriptId = 'facebook-jssdk'
-    if (!document.getElementById(scriptId)) {
-      const js = document.createElement('script')
-      js.id = scriptId
-      js.src = 'https://connect.facebook.net/en_US/sdk.js'
-      document.body.appendChild(js)
-    }
-  }, [])
+    checkExisting()
+  }, [session.user.id])
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
