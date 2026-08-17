@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '../../../supabaseClient'
 import { sanitizeInstructions, looksMalicious } from '../../../utils/sanitizeInstructions'
@@ -24,6 +24,28 @@ export default function StepPersonality({ instance, onNext, onSkip, onBack }: St
   const [rules, setRules] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    if (!instance?.id || loaded) return
+    ;(async () => {
+      const { data } = await supabase
+        .from('agent_prompts')
+        .select('personality_config')
+        .eq('instance_id', instance.id)
+        .eq('channel', 'instagram')
+        .limit(1)
+        .maybeSingle()
+      const cfg = data?.personality_config
+      if (cfg) {
+        if (cfg.ai_name) setName(cfg.ai_name)
+        if (cfg.tone) setTone(cfg.tone)
+        if (cfg.greeting) setGreeting(cfg.greeting)
+        if (cfg.business_rules) setRules(cfg.business_rules)
+      }
+      setLoaded(true)
+    })()
+  }, [instance?.id, loaded])
 
   const handleSave = async () => {
     if (!name.trim()) {
