@@ -30,6 +30,7 @@ const WhatsAppLeadsView = lazy(() => import('./WhatsAppLeadsView'))
 const BranchesView = lazy(() => import('./BranchesView'))
 const ReferralsView = lazy(() => import('./ReferralsView'))
 const InstagramScannerView = lazy(() => import('./InstagramScannerView'))
+const InstagramMessagesView = lazy(() => import('./InstagramMessagesView'))
 
 const LazyFallback = () => (
   <div className="flex items-center justify-center h-64">
@@ -221,13 +222,14 @@ export default function Dashboard({ session }: { session: Session }) {
           <MobileNavBtn
             label="Instagram"
             icon={<FaInstagram className="text-pink-500" />}
-            active={activeTab === 'leads'}
+            active={activeTab === 'leads' || activeTab === 'ig-messages'}
             onClick={() => setInstagramMenuOpen(!instagramMenuOpen)}
             isParent isOpen={instagramMenuOpen}
           />
           {instagramMenuOpen && (
             <div className="ml-4 border-l border-gray-100 pl-3 space-y-0.5">
               <MobileSubBtn label="Ventas Capturadas" active={activeTab === 'leads'} onClick={() => { setActiveTab('leads'); setMobileMenuOpen(false) }} />
+              <MobileSubBtn label="Bandeja" active={activeTab === 'ig-messages'} onClick={() => { setActiveTab('ig-messages'); setMobileMenuOpen(false) }} />
             </div>
           )}
 
@@ -379,7 +381,7 @@ export default function Dashboard({ session }: { session: Session }) {
           <SidebarBtn
             label="Instagram"
             icon={<FaInstagram className="text-pink-500" />}
-            active={activeTab === 'leads'}
+            active={activeTab === 'leads' || activeTab === 'ig-messages'}
             onClick={() => setInstagramMenuOpen(!instagramMenuOpen)}
             isParent={true}
             isOpen={instagramMenuOpen}
@@ -390,6 +392,11 @@ export default function Dashboard({ session }: { session: Session }) {
                 label="Ventas Capturadas"
                 active={activeTab === 'leads'}
                 onClick={() => setActiveTab('leads')}
+              />
+              <SidebarSubBtn
+                label="Bandeja"
+                active={activeTab === 'ig-messages'}
+                onClick={() => setActiveTab('ig-messages')}
               />
             </div>
           )}
@@ -616,6 +623,9 @@ export default function Dashboard({ session }: { session: Session }) {
             {activeTab === 'wpp-leads' && <WhatsAppLeadsView userId={session.user.id} />}
             {activeTab === 'wpp-messages' && (
               <WhatsAppMessagesView session={session} />
+            )}
+            {activeTab === 'ig-messages' && (
+              <InstagramMessagesView session={session} />
             )}
             {activeTab === 'telegram-leads' && <TelegramLeadsView userId={session.user.id} />}
 
