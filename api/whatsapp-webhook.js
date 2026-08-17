@@ -35,8 +35,17 @@ async function logInboundMessages(body) {
 
         for (const msg of messages) {
           if (!msg.id || !msg.from) continue
-          const textBody = msg.text?.body || msg.button?.text || msg.interactive?.button_reply?.title || ''
-          if (!textBody) continue
+          let textBody = msg.text?.body || msg.button?.text || msg.interactive?.button_reply?.title || ''
+          if (!textBody) {
+            if (msg.type === 'image') textBody = msg.image?.caption || '[Imagen]'
+            else if (msg.type === 'video') textBody = msg.video?.caption || '[Video]'
+            else if (msg.type === 'audio') textBody = '[Audio]'
+            else if (msg.type === 'sticker') textBody = '[Sticker]'
+            else if (msg.type === 'document') textBody = msg.document?.filename || '[Documento]'
+            else if (msg.type === 'location') textBody = `[Ubicación: ${msg.location?.latitude},${msg.location?.longitude}]`
+            else if (msg.type === 'contacts') textBody = '[Contacto compartido]'
+            else continue
+          }
           const { error: insertErr } = await sb.from('whatsapp_messages').insert({
             user_id: conn.user_id,
             phone_number_id: phoneNumberId,
@@ -126,6 +135,9 @@ export default async function handler(req, res) {
       console.warn('Invalid or missing WhatsApp webhook secret')
       return res.status(401).json({ message: 'Unauthorized' })
     }
+  } else {
+    console.warn('No WhatsApp auth secrets configured — rejecting POST')
+    return res.status(500).json({ message: 'Webhook authentication not configured' })
   }
 
   let body

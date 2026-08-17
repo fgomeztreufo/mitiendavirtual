@@ -125,12 +125,6 @@ async function handleClassify(req, res, user) {
 
     const result = await r.json()
 
-    await supa.from('ig_scan_log').insert({
-      user_id: user.id,
-      posts_found: posts.length,
-      products_classified: Array.isArray(result) ? result.filter(p => p.classification === 'product').length : 0
-    })
-
     return res.status(200).json(result)
   } catch (err) {
     console.error('instagram-classify error:', err)

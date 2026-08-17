@@ -25,22 +25,22 @@ async function handleChatState(sb, req, res) {
   if (!contactId) return res.status(400).json({ message: 'contact_id es requerido.' })
 
   if (action === 'check-mode') {
-    const { data } = await sb.from('chat_states').select('id').eq('instagram_id', contactId).eq('status', 'human').limit(1)
+    const { data } = await sb.from('chat_states').select('id').eq('instagram_id', contactId).eq('user_id', user.id).eq('status', 'human').limit(1)
     return res.status(200).json({ mode: data && data.length > 0 ? 'human' : 'bot' })
   }
 
   if (action === 'takeover') {
-    const { data: existing } = await sb.from('chat_states').select('id').eq('instagram_id', contactId).limit(1)
+    const { data: existing } = await sb.from('chat_states').select('id').eq('instagram_id', contactId).eq('user_id', user.id).limit(1)
     if (existing && existing.length > 0) {
       await sb.from('chat_states').update({ status: 'human' }).eq('id', existing[0].id)
     } else {
-      await sb.from('chat_states').insert({ instagram_id: contactId, status: 'human' })
+      await sb.from('chat_states').insert({ instagram_id: contactId, user_id: user.id, status: 'human' })
     }
     return res.status(200).json({ ok: true, mode: 'human' })
   }
 
   if (action === 'resume') {
-    await sb.from('chat_states').delete().eq('instagram_id', contactId)
+    await sb.from('chat_states').delete().eq('instagram_id', contactId).eq('user_id', user.id)
     return res.status(200).json({ ok: true, mode: 'bot' })
   }
 

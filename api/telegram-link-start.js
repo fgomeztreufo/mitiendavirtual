@@ -66,14 +66,14 @@ async function handleChatState(req, res) {
   if (!contactId) return res.status(400).json({ message: 'contact_id es requerido.' })
 
   if (action === 'check-mode') {
-    const url = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/chat_states?chat_id=eq.${encodeURIComponent(contactId)}&status=eq.human&select=id&limit=1`
+    const url = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/chat_states?chat_id=eq.${encodeURIComponent(contactId)}&user_id=eq.${encodeURIComponent(user.id)}&status=eq.human&select=id&limit=1`
     const r = await fetch(url, { headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` } })
     const data = await r.json().catch(() => [])
     return res.status(200).json({ mode: Array.isArray(data) && data.length > 0 ? 'human' : 'bot' })
   }
 
   if (action === 'takeover') {
-    const checkUrl = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/chat_states?chat_id=eq.${encodeURIComponent(contactId)}&select=id&limit=1`
+    const checkUrl = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/chat_states?chat_id=eq.${encodeURIComponent(contactId)}&user_id=eq.${encodeURIComponent(user.id)}&select=id&limit=1`
     const checkRes = await fetch(checkUrl, { headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` } })
     const existing = await checkRes.json().catch(() => [])
 
@@ -87,14 +87,14 @@ async function handleChatState(req, res) {
       await fetch(`${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/chat_states`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` },
-        body: JSON.stringify({ chat_id: contactId, status: 'human' })
+        body: JSON.stringify({ chat_id: contactId, user_id: user.id, status: 'human' })
       })
     }
     return res.status(200).json({ ok: true, mode: 'human' })
   }
 
   if (action === 'resume') {
-    await fetch(`${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/chat_states?chat_id=eq.${encodeURIComponent(contactId)}`, {
+    await fetch(`${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/chat_states?chat_id=eq.${encodeURIComponent(contactId)}&user_id=eq.${encodeURIComponent(user.id)}`, {
       method: 'DELETE',
       headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` }
     })
