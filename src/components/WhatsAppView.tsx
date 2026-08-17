@@ -115,6 +115,11 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
 
   // Facebook SDK
   useEffect(() => {
+    if (window.FB) {
+      setSdkStatus('sdk-ready')
+      return
+    }
+
     window.fbAsyncInit = function () {
       window.FB.init({ appId: APP_ID, cookie: true, xfbml: true, version: 'v25.0' })
       setSdkStatus('sdk-ready')
@@ -124,10 +129,15 @@ export default function WhatsAppView({ session, profile, instance, onUpdate, goT
       const js = document.createElement('script')
       js.id = scriptId
       js.src = 'https://connect.facebook.net/en_US/sdk.js'
+      js.onerror = () => setSdkStatus('sdk-ready')
       document.body.appendChild(js)
-    } else if (window.FB) {
-      setSdkStatus('sdk-ready')
     }
+
+    const poll = setInterval(() => {
+      if (window.FB) { clearInterval(poll); setSdkStatus('sdk-ready') }
+    }, 500)
+    const timeout = setTimeout(() => { clearInterval(poll); setSdkStatus('sdk-ready') }, 10000)
+    return () => { clearInterval(poll); clearTimeout(timeout) }
   }, [])
 
   const sessionInfoRef = useRef<any>(null)
