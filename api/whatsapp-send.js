@@ -45,6 +45,44 @@ function buildReadableBody(templateName, params) {
   return `[Template: ${templateName}] ${params.join(', ')}`
 }
 
+async function handleChatState(sb, req, res) {
+  const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
+  if (!token) return res.status(401).json({ message: 'Se requiere autenticación.' })
+  const { data: { user }, error } = await sb.auth.getUser(token)
+  if (error || !user) return res.status(401).json({ message: 'Token inválido o sesión expirada.' })
+
+  const action = (req.query?.action || '').toLowerCase()
+  const contactId = req.method === 'GET'
+    ? req.query?.contact
+    : (req.body?.contact_id || req.body?.contact_phone)
+
+  if (!contactId) return res.status(400).json({ message: 'contact_id es requerido.' })
+
+  const phone = contactId.replace(/^\+/, '')
+
+  if (action === 'check-mode') {
+    const { data } = await sb.from('chat_states').select('id').eq('whatsapp_phone', phone).eq('status', 'human').limit(1)
+    return res.status(200).json({ mode: data && data.length > 0 ? 'human' : 'bot' })
+  }
+
+  if (action === 'takeover') {
+    const { data: existing } = await sb.from('chat_states').select('id').eq('whatsapp_phone', phone).limit(1)
+    if (existing && existing.length > 0) {
+      await sb.from('chat_states').update({ status: 'human' }).eq('id', existing[0].id)
+    } else {
+      await sb.from('chat_states').insert({ whatsapp_phone: phone, status: 'human' })
+    }
+    return res.status(200).json({ ok: true, mode: 'human' })
+  }
+
+  if (action === 'resume') {
+    await sb.from('chat_states').delete().eq('whatsapp_phone', phone)
+    return res.status(200).json({ ok: true, mode: 'bot' })
+  }
+
+  return res.status(400).json({ message: 'Acción no válida.' })
+}
+
 export default async function handler(req, res) {
   const origin = req.headers.origin
   if (ALLOWED_ORIGINS.includes(origin)) {
@@ -52,21 +90,28 @@ export default async function handler(req, res) {
   } else if (!origin) {
     res.setHeader('Access-Control-Allow-Origin', '*')
   }
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-wpp-template-secret')
   res.setHeader('Access-Control-Allow-Credentials', 'true')
 
   if (req.method === 'OPTIONS') return res.status(200).end()
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST')
-    return res.status(405).json({ message: 'Method Not Allowed' })
-  }
 
   if (!supabaseUrl || !supabaseServiceKey) {
     return res.status(500).json({ message: 'Configuración de servidor incompleta.' })
   }
 
   const sb = createClient(supabaseUrl, supabaseServiceKey)
+  const action = (req.query?.action || '').toLowerCase()
+
+  if (action === 'check-mode' || action === 'takeover' || action === 'resume') {
+    return handleChatState(sb, req, res)
+  }
+
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'GET, POST')
+    return res.status(405).json({ message: 'Method Not Allowed' })
+  }
+
   const mode = req.body?.type || 'text'
 
   // --- Auth ---

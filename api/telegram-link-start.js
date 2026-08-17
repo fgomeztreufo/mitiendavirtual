@@ -53,6 +53,57 @@ async function getBotTokenForUser(userId) {
   return TELEGRAM_BOT_TOKEN
 }
 
+async function handleChatState(req, res) {
+  const authHeader = req.headers.authorization || ''
+  const user = await resolveUserFromBearer(authHeader)
+  if (!user?.id) return res.status(401).json({ message: 'Unauthorized' })
+
+  const action = (req.query?.action || '').toLowerCase()
+  const contactId = req.method === 'GET'
+    ? req.query?.contact
+    : (req.body?.contact_id || req.body?.chat_id)
+
+  if (!contactId) return res.status(400).json({ message: 'contact_id es requerido.' })
+
+  if (action === 'check-mode') {
+    const url = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/chat_states?chat_id=eq.${encodeURIComponent(contactId)}&status=eq.human&select=id&limit=1`
+    const r = await fetch(url, { headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` } })
+    const data = await r.json().catch(() => [])
+    return res.status(200).json({ mode: Array.isArray(data) && data.length > 0 ? 'human' : 'bot' })
+  }
+
+  if (action === 'takeover') {
+    const checkUrl = `${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/chat_states?chat_id=eq.${encodeURIComponent(contactId)}&select=id&limit=1`
+    const checkRes = await fetch(checkUrl, { headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` } })
+    const existing = await checkRes.json().catch(() => [])
+
+    if (Array.isArray(existing) && existing.length > 0) {
+      await fetch(`${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/chat_states?id=eq.${existing[0].id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` },
+        body: JSON.stringify({ status: 'human' })
+      })
+    } else {
+      await fetch(`${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/chat_states`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` },
+        body: JSON.stringify({ chat_id: contactId, status: 'human' })
+      })
+    }
+    return res.status(200).json({ ok: true, mode: 'human' })
+  }
+
+  if (action === 'resume') {
+    await fetch(`${SUPABASE_URL.replace(/\/$/, '')}/rest/v1/chat_states?chat_id=eq.${encodeURIComponent(contactId)}`, {
+      method: 'DELETE',
+      headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` }
+    })
+    return res.status(200).json({ ok: true, mode: 'bot' })
+  }
+
+  return res.status(400).json({ message: 'Acción no válida.' })
+}
+
 async function handleSend(req, res) {
   const authHeader = req.headers.authorization || ''
   if (!authHeader) return res.status(401).json({ message: 'Unauthorized' })
@@ -203,6 +254,7 @@ export default async function handler(req, res) {
   if (req.method === 'DELETE') return handleDeactivate(req, res)
 
   const action = (req.query?.action || '').toLowerCase()
+  if (action === 'check-mode' || action === 'takeover' || action === 'resume') return handleChatState(req, res)
   if (action === 'send' && req.method === 'POST') return handleSend(req, res)
 
   if (req.method !== 'POST') {

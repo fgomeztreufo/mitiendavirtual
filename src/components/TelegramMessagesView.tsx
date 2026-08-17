@@ -86,6 +86,9 @@ export default function TelegramMessagesView({ session }: TelegramMessagesViewPr
   const [daysFilter, setDaysFilter] = useState(3)
   const [searchQuery, setSearchQuery] = useState('')
   const [realtimeStatus, setRealtimeStatus] = useState<'connecting' | 'connected' | 'fallback'>('connecting')
+  const [humanMode, setHumanMode] = useState(false)
+  const [togglingMode, setTogglingMode] = useState(false)
+  const [humanModeContacts, setHumanModeContacts] = useState<Set<string>>(new Set())
 
   const [reengageSelected, setReengageSelected] = useState<Set<string>>(new Set())
   const [reengageMessage, setReengageMessage] = useState('')
@@ -415,12 +418,52 @@ export default function TelegramMessagesView({ session }: TelegramMessagesViewPr
     }
   }, [session.user.id, handleNewMessage])
 
-  const handleSelectContact = useCallback((chatId: string) => {
+  const handleSelectContact = useCallback(async (chatId: string) => {
     setSelectedContact(chatId)
+    setHumanMode(humanModeContacts.has(chatId))
     setConversations(prev => prev.map(c =>
       c.chat_id === chatId ? { ...c, unread: 0 } : c
     ))
-  }, [])
+    try {
+      const { data: { session: s } } = await supabase.auth.getSession()
+      if (!s) return
+      const r = await fetch(`/api/telegram-link-start?action=check-mode&contact=${encodeURIComponent(chatId)}`, {
+        headers: { Authorization: `Bearer ${s.access_token}` }
+      })
+      const d = await r.json().catch(() => ({}))
+      const isHuman = d.mode === 'human'
+      setHumanMode(isHuman)
+      setHumanModeContacts(prev => {
+        const next = new Set(prev)
+        if (isHuman) next.add(chatId); else next.delete(chatId)
+        return next
+      })
+    } catch {}
+  }, [humanModeContacts])
+
+  const toggleHumanMode = useCallback(async () => {
+    if (!selectedContact || togglingMode) return
+    setTogglingMode(true)
+    try {
+      const { data: { session: s } } = await supabase.auth.getSession()
+      if (!s) return
+      const action = humanMode ? 'resume' : 'takeover'
+      const r = await fetch(`/api/telegram-link-start?action=${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.access_token}` },
+        body: JSON.stringify({ contact_id: selectedContact })
+      })
+      const d = await r.json().catch(() => ({}))
+      const isHuman = d.mode === 'human'
+      setHumanMode(isHuman)
+      setHumanModeContacts(prev => {
+        const next = new Set(prev)
+        if (isHuman) next.add(selectedContact); else next.delete(selectedContact)
+        return next
+      })
+    } catch {}
+    finally { setTogglingMode(false) }
+  }, [selectedContact, humanMode, togglingMode])
 
   const handleSend = useCallback(async () => {
     if (!selectedContact || !newMessage.trim() || sending) return
@@ -661,6 +704,9 @@ export default function TelegramMessagesView({ session }: TelegramMessagesViewPr
                           {displayName(conv)}
                         </span>
                         <div className="flex items-center gap-1.5">
+                          {humanModeContacts.has(conv.chat_id) && (
+                            <span className="text-[8px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-full font-bold">HUMANO</span>
+                          )}
                           {blockedIds.has(conv.chat_id) && (
                             <span className="text-[8px] bg-red-50 text-red-500 px-1.5 py-0.5 rounded-full font-bold">BLOQ</span>
                           )}
@@ -706,17 +752,30 @@ export default function TelegramMessagesView({ session }: TelegramMessagesViewPr
                           </p>
                         </div>
                       </div>
-                      <button
-                        onClick={() => toggleBlock(selectedContact)}
-                        disabled={togglingBlock}
-                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all disabled:opacity-50 ${
-                          blockedIds.has(selectedContact)
-                            ? 'bg-gray-50 text-gray-500 hover:bg-gray-100'
-                            : 'bg-red-50 text-red-500 hover:bg-red-100'
-                        }`}
-                      >
-                        {togglingBlock ? '...' : blockedIds.has(selectedContact) ? 'Desbloquear' : 'Bloquear'}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={toggleHumanMode}
+                          disabled={togglingMode}
+                          className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all disabled:opacity-50 ${
+                            humanMode
+                              ? 'bg-green-50 text-green-600 hover:bg-green-100'
+                              : 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+                          }`}
+                        >
+                          {togglingMode ? '...' : humanMode ? 'Devolver a IA' : 'Tomar Control'}
+                        </button>
+                        <button
+                          onClick={() => toggleBlock(selectedContact)}
+                          disabled={togglingBlock}
+                          className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all disabled:opacity-50 ${
+                            blockedIds.has(selectedContact)
+                              ? 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                              : 'bg-red-50 text-red-500 hover:bg-red-100'
+                          }`}
+                        >
+                          {togglingBlock ? '...' : blockedIds.has(selectedContact) ? 'Desbloquear' : 'Bloquear'}
+                        </button>
+                      </div>
                     </div>
 
                     <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -826,8 +885,10 @@ export default function TelegramMessagesView({ session }: TelegramMessagesViewPr
                               )}
                             </button>
                           </div>
-                          <p className="text-[10px] text-gray-400 italic text-center">
-                            Al responder, tu asistente IA seguira activo en esta conversacion.
+                          <p className={`text-[10px] italic text-center ${humanMode ? 'text-amber-500 font-medium' : 'text-gray-400'}`}>
+                            {humanMode
+                              ? 'Estas en control. La IA no respondera a este contacto.'
+                              : 'Al responder, tu asistente IA seguira activo en esta conversacion.'}
                           </p>
                         </div>
                       )}

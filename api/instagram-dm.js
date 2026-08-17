@@ -5,6 +5,48 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.
 const GRAPH_API = 'https://graph.facebook.com/v25.0'
 const ALLOWED_ORIGINS = ['http://localhost:5173', 'https://www.mitiendavirtual.cl', 'https://mitiendavirtual.cl']
 
+async function authUser(sb, req) {
+  const bearerToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
+  if (!bearerToken) return null
+  const { data: { user }, error } = await sb.auth.getUser(bearerToken)
+  if (error || !user) return null
+  return user
+}
+
+async function handleChatState(sb, req, res) {
+  const user = await authUser(sb, req)
+  if (!user) return res.status(401).json({ message: 'Se requiere autenticación.' })
+
+  const action = (req.query?.action || '').toLowerCase()
+  const contactId = req.method === 'GET'
+    ? req.query?.contact
+    : (req.body?.contact_id || req.body?.contact_ig_id)
+
+  if (!contactId) return res.status(400).json({ message: 'contact_id es requerido.' })
+
+  if (action === 'check-mode') {
+    const { data } = await sb.from('chat_states').select('id').eq('instagram_id', contactId).eq('status', 'human').limit(1)
+    return res.status(200).json({ mode: data && data.length > 0 ? 'human' : 'bot' })
+  }
+
+  if (action === 'takeover') {
+    const { data: existing } = await sb.from('chat_states').select('id').eq('instagram_id', contactId).limit(1)
+    if (existing && existing.length > 0) {
+      await sb.from('chat_states').update({ status: 'human' }).eq('id', existing[0].id)
+    } else {
+      await sb.from('chat_states').insert({ instagram_id: contactId, status: 'human' })
+    }
+    return res.status(200).json({ ok: true, mode: 'human' })
+  }
+
+  if (action === 'resume') {
+    await sb.from('chat_states').delete().eq('instagram_id', contactId)
+    return res.status(200).json({ ok: true, mode: 'bot' })
+  }
+
+  return res.status(400).json({ message: 'Acción no válida.' })
+}
+
 export default async function handler(req, res) {
   const origin = req.headers.origin
   if (ALLOWED_ORIGINS.includes(origin)) {
@@ -13,17 +55,22 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', 'true')
 
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
     return res.status(200).end()
   }
 
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST, OPTIONS')
-    return res.status(405).json({ message: 'Method Not Allowed' })
+  const sb = createClient(supabaseUrl, supabaseServiceKey)
+  const action = (req.query?.action || '').toLowerCase()
+
+  if (action === 'check-mode' || action === 'takeover' || action === 'resume') {
+    return handleChatState(sb, req, res)
   }
 
-  const sb = createClient(supabaseUrl, supabaseServiceKey)
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'GET, POST, OPTIONS')
+    return res.status(405).json({ message: 'Method Not Allowed' })
+  }
 
   // Auth — Bearer token only (dashboard user)
   const bearerToken = (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
