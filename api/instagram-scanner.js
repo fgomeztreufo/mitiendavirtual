@@ -138,6 +138,40 @@ async function handleClassify(req, res, user) {
   }
 }
 
+// POST ?action=import-services — import services directly to DB
+async function handleImportServices(req, res, user) {
+  const body = await parseBody(req)
+  const services = body.services
+  if (!Array.isArray(services) || services.length === 0) {
+    return res.status(400).json({ message: 'No services to import' })
+  }
+  if (services.length > 50) {
+    return res.status(400).json({ message: 'Máximo 50 servicios por importación' })
+  }
+
+  const supa = serviceClient()
+  let imported = 0
+
+  for (const svc of services) {
+    const name = (svc.name || '').trim()
+    if (!name) continue
+
+    const { error } = await supa.from('services').insert({
+      user_id: user.id,
+      name,
+      description: (svc.description || '').trim() || null,
+      duration_minutes: Number(svc.duration_minutes) || 30,
+      price: svc.price ? Number(svc.price) : null,
+      is_active: true,
+    })
+
+    if (!error) imported++
+    else console.error('service insert error:', error.message)
+  }
+
+  return res.status(200).json({ imported, total: services.length })
+}
+
 // POST ?action=import — import selected products via n8n
 async function handleImport(req, res, user) {
   const body = await parseBody(req)
@@ -237,7 +271,10 @@ export default async function handler(req, res) {
     case 'import':
       if (req.method !== 'POST') return res.status(405).json({ message: 'POST required for import' })
       return handleImport(req, res, user)
+    case 'import-services':
+      if (req.method !== 'POST') return res.status(405).json({ message: 'POST required for import-services' })
+      return handleImportServices(req, res, user)
     default:
-      return res.status(400).json({ message: 'action required: scan, classify, or import' })
+      return res.status(400).json({ message: 'action required: scan, classify, import, or import-services' })
   }
 }

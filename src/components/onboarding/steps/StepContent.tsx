@@ -98,10 +98,10 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
       </div>
 
       <h2 className="text-2xl font-black text-gray-900 mb-2 text-center">
-        Carga tus productos
+        Carga tus productos o servicios
       </h2>
       <p className="text-gray-500 text-sm mb-6 text-center">
-        Tu bot necesita conocer tus productos para poder venderlos. Puedes agregar mas despues.
+        Tu bot necesita conocer lo que ofreces para poder venderlo. Puedes agregar mas despues.
       </p>
 
       {(uploaded || scanDone) ? (
@@ -163,8 +163,8 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
                 </p>
                 <p className="text-gray-500 text-xs mt-0.5">
                   {scanEnabled
-                    ? 'Carga productos desde tus publicaciones de Instagram'
-                    : 'Conecta tu Instagram primero para escanear productos'}
+                    ? 'Carga productos y servicios desde tus publicaciones'
+                    : 'Conecta tu Instagram primero para escanear'}
                 </p>
               </div>
             </div>

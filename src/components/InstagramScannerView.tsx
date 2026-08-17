@@ -17,12 +17,13 @@ interface IgPost {
 }
 
 interface ClassifiedPost extends IgPost {
-  classification: 'product' | 'ad' | 'personal' | 'catalog' | 'other'
+  classification: 'product' | 'service' | 'ad' | 'personal' | 'catalog' | 'other'
   name?: string
   price?: number | null
   description?: string
   brand?: string
   category?: string
+  duration_minutes?: number | null
 }
 
 type Phase = 'idle' | 'scanning' | 'classifying' | 'results' | 'importing' | 'done'
@@ -94,7 +95,7 @@ export default function InstagramScannerView({ session, profile, instance, onPro
       title: 'Escanear Instagram',
       html: `
         <p style="color:#9ca3af;font-size:13px;margin-bottom:12px">
-          Analizaremos tus publicaciones de Instagram con IA para identificar productos y cargarlos a tu catálogo.
+          Analizaremos tus publicaciones de Instagram con IA para identificar productos y servicios, y cargarlos a tu catálogo.
         </p>
         <p style="color:#6b7280;font-size:11px">
           Al continuar, aceptas nuestros <a href="/terms" target="_blank" style="color:#818cf8;text-decoration:underline">Términos de Servicio</a>
@@ -190,6 +191,7 @@ export default function InstagramScannerView({ session, profile, instance, onPro
           description: pd?.description || '',
           brand: pd?.brand || '',
           category: pd?.category || '',
+          duration_minutes: pd?.duration_minutes || null,
           _imported: alreadyImported.has(p.id)
         }
       }) as (ClassifiedPost & { _imported?: boolean })[]
@@ -213,18 +215,23 @@ export default function InstagramScannerView({ session, profile, instance, onPro
       const next = new Set(prev)
       if (next.has(postId)) {
         next.delete(postId)
-      } else if (next.size < remaining) {
-        next.add(postId)
       } else {
-        Swal.fire({
-          title: 'Límite alcanzado',
-          text: `Tu plan ${planCodeToDisplay(planCode)} permite ${planLimit} productos. Tienes ${remaining} cupos disponibles.`,
-          icon: 'warning',
-          confirmButtonText: 'Mejorar Plan',
-          showCancelButton: true,
-          cancelButtonText: 'Entendido',
-          confirmButtonColor: '#D4AF37',
-        }).then(r => { if (r.isConfirmed) goToPlans() })
+        const post = classified.find(p => p.id === postId)
+        const isService = post?.classification === 'service'
+        const selectedProducts = [...next].filter(id => classified.find(p => p.id === id)?.classification === 'product').length
+        if (!isService && selectedProducts >= remaining) {
+          Swal.fire({
+            title: 'Límite alcanzado',
+            text: `Tu plan ${planCodeToDisplay(planCode)} permite ${planLimit} productos. Tienes ${remaining} cupos disponibles.`,
+            icon: 'warning',
+            confirmButtonText: 'Mejorar Plan',
+            showCancelButton: true,
+            cancelButtonText: 'Entendido',
+            confirmButtonColor: '#D4AF37',
+          }).then(r => { if (r.isConfirmed) goToPlans() })
+        } else {
+          next.add(postId)
+        }
       }
       return next
     })
@@ -238,6 +245,7 @@ export default function InstagramScannerView({ session, profile, instance, onPro
       description: post.description || '',
       brand: post.brand || '',
       category: post.category || '',
+      duration_minutes: post.duration_minutes || '',
     })
   }
 
@@ -247,8 +255,9 @@ export default function InstagramScannerView({ session, profile, instance, onPro
   }
 
   const handleImport = async () => {
-    const toImport = classified
-      .filter(p => selected.has(p.id) && !(p as any)._imported)
+    const selectedItems = classified.filter(p => selected.has(p.id) && !(p as any)._imported)
+    const productsToImport = selectedItems
+      .filter(p => p.classification === 'product')
       .map(p => ({
         igPostId: p.id,
         name: p.name || 'Producto de Instagram',
@@ -259,40 +268,63 @@ export default function InstagramScannerView({ session, profile, instance, onPro
         media_url: p.media_url || p.thumbnail_url || '',
         permalink: p.permalink || ''
       }))
+    const servicesToImport = selectedItems
+      .filter(p => p.classification === 'service')
+      .map(p => ({
+        name: p.name || 'Servicio de Instagram',
+        price: p.price || null,
+        description: p.description || p.caption || '',
+        duration_minutes: p.duration_minutes || 30,
+      }))
 
-    if (toImport.length === 0) return
+    if (productsToImport.length === 0 && servicesToImport.length === 0) return
 
     setPhase('importing')
     setImportProgress(10)
 
     try {
-      const res = await fetch('/api/instagram-scanner?action=import', {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ products: toImport })
-      })
+      let importedProducts = 0, skippedProducts = 0, importedServices = 0
 
-      setImportProgress(80)
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        if (data.code === 'LIMIT_EXCEEDED') {
-          setError(`Solo tienes ${data.remaining} cupos disponibles.`)
-          setPhase('results')
-          return
+      if (productsToImport.length > 0) {
+        const res = await fetch('/api/instagram-scanner?action=import', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ products: productsToImport })
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          if (data.code === 'LIMIT_EXCEEDED') {
+            setError(`Solo tienes ${data.remaining} cupos disponibles.`)
+            setPhase('results')
+            return
+          }
+          throw new Error(data.message || 'Error al importar productos')
         }
-        throw new Error(data.message || 'Error al importar')
+        importedProducts = data.imported || 0
+        skippedProducts = data.skipped || 0
+      }
+
+      setImportProgress(60)
+
+      if (servicesToImport.length > 0) {
+        const res = await fetch('/api/instagram-scanner?action=import-services', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ services: servicesToImport })
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.message || 'Error al importar servicios')
+        importedServices = data.imported || 0
       }
 
       setImportProgress(100)
-      setImportResult({ imported: data.imported, skipped: data.skipped || 0 })
+      setImportResult({ imported: importedProducts + importedServices, skipped: skippedProducts })
       setPhase('done')
       onProductsImported()
 
     } catch (err: any) {
       console.error('Import error:', err)
-      setError(err.message || 'Error al importar productos')
+      setError(err.message || 'Error al importar')
       setPhase('results')
     }
   }
@@ -300,6 +332,7 @@ export default function InstagramScannerView({ session, profile, instance, onPro
   const getThumb = (post: IgPost) => post.thumbnail_url || post.media_url || ''
 
   const productCount = classified.filter(p => p.classification === 'product' && !(p as any)._imported).length
+  const serviceCount = classified.filter(p => p.classification === 'service' && !(p as any)._imported).length
 
   if (!isConnected) {
     return (
@@ -363,7 +396,7 @@ export default function InstagramScannerView({ session, profile, instance, onPro
           </div>
           <h2 className="text-xl font-black text-gray-900 mb-3 uppercase">Escanea tu Instagram</h2>
           <p className="text-gray-500 text-sm mb-2 max-w-md">
-            Analizaremos tus publicaciones con IA para encontrar productos y cargarlos a tu catálogo automáticamente.
+            Analizaremos tus publicaciones con IA para encontrar productos y servicios, y cargarlos automáticamente.
           </p>
           <p className="text-gray-600 text-xs mb-8">
             @{instance?.ig_username || 'tu cuenta'} — {remaining} cupos disponibles
@@ -409,7 +442,7 @@ export default function InstagramScannerView({ session, profile, instance, onPro
         <div className="py-8">
           <div className="text-center mb-8">
             <h3 className="text-lg font-bold text-gray-900 mb-2">Clasificando con IA...</h3>
-            <p className="text-gray-500 text-sm">Identificando productos en {posts.length} publicaciones</p>
+            <p className="text-gray-500 text-sm">Identificando productos y servicios en {posts.length} publicaciones</p>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 max-w-5xl mx-auto">
             {posts.map(p => (
@@ -431,10 +464,15 @@ export default function InstagramScannerView({ session, profile, instance, onPro
         <div className="pb-32">
           <div className="flex flex-wrap items-center gap-3 mb-6">
             <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold border border-emerald-200">
-              {productCount} productos encontrados
+              {productCount} producto{productCount !== 1 ? 's' : ''}
             </span>
+            {serviceCount > 0 && (
+              <span className="px-3 py-1.5 rounded-full bg-teal-50 text-teal-600 text-xs font-bold border border-teal-200">
+                {serviceCount} servicio{serviceCount !== 1 ? 's' : ''}
+              </span>
+            )}
             <span className="px-3 py-1.5 rounded-full bg-gray-100 text-gray-500 text-xs font-bold">
-              {classified.filter(p => p.classification !== 'product').length} no son productos
+              {classified.filter(p => p.classification !== 'product' && p.classification !== 'service').length} otros
             </span>
             {pagingCursor && (
               <button
@@ -446,10 +484,10 @@ export default function InstagramScannerView({ session, profile, instance, onPro
             )}
           </div>
 
-          {productCount === 0 && (
+          {productCount === 0 && serviceCount === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-500 text-sm mb-4">
-                No encontramos publicaciones de productos en tus últimas publicaciones.
+                No encontramos productos ni servicios en tus últimas publicaciones.
               </p>
               {pagingCursor && (
                 <button onClick={handleLoadMore}
@@ -463,6 +501,8 @@ export default function InstagramScannerView({ session, profile, instance, onPro
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {classified.map(post => {
               const isProduct = post.classification === 'product'
+              const isService = post.classification === 'service'
+              const isSelectable = isProduct || isService
               const isImported = (post as any)._imported
               const isSelected = selected.has(post.id)
               const isEditing = editingId === post.id
@@ -474,6 +514,7 @@ export default function InstagramScannerView({ session, profile, instance, onPro
                     isImported ? 'border-blue-500/50 opacity-60' :
                     isSelected ? 'border-amber-400 shadow-[0_0_20px_rgba(212,175,55,0.3)] scale-[1.02]' :
                     isProduct ? 'border-emerald-500/40 hover:border-emerald-400' :
+                    isService ? 'border-teal-500/40 hover:border-teal-400' :
                     'border-gray-200 opacity-40'
                   } bg-white shadow-sm`}
                 >
@@ -487,7 +528,12 @@ export default function InstagramScannerView({ session, profile, instance, onPro
                         Ya importado
                       </div>
                     )}
-                    {!isProduct && !isImported && (
+                    {isService && !isImported && (
+                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded-lg bg-teal-500/90 text-white text-[9px] font-bold">
+                        Servicio
+                      </div>
+                    )}
+                    {!isSelectable && !isImported && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                         <span className="px-2 py-1 rounded-lg bg-gray-700/90 text-gray-200 text-[10px] font-bold capitalize">
                           {post.classification === 'ad' ? 'Publicidad' :
@@ -498,7 +544,7 @@ export default function InstagramScannerView({ session, profile, instance, onPro
                     )}
 
                     {/* Checkbox */}
-                    {isProduct && !isImported && (
+                    {isSelectable && !isImported && (
                       <button
                         onClick={() => toggleSelect(post.id)}
                         className={`absolute top-2 right-2 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
@@ -513,21 +559,25 @@ export default function InstagramScannerView({ session, profile, instance, onPro
                   </div>
 
                   {/* Info */}
-                  {isProduct && (
+                  {isSelectable && (
                     <div className="p-3">
                       {isEditing ? (
                         <div className="space-y-2">
                           <input value={editData.name} onChange={e => setEditData({ ...editData, name: e.target.value })}
                             className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-900" placeholder="Nombre" />
                           <input type="number" value={editData.price} onChange={e => setEditData({ ...editData, price: e.target.value })}
-                            className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-900" placeholder="Precio CLP" />
+                            className={`w-full bg-gray-50 border rounded-lg px-2 py-1.5 text-xs text-gray-900 ${!editData.price ? 'border-amber-400' : 'border-gray-200'}`} placeholder="Precio CLP" />
+                          {isService && (
+                            <input type="number" value={editData.duration_minutes} onChange={e => setEditData({ ...editData, duration_minutes: e.target.value })}
+                              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-900" placeholder="Duración (minutos)" />
+                          )}
                           <input value={editData.category} onChange={e => setEditData({ ...editData, category: e.target.value })}
                             className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-900" placeholder="Categoría" />
                           <textarea value={editData.description} onChange={e => setEditData({ ...editData, description: e.target.value })}
                             className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-900 resize-none" rows={2} placeholder="Descripción" />
                           <div className="flex gap-2">
                             <button onClick={() => saveEdit(post.id)}
-                              className="flex-1 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-bold hover:bg-emerald-100">
+                              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold ${isService ? 'bg-teal-50 text-teal-600 hover:bg-teal-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}>
                               Guardar
                             </button>
                             <button onClick={() => setEditingId(null)}
@@ -540,9 +590,12 @@ export default function InstagramScannerView({ session, profile, instance, onPro
                         <div onClick={() => !isImported && startEdit(post)} className={!isImported ? 'cursor-pointer' : ''}>
                           <p className="text-gray-900 text-xs font-bold truncate">{post.name || 'Sin nombre'}</p>
                           {post.price ? (
-                            <p className="text-amber-600 text-xs font-black">${Number(post.price).toLocaleString('es-CL')}</p>
+                            <p className={`text-xs font-black ${isService ? 'text-teal-600' : 'text-amber-600'}`}>${Number(post.price).toLocaleString('es-CL')}</p>
                           ) : (
-                            <p className="text-gray-400 text-[10px] italic">Sin precio detectado</p>
+                            <p className="text-amber-500 text-[10px] italic font-medium">Ingresa el precio</p>
+                          )}
+                          {isService && post.duration_minutes && (
+                            <p className="text-teal-500 text-[10px] mt-0.5">{post.duration_minutes} min</p>
                           )}
                           {post.category && (
                             <p className="text-gray-500 text-[10px] mt-0.5 truncate">{post.category}</p>
@@ -565,9 +618,18 @@ export default function InstagramScannerView({ session, profile, instance, onPro
               <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
                 <div>
                   <p className="text-gray-900 text-sm font-bold">
-                    {selected.size} producto{selected.size > 1 ? 's' : ''} seleccionado{selected.size > 1 ? 's' : ''}
+                    {selected.size} seleccionado{selected.size > 1 ? 's' : ''}
                   </p>
-                  <p className="text-gray-500 text-xs">{remaining - selected.size} cupos restantes después de importar</p>
+                  <p className="text-gray-500 text-xs">
+                    {(() => {
+                      const selProducts = [...selected].filter(id => classified.find(p => p.id === id)?.classification === 'product').length
+                      const selServices = [...selected].filter(id => classified.find(p => p.id === id)?.classification === 'service').length
+                      const parts = []
+                      if (selProducts > 0) parts.push(`${selProducts} producto${selProducts > 1 ? 's' : ''}`)
+                      if (selServices > 0) parts.push(`${selServices} servicio${selServices > 1 ? 's' : ''}`)
+                      return parts.join(' + ')
+                    })()}
+                  </p>
                 </div>
                 <div className="flex gap-3">
                   <button onClick={() => setSelected(new Set())}
@@ -576,7 +638,7 @@ export default function InstagramScannerView({ session, profile, instance, onPro
                   </button>
                   <button onClick={handleImport}
                     className="px-8 py-2.5 rounded-xl font-black text-sm uppercase tracking-wider bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98]">
-                    Importar desde Instagram
+                    Importar seleccionados
                   </button>
                 </div>
               </div>
@@ -591,8 +653,8 @@ export default function InstagramScannerView({ session, profile, instance, onPro
           <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
             <span className="text-2xl animate-bounce">📦</span>
           </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Importando productos...</h3>
-          <p className="text-gray-500 text-sm mb-6">Descargando imágenes y creando productos en tu catálogo</p>
+          <h3 className="text-lg font-bold text-gray-900 mb-2">Importando...</h3>
+          <p className="text-gray-500 text-sm mb-6">Creando productos y servicios en tu catálogo</p>
           <div className="max-w-sm mx-auto h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-1000 rounded-full"
@@ -608,9 +670,9 @@ export default function InstagramScannerView({ session, profile, instance, onPro
           <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-[0_0_40px_rgba(16,185,129,0.3)]">
             <span className="text-3xl">✓</span>
           </div>
-          <h3 className="text-2xl font-black text-gray-900 mb-3 uppercase">Productos importados</h3>
+          <h3 className="text-2xl font-black text-gray-900 mb-3 uppercase">Importación completa</h3>
           <p className="text-gray-500 text-sm mb-2">
-            Se importaron <span className="text-emerald-600 font-bold">{importResult.imported}</span> producto{importResult.imported > 1 ? 's' : ''} desde Instagram.
+            Se importaron <span className="text-emerald-600 font-bold">{importResult.imported}</span> item{importResult.imported > 1 ? 's' : ''} desde Instagram.
           </p>
           {importResult.skipped > 0 && (
             <p className="text-gray-600 text-xs mb-6">
