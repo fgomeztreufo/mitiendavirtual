@@ -56,12 +56,7 @@ export default function Dashboard({ session }: { session: Session }) {
   const [showOnboarding, setShowOnboarding] = useState(false)
 
   const shouldOnboard = useMemo(() => {
-    if (!profile) return false
-    if (localStorage.getItem('onboarding_completed_' + session.user.id)) return false
-    if (profile.onboarding_completed_at) return false
-    return !instance?.provider_id
-      || !profile.business_type
-      || profile.business_type === 'ecommerce'
+    return false
   }, [profile, instance, session.user.id])
 
   useEffect(() => {

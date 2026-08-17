@@ -27,9 +27,7 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
   const [scanDone, setScanDone] = useState(false)
 
   const igConnected = !!instance?.provider_id
-  const isServiceBusiness = ['clinica', 'servicios'].includes(profile?.business_type || '')
-  const showScanOption = !isServiceBusiness
-  const scanEnabled = igConnected && showScanOption
+  const scanEnabled = igConnected
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -143,7 +141,6 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
           </button>
 
           {/* Opción 2: Scan Instagram */}
-          {showScanOption && (
           <button
             onClick={() => scanEnabled ? setMode('scan') : undefined}
             disabled={!scanEnabled}
@@ -169,7 +166,6 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
               </div>
             </div>
           </button>
-          )}
         </div>
       ) : mode === 'scan' ? (
         <div className="w-full text-center space-y-4">
