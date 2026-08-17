@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FaInstagram } from 'react-icons/fa'
+import InstagramScannerView from '../../InstagramScannerView'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
@@ -168,23 +169,19 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
           </button>
         </div>
       ) : mode === 'scan' ? (
-        <div className="w-full text-center space-y-4">
-          <div className="p-6 rounded-2xl bg-pink-50 border border-pink-200">
-            <FaInstagram className="text-pink-500 text-3xl mx-auto mb-3" />
-            <p className="text-gray-900 text-sm font-bold mb-2">Escaneo de Instagram</p>
-            <p className="text-gray-500 text-xs mb-4">
-              Podrás escanear y seleccionar productos desde tu Instagram en el Dashboard.
-            </p>
-            <button
-              onClick={() => { setScanDone(true) }}
-              className="w-full py-3 rounded-xl font-black text-xs uppercase tracking-widest bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 text-white hover:shadow-[0_0_20px_rgba(236,72,153,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Continuar al Dashboard para escanear
+        <div className="w-full">
+          <InstagramScannerView
+            session={session}
+            profile={profile}
+            instance={instance}
+            onProductsImported={() => setScanDone(true)}
+            goToPlans={() => {}}
+          />
+          <div className="text-center mt-4">
+            <button onClick={() => setMode('choose')} className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
+              Volver a elegir
             </button>
           </div>
-          <button onClick={() => setMode('choose')} className="text-xs text-gray-500 hover:text-gray-700 transition-colors">
-            Volver a elegir
-          </button>
         </div>
       ) : (
         <div className="w-full space-y-4">
