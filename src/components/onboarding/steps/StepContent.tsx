@@ -27,7 +27,9 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
   const [scanDone, setScanDone] = useState(false)
 
   const igConnected = !!instance?.provider_id
-  const showScanOption = igConnected && !['clinica', 'servicios'].includes(profile?.business_type || '')
+  const isServiceBusiness = ['clinica', 'servicios'].includes(profile?.business_type || '')
+  const showScanOption = !isServiceBusiness
+  const scanEnabled = igConnected && showScanOption
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -140,15 +142,15 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
             </div>
           </button>
 
-          {/* Opción 2: Scan Instagram (solo para negocios con productos) */}
-          {showScanOption !== false && (
+          {/* Opción 2: Scan Instagram */}
+          {showScanOption && (
           <button
-            onClick={() => showScanOption ? setMode('scan') : undefined}
-            disabled={!showScanOption}
+            onClick={() => scanEnabled ? setMode('scan') : undefined}
+            disabled={!scanEnabled}
             className={`w-full p-5 rounded-2xl border transition-all text-left group ${
-              showScanOption
+              scanEnabled
                 ? 'border-gray-200 bg-white hover:border-pink-400 hover:bg-pink-50 shadow-sm'
-                : 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
+                : 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
             }`}
           >
             <div className="flex items-center gap-4">
@@ -160,7 +162,9 @@ export default function StepContent({ session, instance, profile, onNext, onSkip
                   Escanear tu Instagram
                 </p>
                 <p className="text-gray-500 text-xs mt-0.5">
-                  Carga productos desde tus publicaciones de Instagram
+                  {scanEnabled
+                    ? 'Carga productos desde tus publicaciones de Instagram'
+                    : 'Conecta tu Instagram primero para escanear productos'}
                 </p>
               </div>
             </div>
