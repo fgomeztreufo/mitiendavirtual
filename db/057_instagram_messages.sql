@@ -54,36 +54,42 @@ create or replace function sync_usage_log_to_ig_messages()
 returns trigger language plpgsql security definer as $$
 declare
   msg_text text;
+  contact  text;
+  det      jsonb;
 begin
-  -- Only process Instagram DMs that have a response
   if NEW.sistema is distinct from 'Instagram' then return NEW; end if;
   if NEW.type is distinct from 'message' then return NEW; end if;
   if NEW.user_id is null or NEW.sender_id is null then return NEW; end if;
 
-  -- Extract inbound message text from details JSON
+  -- Parse details JSON
   begin
-    msg_text := NEW.details::jsonb ->> 'mensaje';
+    det := NEW.details::jsonb;
+    msg_text := det ->> 'mensaje';
+    contact  := coalesce(det ->> 'nombre', det ->> 'username');
   exception when others then
     msg_text := NEW.details::text;
+    contact  := null;
   end;
 
-  -- Insert inbound message (from customer)
+  -- Inbound message (from customer)
   if msg_text is not null and msg_text <> '' then
     insert into instagram_messages
-      (user_id, ig_account_id, contact_ig_id, direction, body, sender_type, ig_message_id, created_at)
+      (user_id, ig_account_id, contact_ig_id, contact_name, direction, body, sender_type, ig_message_id, created_at)
     values
-      (NEW.user_id, coalesce(NEW.provider_id,''), NEW.sender_id, 'inbound', msg_text, 'ai', NEW.message_id, NEW.created_at)
-    on conflict (ig_message_id) where ig_message_id is not null do nothing;
+      (NEW.user_id, coalesce(NEW.provider_id,''), NEW.sender_id, contact, 'inbound', msg_text, 'ai', NEW.message_id, NEW.created_at)
+    on conflict (ig_message_id) where ig_message_id is not null
+      do update set contact_name = coalesce(excluded.contact_name, instagram_messages.contact_name);
   end if;
 
-  -- Insert outbound message (AI response) only when response_ia is set
+  -- Outbound message (AI response)
   if NEW.response_ia is not null and NEW.response_ia <> '' then
     insert into instagram_messages
-      (user_id, ig_account_id, contact_ig_id, direction, body, sender_type, ig_message_id, created_at)
+      (user_id, ig_account_id, contact_ig_id, contact_name, direction, body, sender_type, ig_message_id, created_at)
     values
-      (NEW.user_id, coalesce(NEW.provider_id,''), NEW.sender_id, 'outbound', NEW.response_ia, 'ai',
+      (NEW.user_id, coalesce(NEW.provider_id,''), NEW.sender_id, contact, 'outbound', NEW.response_ia, 'ai',
        NEW.message_id || '_resp', NEW.created_at + interval '1 second')
-    on conflict (ig_message_id) where ig_message_id is not null do nothing;
+    on conflict (ig_message_id) where ig_message_id is not null
+      do update set contact_name = coalesce(excluded.contact_name, instagram_messages.contact_name);
   end if;
 
   return NEW;
