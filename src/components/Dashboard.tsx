@@ -31,6 +31,7 @@ const BranchesView = lazy(() => import('./BranchesView'))
 const ReferralsView = lazy(() => import('./ReferralsView'))
 const InstagramScannerView = lazy(() => import('./InstagramScannerView'))
 const InstagramMessagesView = lazy(() => import('./InstagramMessagesView'))
+const TelegramMessagesView = lazy(() => import('./TelegramMessagesView'))
 
 const LazyFallback = () => (
   <div className="flex items-center justify-center h-64">
@@ -237,13 +238,14 @@ export default function Dashboard({ session }: { session: Session }) {
           <MobileNavBtn
             label="Telegram"
             icon={<FaTelegram className="text-sky-500" />}
-            active={activeTab === 'telegram-leads'}
+            active={activeTab === 'telegram-leads' || activeTab === 'tg-messages'}
             onClick={() => setTelegramMenuOpen(!telegramMenuOpen)}
             isParent isOpen={telegramMenuOpen}
           />
           {telegramMenuOpen && (
             <div className="ml-4 border-l border-gray-100 pl-3 space-y-0.5">
               <MobileSubBtn label="Leads" active={activeTab === 'telegram-leads'} onClick={() => { setActiveTab('telegram-leads'); setMobileMenuOpen(false) }} />
+              <MobileSubBtn label="Bandeja" active={activeTab === 'tg-messages'} onClick={() => { setActiveTab('tg-messages'); setMobileMenuOpen(false) }} />
             </div>
           )}
 
@@ -405,7 +407,7 @@ export default function Dashboard({ session }: { session: Session }) {
           <SidebarBtn
             label="Telegram"
             icon={<FaTelegram className="text-sky-500" />}
-            active={activeTab === 'telegram-leads'}
+            active={activeTab === 'telegram-leads' || activeTab === 'tg-messages'}
             onClick={() => setTelegramMenuOpen(!telegramMenuOpen)}
             isParent
             isOpen={telegramMenuOpen}
@@ -416,6 +418,11 @@ export default function Dashboard({ session }: { session: Session }) {
                 label="Leads"
                 active={activeTab === 'telegram-leads'}
                 onClick={() => setActiveTab('telegram-leads')}
+              />
+              <SidebarSubBtn
+                label="Bandeja"
+                active={activeTab === 'tg-messages'}
+                onClick={() => setActiveTab('tg-messages')}
               />
             </div>
           )}
@@ -628,6 +635,9 @@ export default function Dashboard({ session }: { session: Session }) {
               <InstagramMessagesView session={session} />
             )}
             {activeTab === 'telegram-leads' && <TelegramLeadsView userId={session.user.id} />}
+            {activeTab === 'tg-messages' && (
+              <TelegramMessagesView session={session} />
+            )}
 
             {/* VISTA DE FAQs RE-INCORPORADA */}
             {activeTab === 'faqs' && <FaqsView session={session} />}

@@ -16,7 +16,119 @@ if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
   supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
 }
 
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || ''
 const TELEGRAM_BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || (process.env.VITE_TELEGRAM_BOT_USERNAME) || 'mi_tienda_virtual_bot'
+
+async function resolveUserFromBearer(authHeader) {
+  if (!authHeader || !SUPABASE_URL) return null
+  try {
+    const uRes = await fetch(`${SUPABASE_URL.replace(/\/$/, '')}/auth/v1/user`, {
+      headers: { Authorization: authHeader, apikey: SUPABASE_SERVICE_ROLE_KEY }
+    })
+    if (uRes.ok) {
+      const u = await uRes.json()
+      return u?.id ? u : null
+    }
+  } catch {}
+  return null
+}
+
+async function getBotTokenForUser(userId) {
+  if (!supabaseAdmin) return TELEGRAM_BOT_TOKEN
+  const { data: inst } = await supabaseAdmin
+    .from('instances')
+    .select('id, channels')
+    .eq('user_id', userId)
+    .limit(1)
+
+  if (inst && inst.length > 0 && inst[0].channels?.telegram?.bot_type === 'own') {
+    const { data: cred } = await supabaseAdmin.rpc('get_decrypted_credential', {
+      p_user_id: userId,
+      p_instance_id: inst[0].id,
+      p_provider: 'telegram',
+      p_credential_type: 'bot_token'
+    })
+    if (cred) return cred
+  }
+  return TELEGRAM_BOT_TOKEN
+}
+
+async function handleSend(req, res) {
+  const authHeader = req.headers.authorization || ''
+  if (!authHeader) return res.status(401).json({ message: 'Unauthorized' })
+
+  const user = await resolveUserFromBearer(authHeader)
+  if (!user?.id) return res.status(401).json({ message: 'Unauthorized' })
+
+  let body = req.body
+  if (!body) {
+    try {
+      body = await new Promise((resolve, reject) => {
+        let data = ''
+        req.on('data', c => { data += c })
+        req.on('end', () => { try { resolve(JSON.parse(data || '{}')) } catch { resolve({}) } })
+        req.on('error', reject)
+      })
+    } catch { body = {} }
+  }
+
+  const message = (body.message || '').trim()
+  if (!message) return res.status(400).json({ message: 'message is required' })
+
+  const botToken = await getBotTokenForUser(user.id)
+  if (!botToken) return res.status(500).json({ message: 'No bot token configured' })
+
+  const contacts = body.contacts || (body.chat_id ? [body.chat_id] : [])
+  if (contacts.length === 0) return res.status(400).json({ message: 'chat_id or contacts[] required' })
+  if (contacts.length > 100) return res.status(400).json({ message: 'Max 100 contacts per request' })
+
+  const isBulk = !!body.contacts
+  const results = []
+  let sent = 0, failed = 0
+
+  for (const chatId of contacts) {
+    try {
+      const tgRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: message })
+      })
+      const tgData = await tgRes.json()
+
+      if (!tgRes.ok || !tgData.ok) {
+        failed++
+        results.push({ chat_id: chatId, ok: false, error: tgData.description || 'Telegram error' })
+        continue
+      }
+
+      if (supabaseAdmin) {
+        const msgId = tgData.result?.message_id
+        await supabaseAdmin.from('telegram_messages').insert({
+          user_id: user.id,
+          chat_id: String(chatId),
+          direction: 'outbound',
+          body: message,
+          sender_type: 'human',
+          tg_message_id: msgId ? `${chatId}_${msgId}_human` : null
+        }).then(() => {})
+      }
+
+      sent++
+      results.push({ chat_id: chatId, ok: true })
+    } catch (err) {
+      failed++
+      results.push({ chat_id: chatId, ok: false, error: err.message || 'Send failed' })
+    }
+  }
+
+  if (isBulk) {
+    return res.status(200).json({ ok: true, sent, failed, total: contacts.length, results })
+  }
+  if (results[0]?.ok) {
+    return res.status(200).json({ ok: true })
+  }
+  return res.status(502).json({ message: results[0]?.error || 'Failed to send' })
+}
 
 // DELETE: deactivate Telegram linkage (merged from telegram-deactivate.js)
 async function handleDeactivate(req, res) {
@@ -89,6 +201,9 @@ async function handleDeactivate(req, res) {
 
 export default async function handler(req, res) {
   if (req.method === 'DELETE') return handleDeactivate(req, res)
+
+  const action = (req.query?.action || '').toLowerCase()
+  if (action === 'send' && req.method === 'POST') return handleSend(req, res)
 
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST, DELETE')
