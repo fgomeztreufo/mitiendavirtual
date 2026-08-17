@@ -619,7 +619,7 @@ export default function WhatsAppMessagesView({ session }: WhatsAppMessagesViewPr
               </div>
             ) : (
               <>
-                <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                <div className="p-4 border-b border-gray-100 space-y-2">
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${blockedPhones.has(selectedContact) ? 'bg-red-50' : 'bg-[#25D366]/20'}`}>
                       <span className={`text-xs font-bold ${blockedPhones.has(selectedContact) ? 'text-red-500' : 'text-[#25D366]'}`}>

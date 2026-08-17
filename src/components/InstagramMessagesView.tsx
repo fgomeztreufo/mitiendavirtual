@@ -739,7 +739,7 @@ export default function InstagramMessagesView({ session }: InstagramMessagesView
                   </div>
                 ) : (
                   <>
-                    <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                    <div className="p-4 border-b border-gray-100 space-y-2">
                       <div className="flex items-center gap-3">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${blockedIds.has(selectedContact) ? 'bg-red-50' : 'bg-[#E1306C]/20'}`}>
                           <span className={`text-xs font-bold ${blockedIds.has(selectedContact) ? 'text-red-500' : 'text-[#E1306C]'}`}>
