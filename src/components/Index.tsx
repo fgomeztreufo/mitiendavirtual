@@ -226,7 +226,7 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
 
                 <h3 className="text-lg font-bold mt-1">{plan.name} {plan.emoji}</h3>
                 <div className="mt-2 text-3xl font-extrabold">
-                  ${plan.price}
+                  ${plan.price} <span className="text-base font-semibold text-gray-400">CLP</span>
                   <span className="text-sm text-gray-500 font-normal"> /mes</span>
                 </div>
 
@@ -318,7 +318,7 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
                 }`}>Bolsa {pack.size}</span>
                 <p className="text-2xl sm:text-3xl font-black text-gray-900">{pack.credits}</p>
                 <p className="text-[11px] text-gray-500 uppercase tracking-wider mt-1">créditos IA</p>
-                <p className={`text-lg font-bold mt-3 ${pack.popular ? 'text-emerald-600' : 'text-gray-900'}`}>{pack.price}</p>
+                <p className={`text-lg font-bold mt-3 ${pack.popular ? 'text-emerald-600' : 'text-gray-900'}`}>{pack.price} <span className="text-xs font-semibold text-gray-400">CLP</span></p>
                 <p className="text-[10px] text-gray-400 mt-1">No vencen</p>
               </motion.div>
             ))}

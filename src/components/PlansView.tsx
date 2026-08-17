@@ -322,7 +322,7 @@ export default function PlansView({ session, profile }: PlansViewProps) {
 
                         <h3 className="text-lg font-bold text-gray-900 mb-1">{plan.display_name} {planEmoji}</h3>
                         <div className="text-3xl font-bold text-gray-900 mb-1">
-                            ${price.toLocaleString('es-CL')}
+                            ${price.toLocaleString('es-CL')} <span className="text-base font-semibold text-gray-400">CLP</span>
                             <span className="text-sm text-gray-400 font-normal"> /mes</span>
                         </div>
                         {plan.description && (
@@ -412,7 +412,7 @@ export default function PlansView({ session, profile }: PlansViewProps) {
                       {sizeLabel && <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-0.5 rounded-full">Bolsa {sizeLabel}</span>}
                       <p className="text-2xl font-black text-gray-900">{pack.credits.toLocaleString('es-CL')}</p>
                       <p className="text-[11px] text-gray-500 uppercase tracking-wider">créditos IA</p>
-                      <p className="text-lg font-bold text-emerald-600">${pack.price_clp.toLocaleString('es-CL')}</p>
+                      <p className="text-lg font-bold text-emerald-600">${pack.price_clp.toLocaleString('es-CL')} <span className="text-xs font-semibold text-gray-400">CLP</span></p>
                       <button
                         onClick={() => handleBuyCreditPack(pack)}
                         className="w-full py-2 text-xs font-bold rounded-xl border border-emerald-300 text-emerald-600 hover:bg-emerald-50 transition-all"
