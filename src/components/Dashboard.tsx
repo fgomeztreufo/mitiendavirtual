@@ -11,27 +11,36 @@ import { PrivacyPolicy, TermsOfService, DataDeletion, SupportPage } from './Lega
 import FloatingWhatsAppButton from './FloatingWhatsAppButton'
 import OnboardingWizard from './onboarding/OnboardingWizard'
 
-const InstagramView = lazy(() => import('./InstagramView'))
-const CatalogView = lazy(() => import('./CatalogView'))
-const ProductsListView = lazy(() => import('./ProductsListView'))
-const PlansView = lazy(() => import('./PlansView'))
-const WhatsAppView = lazy(() => import('./WhatsAppView'))
-const FaqsView = lazy(() => import('./FaqsView'))
-const KnowlowerView = lazy(() => import('./KnowlowerView'))
-const LeadsView = lazy(() => import('./Leads'))
-const TelegramLeadsView = lazy(() => import('./TelegramLeadsView'))
-const NotificationsView = lazy(() => import('./NotificationsView'))
-const TelegramView = lazy(() => import('./TelegramView'))
-const AgentsDashboard = lazy(() => import('./AgentsDashboard'))
-const SchedulingView = lazy(() => import('./SchedulingView'))
-const ServicesView = lazy(() => import('./ServicesView'))
-const WhatsAppMessagesView = lazy(() => import('./WhatsAppMessagesView'))
-const WhatsAppLeadsView = lazy(() => import('./WhatsAppLeadsView'))
-const BranchesView = lazy(() => import('./BranchesView'))
-const ReferralsView = lazy(() => import('./ReferralsView'))
-const InstagramScannerView = lazy(() => import('./InstagramScannerView'))
-const InstagramMessagesView = lazy(() => import('./InstagramMessagesView'))
-const TelegramMessagesView = lazy(() => import('./TelegramMessagesView'))
+function lazyRetry<T extends { default: React.ComponentType<any> }>(
+  load: () => Promise<T>
+): React.LazyExoticComponent<T['default']> {
+  return lazy(() => load().catch(() => {
+    window.location.reload()
+    return new Promise<T>(() => {})
+  }))
+}
+
+const InstagramView = lazyRetry(() => import('./InstagramView'))
+const CatalogView = lazyRetry(() => import('./CatalogView'))
+const ProductsListView = lazyRetry(() => import('./ProductsListView'))
+const PlansView = lazyRetry(() => import('./PlansView'))
+const WhatsAppView = lazyRetry(() => import('./WhatsAppView'))
+const FaqsView = lazyRetry(() => import('./FaqsView'))
+const KnowlowerView = lazyRetry(() => import('./KnowlowerView'))
+const LeadsView = lazyRetry(() => import('./Leads'))
+const TelegramLeadsView = lazyRetry(() => import('./TelegramLeadsView'))
+const NotificationsView = lazyRetry(() => import('./NotificationsView'))
+const TelegramView = lazyRetry(() => import('./TelegramView'))
+const AgentsDashboard = lazyRetry(() => import('./AgentsDashboard'))
+const SchedulingView = lazyRetry(() => import('./SchedulingView'))
+const ServicesView = lazyRetry(() => import('./ServicesView'))
+const WhatsAppMessagesView = lazyRetry(() => import('./WhatsAppMessagesView'))
+const WhatsAppLeadsView = lazyRetry(() => import('./WhatsAppLeadsView'))
+const BranchesView = lazyRetry(() => import('./BranchesView'))
+const ReferralsView = lazyRetry(() => import('./ReferralsView'))
+const InstagramScannerView = lazyRetry(() => import('./InstagramScannerView'))
+const InstagramMessagesView = lazyRetry(() => import('./InstagramMessagesView'))
+const TelegramMessagesView = lazyRetry(() => import('./TelegramMessagesView'))
 
 const LazyFallback = () => (
   <div className="flex items-center justify-center h-64">

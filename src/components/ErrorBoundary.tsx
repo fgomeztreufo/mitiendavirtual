@@ -8,11 +8,35 @@ interface State {
   hasError: boolean
 }
 
+function isChunkError(error: unknown): boolean {
+  const msg = (error as Error)?.message || ''
+  return (
+    msg.includes('Failed to fetch dynamically imported module') ||
+    msg.includes('Loading chunk') ||
+    msg.includes('Loading CSS chunk') ||
+    msg.includes('Importing a module script failed') ||
+    msg.includes('error loading dynamically imported module')
+  )
+}
+
+const RELOAD_KEY = 'chunk_error_reload'
+
 export default class ErrorBoundary extends Component<Props, State> {
   state: State = { hasError: false }
 
   static getDerivedStateFromError(): State {
     return { hasError: true }
+  }
+
+  componentDidCatch(error: unknown) {
+    if (isChunkError(error) && !sessionStorage.getItem(RELOAD_KEY)) {
+      sessionStorage.setItem(RELOAD_KEY, '1')
+      window.location.reload()
+    }
+  }
+
+  componentDidMount() {
+    sessionStorage.removeItem(RELOAD_KEY)
   }
 
   render() {
