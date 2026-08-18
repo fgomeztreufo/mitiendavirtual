@@ -324,6 +324,71 @@ export default function IndexLanding({ onLoginClick }: IndexProps) {
         </div>
       </section>
 
+      {/* ════════════ VIDEO DEMO ════════════ */}
+      <section id="demo" className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 bg-[#F8FAFC] scroll-mt-20">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={stagger}
+            className="text-center mb-12"
+          >
+            <motion.h2 variants={fadeUp} custom={0} className="text-2xl sm:text-3xl md:text-5xl font-bold">
+              Míralo{' '}
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+                en acción
+              </span>
+            </motion.h2>
+            <motion.p variants={fadeUp} custom={1} className="mt-4 text-gray-600 text-base sm:text-lg max-w-2xl mx-auto">
+              En 60 segundos descubre cómo tu agente de IA responde clientes, agenda citas y vende por ti — automáticamente.
+            </motion.p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="relative rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(99,102,241,0.15)] border border-gray-200 bg-white"
+          >
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+              {/* TODO: Reemplazar con <iframe> de YouTube/Loom cuando tengas el video */}
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950 flex flex-col items-center justify-center gap-6 p-8">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors group">
+                  <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white ml-1 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <p className="text-white/90 font-semibold text-lg sm:text-xl">Demo en 60 segundos</p>
+                  <p className="text-white/50 text-sm mt-1">Próximamente</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="mt-8 flex flex-wrap justify-center gap-6 sm:gap-10 text-sm text-gray-500"
+          >
+            {[
+              { icon: '⚡', text: 'Responde en 3 segundos' },
+              { icon: '🤖', text: 'Sin código, sin complicaciones' },
+              { icon: '📈', text: 'Más ventas mientras duermes' },
+            ].map((item) => (
+              <span key={item.text} className="flex items-center gap-2">
+                <span className="text-lg">{item.icon}</span>
+                {item.text}
+              </span>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
       {/* ════════════ PLANS ════════════ */}
       <section id="planes" className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 bg-[#F8FAFC] scroll-mt-20">
         <div className="max-w-6xl mx-auto">

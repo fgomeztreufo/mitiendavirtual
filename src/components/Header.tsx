@@ -5,6 +5,7 @@ import { siteConfig } from '../config/siteConfig'
 const NAV_ITEMS = [
   { name: 'Canales', id: 'canales' },
   { name: 'Cómo funciona', id: 'como-funciona' },
+  { name: 'Demo', id: 'demo' },
   { name: 'Planes', id: 'planes' },
   { name: 'FAQ', id: 'faq' },
 ]

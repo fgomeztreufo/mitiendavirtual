@@ -57,7 +57,8 @@ export default function Dashboard({ session }: { session: Session }) {
 
   const shouldOnboard = useMemo(() => {
     if (localStorage.getItem('onboarding_completed_' + session.user.id)) return false
-    if (!profile || !instance) return false
+    if (!profile) return false
+    if (!instance) return true
     const hasPersonality = !!(instance as any)?.personalities?.[0]?.ai_name
     const hasProducts = (profile as any)?.current_products > 0
     if (hasPersonality && hasProducts) return false
