@@ -68,7 +68,7 @@ const STEPS = [
 
 const TESTIMONIALS = [
   { name: 'Carolina M.', role: 'Tienda de ropa, Santiago', quote: 'Antes perdía ventas por no responder a tiempo en Instagram. Ahora la IA responde al instante y mis ventas subieron un 40%.', initials: 'CM' },
-  { name: 'Diego R.', role: 'Consultorio dental, Viña del Mar', quote: 'Google Calendar + la IA me agendan citas automáticamente. Dejé de perder pacientes que escribían fuera de horario.', initials: 'DR' },
+  { name: 'Matías L.', role: 'Barbería The Kings, Viña del Mar', quote: 'Google Calendar + la IA me agendan citas automáticamente. Dejé de perder clientes que escribían fuera de horario.', initials: 'ML' },
   { name: 'Valentina S.', role: 'Pastelería artesanal, Concepción', quote: 'En una semana ya tenía todo funcionando. No necesité saber nada de tecnología. La IA responde igual que yo.', initials: 'VS' },
 ]
 
