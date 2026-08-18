@@ -99,7 +99,7 @@ export default function PlansView({ session, profile }: PlansViewProps) {
         try {
             const { error } = await supabase
                 .from('profiles')
-                .update({ plan_type: 'free', plan_expires_at: null })
+                .update({ plan_type: 'free', plan_expires_at: null, ai_credits_used: 0 })
                 .eq('id', session.user.id)
 
             if (error) throw error
