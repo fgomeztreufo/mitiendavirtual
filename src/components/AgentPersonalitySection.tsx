@@ -84,21 +84,6 @@ export default function AgentPersonalitySection({ instanceId, channel, channelCo
         }
         setConfig(loaded)
         setSavedConfig(loaded)
-      } else {
-        const { data: legacy } = await supabase
-          .from('instance_personalities')
-          .select('ai_name, biz_name')
-          .eq('instance_id', instanceId)
-          .maybeSingle()
-
-        if (legacy) {
-          const preloaded = {
-            ...DEFAULT_CONFIG,
-            ai_name: legacy.ai_name || legacy.biz_name || '',
-          }
-          setConfig(preloaded)
-          setSavedConfig(preloaded)
-        }
       }
     } catch (_) { /* silent */ }
     finally { setLoading(false) }

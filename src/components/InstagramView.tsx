@@ -58,7 +58,7 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
           {
             event: '*',
             schema: 'public',
-            table: 'instance_personalities',
+            table: 'agent_prompts',
             filter: `instance_id=eq.${instance.id}`
           },
           () => { fetchConfig() }
@@ -78,16 +78,19 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
   async function fetchConfig() {
     try {
       const { data } = await supabase
-        .from('instance_personalities')
-        .select('biz_name, ai_name, activation_keyword, antispam_enabled, reply_public')
+        .from('agent_prompts')
+        .select('personality_config')
         .eq('instance_id', instance.id)
-        .single()
+        .eq('channel', 'instagram')
+        .eq('is_active', true)
+        .maybeSingle()
 
-      if (data) {
-        setPersonalityName(data.ai_name || data.biz_name || '')
-        setActivationKeyword(data.activation_keyword || '')
-        setAntispamEnabled(data.antispam_enabled ?? false)
-        setReplyPublic(data.reply_public || '')
+      if (data?.personality_config) {
+        const cfg = data.personality_config as Record<string, any>
+        setPersonalityName(cfg.ai_name || '')
+        setActivationKeyword(cfg.activation_keyword || '')
+        setAntispamEnabled(cfg.antispam_enabled ?? false)
+        setReplyPublic(cfg.reply_public || '')
       }
     } catch (_) { /* silent */ }
     finally { setPersonalityLoaded(true) }
@@ -412,14 +415,12 @@ export default function InstagramView({ session, profile, instance, onUpdate, go
               onClick={async () => {
                 setSavingIgSettings(true)
                 try {
-                  const { error } = await supabase
-                    .from('instance_personalities')
-                    .update({
-                      activation_keyword: activationKeyword.trim(),
-                      antispam_enabled: antispamEnabled,
-                      reply_public: replyPublic.trim(),
-                    })
-                    .eq('instance_id', instance.id)
+                  const { error } = await supabase.rpc('update_ig_settings', {
+                    p_instance_id: instance.id,
+                    p_activation_keyword: activationKeyword.trim(),
+                    p_antispam_enabled: antispamEnabled,
+                    p_reply_public: replyPublic.trim(),
+                  })
                   if (error) throw error
                   Swal.fire({
                     icon: 'success',
