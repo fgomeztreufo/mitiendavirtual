@@ -8,6 +8,7 @@ import StepBusinessType from './steps/StepBusinessType'
 import StepInstagram from './steps/StepInstagram'
 import StepWhatsApp from './steps/StepWhatsApp'
 import StepPersonality from './steps/StepPersonality'
+import StepFaqs from './steps/StepFaqs'
 import StepContent from './steps/StepContent'
 import StepDone from './steps/StepDone'
 
@@ -19,7 +20,7 @@ interface OnboardingWizardProps {
   onRefreshData: () => void
 }
 
-type StepId = 'welcome' | 'business' | 'instagram' | 'whatsapp' | 'personality' | 'content' | 'done'
+type StepId = 'welcome' | 'business' | 'instagram' | 'whatsapp' | 'personality' | 'faqs' | 'content' | 'done'
 
 export default function OnboardingWizard({ session, profile, instance, onComplete, onRefreshData }: OnboardingWizardProps) {
   const hasInstance = !!instance?.id
@@ -27,7 +28,7 @@ export default function OnboardingWizard({ session, profile, instance, onComplet
   const steps: StepId[] = useMemo(() => {
     const base: StepId[] = ['welcome', 'business', 'instagram', 'whatsapp']
     if (hasInstance || base.includes('instagram')) base.push('personality')
-    base.push('content', 'done')
+    base.push('faqs', 'content', 'done')
     return base
   }, [hasInstance])
 
@@ -46,6 +47,7 @@ export default function OnboardingWizard({ session, profile, instance, onComplet
     instagram: !!instance?.provider_id,
     whatsapp: false,
     personality: false,
+    faqs: false,
     content: false,
   })
 
@@ -192,6 +194,20 @@ export default function OnboardingWizard({ session, profile, instance, onComplet
             instance={instance}
             onNext={() => {
               setCompletedSteps(prev => ({ ...prev, personality: true }))
+              goNext()
+            }}
+            onSkip={goNext}
+            onBack={goBack}
+          />
+        )}
+
+        {currentStep === 'faqs' && (
+          <StepFaqs
+            key="faqs"
+            session={session}
+            profile={profile}
+            onNext={() => {
+              setCompletedSteps(prev => ({ ...prev, faqs: true }))
               goNext()
             }}
             onSkip={goNext}

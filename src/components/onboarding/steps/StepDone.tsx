@@ -9,6 +9,7 @@ interface StepDoneProps {
     instagram: boolean
     whatsapp: boolean
     personality: boolean
+    faqs: boolean
     content: boolean
   }
   onFinish: () => void
@@ -26,6 +27,7 @@ export default function StepDone({ instance, completedSteps, onFinish }: StepDon
     { label: 'Instagram conectado', done: completedSteps.instagram },
     { label: 'WhatsApp conectado', done: completedSteps.whatsapp },
     { label: 'Personalidad del agente', done: completedSteps.personality },
+    { label: 'Preguntas frecuentes', done: completedSteps.faqs },
     { label: 'Primer producto subido', done: completedSteps.content },
   ]
 
